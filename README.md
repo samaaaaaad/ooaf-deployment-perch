@@ -1,3 +1,5 @@
+# Lab_Practical4_Group_1
+
 # ELEC5619_Practical04_Group_01
 
 # Even Ticketing System
@@ -5,7 +7,11 @@
 ## 1. Project Overview
 
 
-**Real World Problem:**
+Pop-up businesses often lack an efficient way to sell specific seating locations and instead rely on first-come, first-served arrangements. This limits their ability to price premium seats differently and manage seating layouts effectively.
+
+Traditional ticketing platforms are typically designed for fixed venues and are poorly suited to businesses that frequently relocate or reconfigure their seating. Customising these systems can also be costly and impractical for temporary or mobile operations.
+
+This project proposes a clean, intuitive drag-and-drop platform that allows businesses to create, modify, and rearrange seating layouts easily. Individual seats or sections can then be priced and sold independently, giving businesses greater control over seating configuration, pricing, and venue changes.
 
 ---
 
@@ -51,4 +57,3 @@
 cd appName
 ./gradlew bootRun
 ```
----
