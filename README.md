@@ -1,11 +1,8 @@
-# Lab_Practical4_Group_1
-
 # ELEC5619_Practical04_Group_01
 
-# Even Ticketing System
+# Event Ticketing System
 
 ## 1. Project Overview
-
 
 Pop-up businesses often lack an efficient way to sell specific seating locations and instead rely on first-come, first-served arrangements. This limits their ability to price premium seats differently and manage seating layouts effectively.
 
@@ -13,6 +10,16 @@ Traditional ticketing platforms are typically designed for fixed venues and are 
 
 This project proposes a clean, intuitive drag-and-drop platform that allows businesses to create, modify, and rearrange seating layouts easily. Individual seats or sections can then be priced and sold independently, giving businesses greater control over seating configuration, pricing, and venue changes.
 
+### 1.1 Key Requirements
+ 
+Directly addressing the problems above, the platform must support:
+ 
+- **Flexible layout creation:** organizers can build, edit, and rearrange a seating floorplan for any temporary or mobile venue through a drag-and-drop interface
+- **Independent seat/section pricing:** individual seats or sections can be priced separately (e.g. VIP vs. standard), rather than one flat ticket price for the whole event.
+- **Real-time seat selection:** customers view live seat availability and choose a specific seat.
+- **Reusable floorplans:** a layout built once for a venue can be saved and reused across multiple future events at that same pop-up location.
+- **Secure payment processing:** ticket purchases are processed securely, without the platform storing raw card data.
+- **Ticket delivery & check-in:** confirmed bookings generate a scannable e-ticket/printable ticket.
 ---
 
 ## 2. Used Libraries and Versions
@@ -43,7 +50,7 @@ This project proposes a clean, intuitive drag-and-drop platform that allows busi
 ## 4. Team Roles & Responsibilities
 | SID (Name) | Role | Responsibilities |
 |------|------|------------------|
-| **520442472 (NAME)** | ROLES |
+| **520442472 Dmitry Khachumov** | ROLES |
 | **SID (NAME)** | ROLES |
 | **SID (NAME)** | ROLES |
 | **SID (NAME)** | ROLES |
