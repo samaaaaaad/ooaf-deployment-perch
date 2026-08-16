@@ -51,7 +51,7 @@ Directly addressing the problems above, the platform must support:
 | SID (Name) | Role | Responsibilities |
 |------|------|------------------|
 | **520442472 Dmitry Khachumov** | ROLES |
-| **SID Jose Maria Mosciaro Herrera** | ROLES |
+| **550358783 Jose Maria Mosciaro Herrera** | ROLES |
 | **SID (NAME)** | ROLES |
 | **SID (NAME)** | ROLES |
 | **SID (NAME)** | ROLES |
