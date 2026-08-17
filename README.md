@@ -1,7 +1,7 @@
 # Event Ticketing System
 
 **ELEC5619 — Object Oriented Application Frameworks**
-**Project Group:** [Group Number]
+**Project Group:** ELEC5619_Practical04_Group_1
 **Repository:** Lab_Practical4_Group_1
 
 ---
@@ -39,11 +39,9 @@ Directly addressing the problems above, the platform must support:
 
 
 ### Frontend (React)
-- React: 19.2.8 *(pending confirmation once frontend is scaffolded)*
-- React Router: 6.x *(pending confirmation)*
-- Axios: 1.x *(pending confirmation)*
-
-*(Frontend library versions will be confirmed in Sprint 1 once the project skeleton is initialised.)*
+- React: 19.2.8 *(latest stable)*
+- React Router: 8.3.0 *(latest stable)*
+- Axios: 1.19.0 *(latest stable)*
 
 ---
 
@@ -97,7 +95,6 @@ Directly addressing the problems above, the platform must support:
 | **550264462 (Maria Hamlili)** | Frontend Developer — Booking | Event browsing and details pages, interactive customer seat-selection interface, booking summary and confirmation pages, responsive frontend development |
 | **550358783 (Jose Maria Mosciaro Herrera)** | Backend Developer — Users, Bookings & Concurrency | User registration and authentication, role-based access, seat reservation/holding logic (concurrency handling), booking APIs |
 | **520494057 (Thomas Huynh)** | Full-Stack Developer — Tickets, Check-In & QA | Customer booking/ticket interfaces, e-ticket and QR-code functionality, organiser check-in flow, frontend-backend integration for tickets, test infrastructure |
-
 
 ---
 
