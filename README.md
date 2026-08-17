@@ -1,7 +1,7 @@
 # Event Ticketing System
 
 **ELEC5619 — Object Oriented Application Frameworks**
-**Project Group:** [Group Number]
+**Project Group:** ELEC5619_Practical04_Group_1
 **Repository:** Lab_Practical4_Group_1
 
 ---
@@ -39,11 +39,9 @@ Directly addressing the problems above, the platform must support:
 
 
 ### Frontend (React)
-- React: 19.2.8 *(pending confirmation once frontend is scaffolded)*
-- React Router: 6.x *(pending confirmation)*
-- Axios: 1.x *(pending confirmation)*
-
-*(Frontend library versions will be confirmed in Sprint 1 once the project skeleton is initialised.)*
+- React: 19.2.8 *(latest stable)*
+- React Router: 8.3.0 *(latest stable)*
+- Axios: 1.19.0 *(latest stable)*
 
 ---
 
