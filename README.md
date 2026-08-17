@@ -1,4 +1,4 @@
-## Event Ticketing System
+# Event Ticketing System
 
 **ELEC5619 — Object Oriented Application Frameworks**
 **Project Group:** ELEC5619_Practical04_Group_1
