@@ -48,6 +48,15 @@ Use constructor injection. Keep controllers thin and do not place database acces
 - Current organiser IDs in read routes are transitional. Write routes remain deferred until authentication supplies a trusted current user.
 - Do not trust an organiser UUID supplied in a request body when creating or changing owned data.
 
+## Authentication
+
+- The MVP manages credentials locally; external OIDC providers and bearer API tokens are outside the current scope.
+- `users.email` is the only email column. Trim and lowercase it with `Locale.ROOT` before every lookup or save.
+- Enforce uniqueness on the canonical `email` value; do not add a duplicate `email_normalized` column.
+- Never store or log a raw password. Persist only a strong password hash.
+- Successful login must establish a server-side Spring Security session. Protected endpoints obtain the current `userId` from that session rather than from request data.
+- In-memory sessions are sufficient for the single-instance MVP. A distributed session store is a future scaling decision.
+
 ## H2 Development Database
 
 - Local development uses the file-backed H2 database configured in `src/main/resources/application.properties`.
