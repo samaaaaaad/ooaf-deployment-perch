@@ -38,3 +38,7 @@ out/
 
 ### Local H2 database ###
 /data/
+
+### Local browser QA state ###
+/.playwright-cli/
+/output/playwright/

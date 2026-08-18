@@ -45,9 +45,37 @@ When the application is running locally, the development H2 console is available
 
 
 ### Frontend (React)
-- React: 19.2.8 *(latest stable)*
-- React Router: 8.3.0 *(latest stable)*
-- Axios: 1.19.0 *(latest stable)*
+- React: 19.2.8
+- Vite: 6.4.3
+- Vitest: 3.2.7
+- React Testing Library: 16.3.2
+
+The React application in `frontend/` is the first UI iteration over the existing
+registration/login backend and the read-only Event and Venue APIs. The original
+Sprint 1 static prototype remains at
+`src/main/resources/static/login.html` for reference.
+
+### Running Locally
+
+Start the Spring Boot API and H2 database from the repository root:
+
+```bash
+bash gradlew bootRun
+```
+
+In a second terminal, install the frontend dependencies the first time you set
+up the project (or whenever `package.json` or `package-lock.json` changes):
+
+```bash
+cd frontend
+npm install
+```
+
+Then start the React development server:
+
+```bash
+npm run dev
+```
 
 ---
 
@@ -106,7 +134,10 @@ When the application is running locally, the development H2 console is available
 
 ## 5. Repository Structure *(to be finalised)*
 
-/frontend      # React application
-/backend       # Spring Boot application
-/docs          # Design docs, ER diagrams, API specs
-/screenshots   # Sprint 0 evidence (GitHub org, sprints board)
+```text
+/frontend            # Vite React application
+/src/main            # Spring Boot source and the retained static login prototype
+/src/test            # Spring Boot persistence and validation tests
+/docs                # Design docs, ER diagram and architecture decisions
+/screenshots         # Sprint 0 evidence (GitHub organisation and sprint board)
+```
