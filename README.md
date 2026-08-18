@@ -24,7 +24,6 @@ Directly addressing the problems above, the platform must support:
 - **Reusable floorplans:** a layout built once for a venue can be saved and reused across multiple future events at that same pop-up location.
 - **Secure payment processing:** ticket purchases are processed securely, without the platform storing raw card data.
 - **Ticket delivery & check-in:** confirmed bookings generate a scannable e-ticket/printable ticket.
-
 ---
 
 ## 2. Used Libraries and Versions
