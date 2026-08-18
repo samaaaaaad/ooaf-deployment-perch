@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Event Ticketing — Login</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f4f5f7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    width: 320px;
+  }
+  h1 { font-size: 1.25rem; margin: 0 0 1.25rem; }
+  label { display: block; font-size: 0.85rem; margin-bottom: 0.25rem; color: #333; }
+  input, select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  button {
+    width: 100%;
+    padding: 0.6rem;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  button:hover { background: #1d4ed8; }
+  .toggle { text-align: center; margin-top: 1rem; font-size: 0.85rem; }
+  .toggle a { color: #2563eb; cursor: pointer; text-decoration: none; }
+  #message { margin-top: 0.75rem; font-size: 0.85rem; text-align: center; min-height: 1.2em; }
+  #message.error { color: #dc2626; }
+  #message.success { color: #16a34a; }
+  #registerFields { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1 id="formTitle">Log in</h1>
+
+  <form id="authForm">
+    <div id="registerFields">
+      <label for="fullName">Full name</label>
+      <input type="text" id="fullName" placeholder="Jane Smith">
+    </div>
+
+    <label for="email">Email</label>
+    <input type="email" id="email" required placeholder="you@example.com">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" required placeholder="********">
+
+    <button type="submit" id="submitBtn">Log in</button>
+  </form>
+
+  <div id="message"></div>
+
+  <div class="toggle">
+    <span id="toggleText">Don't have an account? <a id="toggleLink">Register</a></span>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8080/api/users';
+  let isRegisterMode = false;
+
+  const formTitle = document.getElementById('formTitle');
+  const registerFields = document.getElementById('registerFields');
+  const submitBtn = document.getElementById('submitBtn');
+  const toggleText = document.getElementById('toggleText');
+  const messageEl = document.getElementById('message');
+
+  function setToggleLink() {
+    document.getElementById('toggleLink').addEventListener('click', handleToggleClick);
+  }
+
+  function handleToggleClick() {
+    isRegisterMode = !isRegisterMode;
+    formTitle.textContent = isRegisterMode ? 'Create an account' : 'Log in';
+    submitBtn.textContent = isRegisterMode ? 'Register' : 'Log in';
+    registerFields.style.display = isRegisterMode ? 'block' : 'none';
+    toggleText.innerHTML = isRegisterMode
+      ? 'Already have an account? <a id="toggleLink">Log in</a>'
+      : 'Don\'t have an account? <a id="toggleLink">Register</a>';
+    setToggleLink();
+    messageEl.textContent = '';
+    messageEl.className = '';
+  }
+
+  setToggleLink();
+
+  document.getElementById('authForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    messageEl.textContent = '';
+    messageEl.className = '';
+
+    try {
+      let response;
+      if (isRegisterMode) {
+        const fullName = document.getElementById('fullName').value;
+        response = await fetch(`${API_BASE}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, email, password })
+        });
+      } else {
+        response = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+      }
+
+      // Backend returns JSON on success, plain text on error — handle both.
+      const raw = await response.text();
+      let data;
+      try { data = JSON.parse(raw); } catch { data = raw; }
+
+      if (!response.ok) {
+        throw new Error(typeof data === 'string' ? data : 'Something went wrong');
+      }
+
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      messageEl.textContent = isRegisterMode
+        ? `Account created! Welcome, ${data.fullName}.`
+        : `Welcome back, ${data.fullName}.`;
+      messageEl.className = 'success';
+
+    } catch (err) {
+      messageEl.textContent = err.message || 'Request failed';
+      messageEl.className = 'error';
+    }
+  });
+</script>
+
+</body>
+</html>
