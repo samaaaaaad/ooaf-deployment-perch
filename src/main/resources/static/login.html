@@ -48,6 +48,7 @@
   #message.error { color: #dc2626; }
   #message.success { color: #16a34a; }
   #registerFields { display: none; }
+  .hint { display: none; font-size: 0.75rem; color: #666; margin: -0.6rem 0 0.9rem; }
 </style>
 </head>
 <body>
@@ -66,6 +67,7 @@
 
     <label for="password">Password</label>
     <input type="password" id="password" required placeholder="********">
+    <div id="passwordHint" class="hint">At least 8 characters, with a letter, a number, and a special character</div>
 
     <button type="submit" id="submitBtn">Log in</button>
   </form>
@@ -83,9 +85,21 @@
 
   const formTitle = document.getElementById('formTitle');
   const registerFields = document.getElementById('registerFields');
+  const passwordHint = document.getElementById('passwordHint');
   const submitBtn = document.getElementById('submitBtn');
   const toggleText = document.getElementById('toggleText');
   const messageEl = document.getElementById('message');
+
+  function validatePasswordClient(pw) {
+    if (pw.length < 8) return 'Password must be at least 8 characters long';
+    const hasLetter = /[a-zA-Z]/.test(pw);
+    const hasDigit = /[0-9]/.test(pw);
+    const hasSpecial = /[^a-zA-Z0-9]/.test(pw);
+    if (!hasLetter) return 'Password must contain at least one letter';
+    if (!hasDigit) return 'Password must contain at least one number';
+    if (!hasSpecial) return 'Password must contain at least one special character';
+    return null;
+  }
 
   function setToggleLink() {
     document.getElementById('toggleLink').addEventListener('click', handleToggleClick);
@@ -96,6 +110,7 @@
     formTitle.textContent = isRegisterMode ? 'Create an account' : 'Log in';
     submitBtn.textContent = isRegisterMode ? 'Register' : 'Log in';
     registerFields.style.display = isRegisterMode ? 'block' : 'none';
+    passwordHint.style.display = isRegisterMode ? 'block' : 'none';
     toggleText.innerHTML = isRegisterMode
       ? 'Already have an account? <a id="toggleLink">Log in</a>'
       : 'Don\'t have an account? <a id="toggleLink">Register</a>';
@@ -112,6 +127,15 @@
     const password = document.getElementById('password').value;
     messageEl.textContent = '';
     messageEl.className = '';
+
+    if (isRegisterMode) {
+      const passwordError = validatePasswordClient(password);
+      if (passwordError) {
+        messageEl.textContent = passwordError;
+        messageEl.className = 'error';
+        return;
+      }
+    }
 
     try {
       let response;
