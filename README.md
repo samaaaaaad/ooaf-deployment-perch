@@ -14,6 +14,8 @@ Traditional ticketing platforms are typically designed for fixed venues and are 
 
 This project proposes a clean, intuitive drag-and-drop platform that allows businesses to create, modify, and rearrange seating layouts easily. Individual seats or sections can then be priced and sold independently, giving businesses greater control over seating configuration, pricing, and venue changes.
 
+The corrected logical database model is available in the editable [Draw.io ERD](docs/event-ticketing-mvp-erd.drawio). Architecture decisions are recorded under [`docs/adr`](docs/adr), and active development conventions are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ### 1.1 Key Requirements
 
 Directly addressing the problems above, the platform must support:
@@ -29,12 +31,17 @@ Directly addressing the problems above, the platform must support:
 ## 2. Used Libraries and Versions
 
 ### Backend (Java/Spring Boot)
-- Spring Boot: 3.5.4
+- Spring Boot: 4.1.0
 - Spring Boot Starter Web: (managed by Spring Boot)
 - Spring Boot Starter Data JPA: (managed by Spring Boot)
 - Spring Security Core: (managed by Spring Boot)
-- H2 Database: (latest via Spring Boot dependency management)
-- PostgreSQL Driver: (managed by Spring Boot) — for production/staging; H2 for local dev/testing
+- H2 Database: (managed by Spring Boot) — local file storage and isolated in-memory tests
+
+### Local Database
+
+The MVP uses an H2 file database at `./data/event-ticketing`. Hibernate updates the local schema from the JPA entities while the model is evolving. Tests use a separate in-memory H2 database and recreate its schema for each test run.
+
+When the application is running locally, the development H2 console is available at `http://localhost:8080/h2-console`. Use JDBC URL `jdbc:h2:file:./data/event-ticketing`, username `sa`, and a blank password. The console is for local development only.
 
 
 ### Frontend (React)
