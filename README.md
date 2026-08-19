@@ -14,6 +14,8 @@ Traditional ticketing platforms are typically designed for fixed venues and are 
 
 This project proposes a clean, intuitive drag-and-drop platform that allows businesses to create, modify, and rearrange seating layouts easily. Individual seats or sections can then be priced and sold independently, giving businesses greater control over seating configuration, pricing, and venue changes.
 
+The corrected logical database model is available in the editable [Draw.io ERD](docs/event-ticketing-mvp-erd.drawio). Architecture decisions are recorded under [`docs/adr`](docs/adr), and active development conventions are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ### 1.1 Key Requirements
 
 Directly addressing the problems above, the platform must support:
@@ -29,18 +31,51 @@ Directly addressing the problems above, the platform must support:
 ## 2. Used Libraries and Versions
 
 ### Backend (Java/Spring Boot)
-- Spring Boot: 3.5.4
+- Spring Boot: 4.1.0
 - Spring Boot Starter Web: (managed by Spring Boot)
 - Spring Boot Starter Data JPA: (managed by Spring Boot)
 - Spring Security Core: (managed by Spring Boot)
-- H2 Database: (latest via Spring Boot dependency management)
-- PostgreSQL Driver: (managed by Spring Boot) — for production/staging; H2 for local dev/testing
+- H2 Database: (managed by Spring Boot) — local file storage and isolated in-memory tests
+
+### Local Database
+
+The MVP uses an H2 file database at `./data/event-ticketing`. Hibernate updates the local schema from the JPA entities while the model is evolving. Tests use a separate in-memory H2 database and recreate its schema for each test run.
+
+When the application is running locally, the development H2 console is available at `http://localhost:8080/h2-console`. Use JDBC URL `jdbc:h2:file:./data/event-ticketing`, username `sa`, and a blank password. The console is for local development only.
 
 
 ### Frontend (React)
-- React: 19.2.8 *(latest stable)*
-- React Router: 8.3.0 *(latest stable)*
-- Axios: 1.19.0 *(latest stable)*
+- React: 19.2.8
+- Vite: 6.4.3
+- Vitest: 3.2.7
+- React Testing Library: 16.3.2
+
+The React application in `frontend/` is the first UI iteration over the existing
+registration/login backend and the read-only Event and Venue APIs. The original
+Sprint 1 static prototype remains at
+`src/main/resources/static/login.html` for reference.
+
+### Running Locally
+
+Start the Spring Boot API and H2 database from the repository root:
+
+```bash
+bash gradlew bootRun
+```
+
+In a second terminal, install the frontend dependencies the first time you set
+up the project (or whenever `package.json` or `package-lock.json` changes):
+
+```bash
+cd frontend
+npm install
+```
+
+Then start the React development server:
+
+```bash
+npm run dev
+```
 
 ---
 
@@ -99,7 +134,10 @@ Directly addressing the problems above, the platform must support:
 
 ## 5. Repository Structure *(to be finalised)*
 
-/frontend      # React application
-/backend       # Spring Boot application
-/docs          # Design docs, ER diagrams, API specs
-/screenshots   # Sprint 0 evidence (GitHub org, sprints board)
+```text
+/frontend            # Vite React application
+/src/main            # Spring Boot source and the retained static login prototype
+/src/test            # Spring Boot persistence and validation tests
+/docs                # Design docs, ER diagram and architecture decisions
+/screenshots         # Sprint 0 evidence (GitHub organisation and sprint board)
+```
