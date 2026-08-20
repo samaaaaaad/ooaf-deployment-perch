@@ -1,0 +1,114 @@
+/* ==========================================================================
+   Login / Register screen
+   A single minimal centred card. No split hero panel. Uses the shared brand
+   palette (teal + gold) to stay consistent with the landing page.
+   ========================================================================== */
+
+.au-wrap {
+  --au-ink: #17232d;
+  --au-muted: #667681;
+  --au-line: #dfe6e8;
+  --au-brand: #176b63;
+  --au-brand-dark: #0d4d47;
+  --au-gold: #d8a84e;
+  --au-danger: #b42318;
+  --au-surface: #ffffff;
+
+  align-items: center;
+  background:
+    radial-gradient(circle at 50% -12%, rgba(23, 107, 99, 0.14), transparent 46%),
+    radial-gradient(circle at 92% 108%, rgba(216, 168, 78, 0.10), transparent 42%),
+    #f1f5f5;
+  box-sizing: border-box;
+  color: var(--au-ink);
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 2rem 1.25rem;
+}
+.au-wrap *,
+.au-wrap *::before,
+.au-wrap *::after { box-sizing: border-box; }
+
+.au-card {
+  background: var(--au-surface);
+  border: 1px solid var(--au-line);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(15, 28, 34, 0.10);
+  max-width: 408px;
+  padding: clamp(1.9rem, 5vw, 2.6rem);
+  position: relative;
+  width: 100%;
+}
+
+.au-back {
+  align-items: center;
+  color: var(--au-muted);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 600;
+  gap: 0.35rem;
+  margin-bottom: 1.5rem;
+  text-decoration: none;
+  transition: color 140ms ease;
+}
+.au-back:hover { color: var(--au-brand); }
+
+.au-brand { align-items: center; display: flex; gap: 0.6rem; margin-bottom: 1.7rem; }
+.au-brand-mark {
+  align-items: center; background: linear-gradient(140deg, var(--au-gold), #c48f38);
+  border-radius: 9px; color: #23180a; display: inline-flex; font-size: 0.72rem;
+  font-weight: 900; height: 34px; justify-content: center; letter-spacing: -0.02em; width: 34px;
+}
+.au-brand-name { font-size: 0.98rem; font-weight: 700; letter-spacing: -0.01em; }
+
+.au-eyebrow {
+  color: var(--au-brand); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em;
+  margin: 0 0 0.5rem; text-transform: uppercase;
+}
+.au-title { font-size: 1.6rem; letter-spacing: -0.03em; margin: 0; }
+.au-sub { color: var(--au-muted); font-size: 0.92rem; line-height: 1.5; margin: 0.55rem 0 1.8rem; }
+
+.au-field { margin-bottom: 1.1rem; }
+.au-field label { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
+.au-field input {
+  background: #fbfdfd; border: 1px solid #cbd5d9; border-radius: 10px; color: var(--au-ink);
+  font: inherit; min-height: 47px; padding: 0.7rem 0.85rem; width: 100%;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+.au-field input::placeholder { color: #9aa7ad; }
+.au-field input:focus { border-color: var(--au-brand); box-shadow: 0 0 0 3px rgba(23, 107, 99, 0.15); outline: none; }
+
+.au-pw { position: relative; }
+.au-pw input { padding-right: 3.7rem; }
+.au-pw-toggle {
+  background: none; border: 0; color: var(--au-muted); cursor: pointer; font-size: 0.78rem;
+  font-weight: 700; padding: 0.35rem 0.5rem; position: absolute; right: 0.45rem; top: 50%;
+  transform: translateY(-50%); transition: color 140ms ease;
+}
+.au-pw-toggle:hover { color: var(--au-brand); }
+
+.au-hint { color: var(--au-muted); display: block; font-size: 0.72rem; line-height: 1.45; margin-top: 0.4rem; }
+
+.au-error {
+  background: #fff1f0; border-radius: 8px; color: var(--au-danger); font-size: 0.82rem;
+  margin-bottom: 1rem; padding: 0.7rem 0.8rem;
+}
+
+.au-submit {
+  background: var(--au-brand); border: 0; border-radius: 10px; color: #fff; cursor: pointer;
+  font: inherit; font-weight: 700; margin-top: 0.35rem; min-height: 48px;
+  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease; width: 100%;
+}
+.au-submit:hover:not(:disabled) { background: var(--au-brand-dark); box-shadow: 0 10px 22px rgba(23, 107, 99, 0.22); transform: translateY(-1px); }
+.au-submit:disabled { cursor: wait; opacity: 0.65; }
+
+.au-back:focus-visible,
+.au-field input:focus-visible,
+.au-pw-toggle:focus-visible,
+.au-submit:focus-visible,
+.au-toggle button:focus-visible { outline: 3px solid rgba(23, 107, 99, 0.30); outline-offset: 2px; }
+
+.au-toggle { color: var(--au-muted); font-size: 0.85rem; margin: 1.5rem 0 0; text-align: center; }
+.au-toggle button { background: none; border: 0; color: var(--au-brand); cursor: pointer; font-weight: 800; padding: 0; }
