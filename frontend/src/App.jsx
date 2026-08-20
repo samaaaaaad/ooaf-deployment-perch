@@ -1,7 +1,7 @@
 import { useAuth } from './auth/AuthContext';
 import AppShell from './components/AppShell';
 import AuthPage from './pages/AuthPage';
-import DashboardPage from './pages/DashboardPage';
+import BrowseEventsPage from './pages/BrowseEventsPage';
 import EventsPage from './pages/EventsPage';
 import LandingPage from './pages/LandingPage';
 import VenuesPage from './pages/VenuesPage';
@@ -17,17 +17,19 @@ export default function App() {
     return <Redirect to="/" />;
   }
 
-  if (path === '/login' || path === '/') {
-    return <Redirect to="/dashboard" />;
+  // Browse events is the main post-login screen. `/dashboard` is kept as a
+  // redirect so the existing login flow still lands somewhere valid.
+  if (path === '/login' || path === '/' || path === '/dashboard') {
+    return <Redirect to="/browse" />;
   }
 
   const pages = {
-    '/dashboard': <DashboardPage />,
+    '/browse': <BrowseEventsPage />,
     '/events': <EventsPage />,
     '/venues': <VenuesPage />,
   };
 
   return pages[path]
     ? <AppShell>{pages[path]}</AppShell>
-    : <Redirect to="/dashboard" />;
+    : <Redirect to="/browse" />;
 }
