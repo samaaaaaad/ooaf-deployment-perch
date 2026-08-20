@@ -49,10 +49,13 @@
 
 .be-cover {
   background: linear-gradient(135deg, var(--cov-1, #1f9184), var(--cov-2, #0c4a44));
-  height: 150px; overflow: hidden; position: relative;
+  height: 158px; overflow: hidden; position: relative;
 }
-.be-cover-icon { bottom: -22px; color: #fff; opacity: 0.16; position: absolute; right: -14px; }
-.be-cover-icon svg { height: 128px; width: 128px; }
+.be-cover-img { height: 100%; left: 0; object-fit: cover; position: absolute; top: 0; width: 100%; }
+.be-cover-scrim {
+  background: linear-gradient(to bottom, rgba(8, 20, 18, 0.42), rgba(8, 20, 18, 0) 58%);
+  inset: 0; position: absolute;
+}
 .be-cover-top {
   align-items: flex-start; display: flex; gap: 0.5rem; justify-content: space-between;
   padding: 0.9rem; position: relative; z-index: 1;

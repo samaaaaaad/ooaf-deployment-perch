@@ -14,21 +14,6 @@ const searchIcon = (
   </svg>
 );
 
-// Big faded emblem drawn on each event's generated cover art.
-const svg = (children) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
-);
-const catIcons = {
-  music: svg(<><path d="M9 18V5l10-2v11" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></>),
-  comedy: svg(<><rect x="9" y="3" width="6" height="10" rx="3" /><path d="M6 11a6 6 0 0 0 12 0M12 17v3M9 20h6" /></>),
-  theatre: svg(<path d="M12 3l2.6 5.9 6.4.6-4.8 4.2 1.4 6.3L12 17l-5.6 3 1.4-6.3L3 9.5l6.4-.6z" />),
-  cinema: svg(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" /></>),
-  sports: svg(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a9 9 0 0 0 0 18" /></>),
-  food: svg(<path d="M7 3h10l-1.3 8a3 3 0 0 1-5.4 0zM12 14v6M8.5 20h7" />),
-  workshop: svg(<path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 3.6 10.8c-.7.5-1.1 1.3-1.1 2.2H9.5c0-.9-.4-1.7-1.1-2.2A6 6 0 0 1 12 3z" />),
-  community: svg(<><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.4" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 19a4.5 4.5 0 0 1 6.5-4" /></>),
-};
-
 const categories = [
   { key: 'music', label: 'Music' },
   { key: 'comedy', label: 'Comedy' },
@@ -121,7 +106,8 @@ export default function BrowseEventsPage() {
           {filtered.map((e) => (
             <article className={`be-card be-cat-${e.cat}`} key={e.id}>
               <div className="be-cover">
-                <span className="be-cover-icon" aria-hidden="true">{catIcons[e.cat]}</span>
+                <img className="be-cover-img" src={`https://picsum.photos/seed/et${e.id}/600/360`} alt="" loading="lazy" />
+                <span className="be-cover-scrim" aria-hidden="true" />
                 <div className="be-cover-top">
                   <span className="be-pill">{labelFor[e.cat]}</span>
                   <span className="be-date">{e.date} · {e.time}</span>
