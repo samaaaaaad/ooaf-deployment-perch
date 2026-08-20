@@ -3,11 +3,6 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import './BrowseEventsPage.css';
 
-const calendarIcon = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4.5" width="18" height="16" rx="2" /><path d="M3 9h18M8 2.5v4M16 2.5v4" />
-  </svg>
-);
 const pinIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" />
@@ -19,7 +14,21 @@ const searchIcon = (
   </svg>
 );
 
-// Category order drives the filter chips. `key` maps to a colour class in the CSS.
+// Big faded emblem drawn on each event's generated cover art.
+const svg = (children) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+);
+const catIcons = {
+  music: svg(<><path d="M9 18V5l10-2v11" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /></>),
+  comedy: svg(<><rect x="9" y="3" width="6" height="10" rx="3" /><path d="M6 11a6 6 0 0 0 12 0M12 17v3M9 20h6" /></>),
+  theatre: svg(<path d="M12 3l2.6 5.9 6.4.6-4.8 4.2 1.4 6.3L12 17l-5.6 3 1.4-6.3L3 9.5l6.4-.6z" />),
+  cinema: svg(<><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4" /></>),
+  sports: svg(<><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a9 9 0 0 0 0 18" /></>),
+  food: svg(<path d="M7 3h10l-1.3 8a3 3 0 0 1-5.4 0zM12 14v6M8.5 20h7" />),
+  workshop: svg(<path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 3.6 10.8c-.7.5-1.1 1.3-1.1 2.2H9.5c0-.9-.4-1.7-1.1-2.2A6 6 0 0 1 12 3z" />),
+  community: svg(<><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.4" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0M14.5 19a4.5 4.5 0 0 1 6.5-4" /></>),
+};
+
 const categories = [
   { key: 'music', label: 'Music' },
   { key: 'comedy', label: 'Comedy' },
@@ -31,7 +40,6 @@ const categories = [
   { key: 'community', label: 'Community' },
 ];
 
-// Dummy events for gauging the feel. Replaced by the browse API later.
 const events = [
   { id: 1, title: 'Sunset Rooftop Sessions', cat: 'music', venue: 'Rooftop Bar', city: 'Alexandria', date: 'Fri 5 Sep', time: '7:00pm', price: 35 },
   { id: 2, title: 'Thursday Night Laughs', cat: 'comedy', venue: 'The Comedy Loft', city: 'Newtown', date: 'Thu 4 Sep', time: '8:00pm', price: 22 },
@@ -72,11 +80,9 @@ export default function BrowseEventsPage() {
   return (
     <section className="be">
       <header className="be-head">
-        <div>
-          <p className="be-eyebrow">Discover</p>
-          <h1>What's on, {firstName}?</h1>
-          <p className="be-sub">Browse events near you, from intimate gigs and comedy nights to pop-up dinners.</p>
-        </div>
+        <p className="be-eyebrow">Discover</p>
+        <h1>What&apos;s on, {firstName}?</h1>
+        <p className="be-sub">Browse events near you, from intimate gigs and comedy nights to pop-up dinners.</p>
         <div className="be-search">
           <span className="be-search-icon" aria-hidden="true">{searchIcon}</span>
           <input
@@ -90,20 +96,11 @@ export default function BrowseEventsPage() {
       </header>
 
       <div className="be-filters" role="tablist" aria-label="Filter by category">
-        <button
-          type="button"
-          className={`be-chip${active === 'all' ? ' is-active' : ''}`}
-          onClick={() => setActive('all')}
-        >
+        <button type="button" className={`be-chip${active === 'all' ? ' is-active' : ''}`} onClick={() => setActive('all')}>
           All events
         </button>
         {categories.map((c) => (
-          <button
-            key={c.key}
-            type="button"
-            className={`be-chip${active === c.key ? ' is-active' : ''}`}
-            onClick={() => setActive(c.key)}
-          >
+          <button key={c.key} type="button" className={`be-chip${active === c.key ? ' is-active' : ''}`} onClick={() => setActive(c.key)}>
             {c.label}
           </button>
         ))}
@@ -123,15 +120,20 @@ export default function BrowseEventsPage() {
         <div className="be-grid">
           {filtered.map((e) => (
             <article className={`be-card be-cat-${e.cat}`} key={e.id}>
-              <span className="be-pill">{labelFor[e.cat]}</span>
-              <h3 className="be-title">{e.title}</h3>
-              <div className="be-meta">
-                <span><span className="be-mi" aria-hidden="true">{calendarIcon}</span>{e.date} · {e.time}</span>
-                <span><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.venue}, {e.city}</span>
+              <div className="be-cover">
+                <span className="be-cover-icon" aria-hidden="true">{catIcons[e.cat]}</span>
+                <div className="be-cover-top">
+                  <span className="be-pill">{labelFor[e.cat]}</span>
+                  <span className="be-date">{e.date} · {e.time}</span>
+                </div>
               </div>
-              <div className="be-foot">
-                <span className="be-price">{e.price === 0 ? 'Free' : `From $${e.price}`}</span>
-                <span className="be-view">View seats →</span>
+              <div className="be-body">
+                <h3 className="be-title">{e.title}</h3>
+                <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.venue}, {e.city}</span>
+                <div className="be-foot">
+                  <span className="be-price">{e.price === 0 ? 'Free' : `From $${e.price}`}</span>
+                  <span className="be-view">View seats →</span>
+                </div>
               </div>
             </article>
           ))}
