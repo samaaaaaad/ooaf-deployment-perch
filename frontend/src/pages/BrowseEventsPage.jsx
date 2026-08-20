@@ -25,23 +25,25 @@ const categories = [
   { key: 'community', label: 'Community' },
 ];
 
+// `img` is a concrete keyword handed to the LoremFlickr placeholder service
+// so each cover roughly matches the event's theme.
 const events = [
-  { id: 1, title: 'Sunset Rooftop Sessions', cat: 'music', venue: 'Rooftop Bar', city: 'Alexandria', date: 'Fri 5 Sep', time: '7:00pm', price: 35 },
-  { id: 2, title: 'Thursday Night Laughs', cat: 'comedy', venue: 'The Comedy Loft', city: 'Newtown', date: 'Thu 4 Sep', time: '8:00pm', price: 22 },
-  { id: 3, title: "A Midsummer Night's Dream", cat: 'theatre', venue: 'Old Fitz Theatre', city: 'Woolloomooloo', date: 'Sat 13 Sep', time: '7:30pm', price: 40 },
-  { id: 4, title: 'Indie Film Night', cat: 'cinema', venue: 'The Vault Cinema', city: 'Surry Hills', date: 'Wed 10 Sep', time: '6:30pm', price: 18 },
-  { id: 5, title: 'Inner West Futsal Cup', cat: 'sports', venue: 'Marrickville PCYC', city: 'Marrickville', date: 'Sun 21 Sep', time: '10:00am', price: 12 },
-  { id: 6, title: 'Natural Wine Tasting', cat: 'food', venue: 'The Cellar Door', city: 'Chippendale', date: 'Fri 19 Sep', time: '6:00pm', price: 55 },
-  { id: 7, title: 'Intro to Pottery', cat: 'workshop', venue: 'Clay & Co Studio', city: 'Erskineville', date: 'Sat 6 Sep', time: '1:00pm', price: 75 },
-  { id: 8, title: 'Neighbourhood Trivia Night', cat: 'community', venue: 'The Local Hall', city: 'Glebe', date: 'Wed 17 Sep', time: '7:00pm', price: 10 },
-  { id: 9, title: 'Jazz & Small Plates', cat: 'music', venue: 'Basement Bar', city: 'Sydney CBD', date: 'Sat 27 Sep', time: '8:00pm', price: 30 },
-  { id: 10, title: 'Improv Jam Night', cat: 'comedy', venue: 'Giant Dwarf', city: 'Redfern', date: 'Fri 26 Sep', time: '8:30pm', price: 20 },
-  { id: 11, title: 'One-Act Play Festival', cat: 'theatre', venue: 'Kings Cross Theatre', city: 'Kings Cross', date: 'Thu 2 Oct', time: '7:00pm', price: 28 },
-  { id: 12, title: 'Outdoor Movie: Amélie', cat: 'cinema', venue: 'Riverside Lawn', city: 'Parramatta', date: 'Sat 4 Oct', time: '7:45pm', price: 15 },
-  { id: 13, title: 'Sunrise Yoga & 5K Run', cat: 'sports', venue: 'Bondi Pavilion', city: 'Bondi Beach', date: 'Sun 5 Oct', time: '6:30am', price: 18 },
-  { id: 14, title: 'Dumpling Masterclass', cat: 'food', venue: 'The Kitchen Studio', city: 'Ashfield', date: 'Sun 12 Oct', time: '11:00am', price: 65 },
-  { id: 15, title: 'Film Photography Basics', cat: 'workshop', venue: 'The Darkroom', city: 'Marrickville', date: 'Sat 11 Oct', time: '2:00pm', price: 80 },
-  { id: 16, title: 'Local Makers Market', cat: 'community', venue: 'Leichhardt Town Hall', city: 'Leichhardt', date: 'Sat 18 Oct', time: '9:00am', price: 0 },
+  { id: 1, title: 'Sunset Rooftop Sessions', cat: 'music', img: 'concert', venue: 'Rooftop Bar', city: 'Alexandria', date: 'Fri 5 Sep', time: '7:00pm', price: 35 },
+  { id: 2, title: 'Thursday Night Laughs', cat: 'comedy', img: 'comedian', venue: 'The Comedy Loft', city: 'Newtown', date: 'Thu 4 Sep', time: '8:00pm', price: 22 },
+  { id: 3, title: "A Midsummer Night's Dream", cat: 'theatre', img: 'theatre', venue: 'Old Fitz Theatre', city: 'Woolloomooloo', date: 'Sat 13 Sep', time: '7:30pm', price: 40 },
+  { id: 4, title: 'Indie Film Night', cat: 'cinema', img: 'cinema', venue: 'The Vault Cinema', city: 'Surry Hills', date: 'Wed 10 Sep', time: '6:30pm', price: 18 },
+  { id: 5, title: 'Inner West Futsal Cup', cat: 'sports', img: 'futsal', venue: 'Marrickville PCYC', city: 'Marrickville', date: 'Sun 21 Sep', time: '10:00am', price: 12 },
+  { id: 6, title: 'Natural Wine Tasting', cat: 'food', img: 'winery', venue: 'The Cellar Door', city: 'Chippendale', date: 'Fri 19 Sep', time: '6:00pm', price: 55 },
+  { id: 7, title: 'Intro to Pottery', cat: 'workshop', img: 'ceramics', venue: 'Clay & Co Studio', city: 'Erskineville', date: 'Sat 6 Sep', time: '1:00pm', price: 75 },
+  { id: 8, title: 'Neighbourhood Trivia Night', cat: 'community', img: 'pub', venue: 'The Local Hall', city: 'Glebe', date: 'Wed 17 Sep', time: '7:00pm', price: 10 },
+  { id: 9, title: 'Jazz & Small Plates', cat: 'music', img: 'saxophone', venue: 'Basement Bar', city: 'Sydney CBD', date: 'Sat 27 Sep', time: '8:00pm', price: 30 },
+  { id: 10, title: 'Improv Jam Night', cat: 'comedy', img: 'comedy', venue: 'Giant Dwarf', city: 'Redfern', date: 'Fri 26 Sep', time: '8:30pm', price: 20 },
+  { id: 11, title: 'One-Act Play Festival', cat: 'theatre', img: 'stage', venue: 'Kings Cross Theatre', city: 'Kings Cross', date: 'Thu 2 Oct', time: '7:00pm', price: 28 },
+  { id: 12, title: 'Outdoor Movie: Amélie', cat: 'cinema', img: 'projector', venue: 'Riverside Lawn', city: 'Parramatta', date: 'Sat 4 Oct', time: '7:45pm', price: 15 },
+  { id: 13, title: 'Sunrise Yoga & 5K Run', cat: 'sports', img: 'yoga', venue: 'Bondi Pavilion', city: 'Bondi Beach', date: 'Sun 5 Oct', time: '6:30am', price: 18 },
+  { id: 14, title: 'Dumpling Masterclass', cat: 'food', img: 'dumpling', venue: 'The Kitchen Studio', city: 'Ashfield', date: 'Sun 12 Oct', time: '11:00am', price: 65 },
+  { id: 15, title: 'Film Photography Basics', cat: 'workshop', img: 'camera', venue: 'The Darkroom', city: 'Marrickville', date: 'Sat 11 Oct', time: '2:00pm', price: 80 },
+  { id: 16, title: 'Local Makers Market', cat: 'community', img: 'market', venue: 'Leichhardt Town Hall', city: 'Leichhardt', date: 'Sat 18 Oct', time: '9:00am', price: 0 },
 ];
 
 const labelFor = Object.fromEntries(categories.map((c) => [c.key, c.label]));
@@ -106,7 +108,7 @@ export default function BrowseEventsPage() {
           {filtered.map((e) => (
             <article className={`be-card be-cat-${e.cat}`} key={e.id}>
               <div className="be-cover">
-                <img className="be-cover-img" src={`https://picsum.photos/seed/et${e.id}/600/360`} alt="" loading="lazy" />
+                <img className="be-cover-img" src={`https://loremflickr.com/600/360/${e.img}?lock=${e.id}`} alt="" loading="lazy" />
                 <span className="be-cover-scrim" aria-hidden="true" />
                 <div className="be-cover-top">
                   <span className="be-pill">{labelFor[e.cat]}</span>
