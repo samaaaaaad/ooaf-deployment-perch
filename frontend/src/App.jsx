@@ -3,6 +3,7 @@ import AppShell from './components/AppShell';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import EventsPage from './pages/EventsPage';
+import LandingPage from './pages/LandingPage';
 import VenuesPage from './pages/VenuesPage';
 import { Redirect, useRouter } from './utils/router';
 
@@ -11,7 +12,9 @@ export default function App() {
   const { path } = useRouter();
 
   if (!user) {
-    return path === '/login' ? <AuthPage /> : <Redirect to="/login" />;
+    if (path === '/login') return <AuthPage />;
+    if (path === '/') return <LandingPage />;
+    return <Redirect to="/" />;
   }
 
   if (path === '/login' || path === '/') {

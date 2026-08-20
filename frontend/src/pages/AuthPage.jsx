@@ -12,8 +12,15 @@ export function validatePassword(password) {
   return null;
 }
 
+function initialMode() {
+  if (typeof window !== 'undefined' && window.location.search.includes('register')) {
+    return 'register';
+  }
+  return 'login';
+}
+
 export default function AuthPage() {
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(initialMode);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
