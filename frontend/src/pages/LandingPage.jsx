@@ -257,7 +257,6 @@ export default function LandingPage() {
                 <li>See live seat availability and pick the exact seat you want</li>
                 <li>Pay securely and get a scannable e-ticket in seconds</li>
               </ul>
-              <a className="lp-btn lp-btn-primary" href="/login" onClick={go('/login')}>Browse events</a>
             </article>
             <article className="lp-audience lp-audience-gold lp-reveal">
               <span className="lp-audience-tag">For organisers</span>
@@ -267,7 +266,6 @@ export default function LandingPage() {
                 <li>Price seats and sections independently, then publish</li>
                 <li>Check guests in at the door with a quick QR scan</li>
               </ul>
-              <a className="lp-btn lp-btn-primary" href="/login" onClick={go('/login?register=1')}>Sell your event</a>
             </article>
           </div>
         </div>
