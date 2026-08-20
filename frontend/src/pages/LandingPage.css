@@ -161,18 +161,6 @@
 /* ---- Generic section ---------------------------------------------------- */
 .lp-section { padding: clamp(4rem, 8vw, 7rem) 0; }
 .lp-section-alt { background: var(--lp-surface-soft); }
-/* Sections that should sit within a single screen height. */
-.lp-fit {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100vh;
-  min-height: 100svh;
-  padding-bottom: clamp(3rem, 5vh, 4rem);
-  padding-top: clamp(5rem, 7vh, 5.5rem);
-}
-.lp-fit .lp-section-head { margin-bottom: clamp(1.6rem, 3vh, 2.6rem); }
-.lp-fit .lp-section-head h2 { font-size: clamp(1.7rem, 3vw, 2.35rem); }
 .lp-section-head { margin: 0 auto 3.2rem; max-width: 42rem; text-align: center; }
 .lp-section-head h2 { font-size: clamp(1.9rem, 3.6vw, 2.85rem); letter-spacing: -0.035em; line-height: 1.1; margin: 0 0 1rem; }
 .lp-section-head p { color: var(--lp-muted); font-size: 1.08rem; line-height: 1.6; margin: 0; }

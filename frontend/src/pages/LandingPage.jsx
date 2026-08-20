@@ -242,7 +242,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---- Two audiences ---- */}
-      <section className="lp-section lp-fit" id="audiences">
+      <section className="lp-section" id="audiences">
         <div className="lp-shell">
           <div className="lp-section-head lp-reveal">
             <p className="lp-eyebrow">For organisers and event-goers</p>
@@ -272,7 +272,7 @@ export default function LandingPage() {
       </section>
 
       {/* ---- Features ---- */}
-      <section className="lp-section lp-section-alt lp-fit" id="features">
+      <section className="lp-section lp-section-alt" id="features">
         <div className="lp-shell">
           <div className="lp-section-head lp-reveal">
             <p className="lp-eyebrow">Everything the platform handles</p>
