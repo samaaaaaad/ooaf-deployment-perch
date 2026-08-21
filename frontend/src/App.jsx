@@ -2,6 +2,8 @@ import { useAuth } from './auth/AuthContext';
 import AppShell from './components/AppShell';
 import AuthPage from './pages/AuthPage';
 import BrowseEventsPage from './pages/BrowseEventsPage';
+import CheckoutPage from './pages/CheckoutPage';
+import EventDetailPage from './pages/EventDetailPage';
 import EventsPage from './pages/EventsPage';
 import LandingPage from './pages/LandingPage';
 import VenuesPage from './pages/VenuesPage';
@@ -23,8 +25,13 @@ export default function App() {
     return <Redirect to="/browse" />;
   }
 
+  if (path.startsWith('/event/')) {
+    return <AppShell><EventDetailPage eventId={path.slice('/event/'.length)} /></AppShell>;
+  }
+
   const pages = {
     '/browse': <BrowseEventsPage />,
+    '/checkout': <CheckoutPage />,
     '/events': <EventsPage />,
     '/venues': <VenuesPage />,
   };

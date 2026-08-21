@@ -42,9 +42,10 @@
 
 .be-card {
   background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-  display: flex; flex-direction: column; overflow: hidden;
+  color: inherit; display: flex; flex-direction: column; overflow: hidden; text-decoration: none;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
+.be-card:focus-visible { outline: 3px solid rgba(23, 107, 99, 0.30); outline-offset: 2px; }
 .be-card:hover { box-shadow: 0 20px 40px rgba(15, 28, 34, 0.14); transform: translateY(-4px); }
 
 .be-cover {
