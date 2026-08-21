@@ -157,7 +157,7 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    document.title = 'Event Ticketing · Reserved seating for pop-ups & mobile venues';
+    document.title = 'Perch · Reserved seating for pop-ups & mobile venues';
 
     const onScroll = () => {
       if (navRef.current) navRef.current.classList.toggle('is-stuck', window.scrollY > 12);
@@ -192,9 +192,9 @@ export default function LandingPage() {
       {/* ---- Navigation ---- */}
       <nav className="lp-nav" ref={navRef} aria-label="Primary">
         <div className="lp-shell lp-nav-inner">
-          <a className="lp-brand" href="/" onClick={go('/')} aria-label="Event Ticketing home">
-            <span className="lp-brand-mark" aria-hidden="true">ET</span>
-            <strong>Event Ticketing</strong>
+          <a className="lp-brand" href="/" onClick={go('/')} aria-label="Perch home">
+            <span className="lp-brand-mark" aria-hidden="true">P</span>
+            <strong>Perch</strong>
           </a>
           <div className="lp-nav-links">
             <a href="#audiences" onClick={scrollTo('audiences')}>Overview</a>
@@ -214,7 +214,7 @@ export default function LandingPage() {
           <p className="lp-eyebrow">Ticketing for pop-ups, promoters and independent venues</p>
           <h1 className="lp-hero-title">Find your seat or <span className="lp-underline">sell out the room</span>.</h1>
           <p className="lp-hero-lead">
-            Event Ticketing is where small venues build custom floorplans and event-goers browse,
+            Perch is where small venues build custom floorplans and event-goers browse,
             pick a seat and check out in real time.
           </p>
           <div className="lp-cta-row">
@@ -345,8 +345,8 @@ export default function LandingPage() {
           <div className="lp-footer-top">
             <div className="lp-footer-brand">
               <a className="lp-brand" href="/" onClick={go('/')}>
-                <span className="lp-brand-mark" aria-hidden="true">ET</span>
-                <strong style={{ color: '#fff' }}>Event Ticketing</strong>
+                <span className="lp-brand-mark" aria-hidden="true">P</span>
+                <strong style={{ color: '#fff' }}>Perch</strong>
               </a>
               <p>Reserved-seating ticketing for pop-ups, promoters and independent venues whose room never sits still.</p>
             </div>
@@ -370,7 +370,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="lp-footer-bottom">
-            <p>© 2026 Event Ticketing · ELEC5619 Practical 04 · Group 1</p>
+            <p>© 2026 Perch · ELEC5619 Practical 04 · Group 1</p>
             <p>Hero photo via Unsplash · Object-Oriented Application Frameworks</p>
           </div>
         </div>

@@ -82,12 +82,12 @@ export default function AuthPage() {
         </a>
 
         <div className="au-brand">
-          <span className="au-brand-mark" aria-hidden="true">ET</span>
-          <span className="au-brand-name">Event Ticketing</span>
+          <span className="au-brand-mark" aria-hidden="true">P</span>
+          <span className="au-brand-name">Perch</span>
         </div>
 
         <p className="au-eyebrow">{isRegistering ? 'Create your account' : 'Welcome back'}</p>
-        <h1 className="au-title">{isRegistering ? 'Start with Event Ticketing' : 'Log in to your workspace'}</h1>
+        <h1 className="au-title">{isRegistering ? 'Start with Perch' : 'Log in to your workspace'}</h1>
         <p className="au-sub">
           {isRegistering
             ? 'Set up an account to browse events or start selling your own.'
