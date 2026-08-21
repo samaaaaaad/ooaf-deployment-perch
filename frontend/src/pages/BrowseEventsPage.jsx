@@ -81,7 +81,7 @@ export default function BrowseEventsPage() {
           {filtered.map((e) => (
             <a className={`be-card be-cat-${e.cat}`} key={e.id} href={`/event/${e.id}`} onClick={openEvent(e.id)}>
               <div className="be-cover">
-                <img className="be-cover-img" src={`https://loremflickr.com/600/360/${e.img}?lock=${e.id}`} alt="" loading="lazy" />
+                <img className="be-cover-img" src={`/events/event-${e.id}.jpg`} alt="" loading="lazy" />
                 <span className="be-cover-scrim" aria-hidden="true" />
                 <div className="be-cover-top">
                   <span className="be-pill">{labelFor[e.cat]}</span>

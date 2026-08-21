@@ -31,8 +31,8 @@ export default function AppShell({ children }) {
         </Link>
 
         <nav className="primary-nav" aria-label="Primary navigation">
-          <NavLink to="/browse">Browse events</NavLink>
-          <NavLink to="/events">My events</NavLink>
+          <NavLink to="/browse">Browse</NavLink>
+          <NavLink to="/events">My Events</NavLink>
           <NavLink to="/venues">Venues</NavLink>
         </nav>
 
