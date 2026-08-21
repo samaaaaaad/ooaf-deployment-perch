@@ -22,17 +22,17 @@ export default function AppShell({ children }) {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Link className="brand" to="/dashboard" aria-label="Event Ticketing dashboard">
-          <span className="brand-mark" aria-hidden="true">ET</span>
+        <Link className="brand" to="/browse" aria-label="Perch home">
+          <span className="brand-mark" aria-hidden="true">P</span>
           <span>
-            <strong>Event Ticketing</strong>
-            <small>Management workspace</small>
+            <strong>Perch</strong>
+            <small>Reserved seating</small>
           </span>
         </Link>
 
         <nav className="primary-nav" aria-label="Primary navigation">
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/events">Events</NavLink>
+          <NavLink to="/browse">Browse</NavLink>
+          <NavLink to="/events">My Events</NavLink>
           <NavLink to="/venues">Venues</NavLink>
         </nav>
 

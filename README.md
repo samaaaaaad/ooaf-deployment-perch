@@ -141,3 +141,18 @@ npm run dev
 /docs                # Design docs, ER diagram and architecture decisions
 /screenshots         # Sprint 0 evidence (GitHub organisation and sprint board)
 ```
+
+---
+
+## 6. Brand Colours
+
+The interface uses a teal and gold palette. These are the core colours across the landing page, login and app.
+
+| Colour | Hex | Used for |
+|---|---|---|
+| Teal (primary) | `#176B63` | Buttons, links, primary accents |
+| Deep teal | `#0A3B37` | Hero and footer backgrounds |
+| Gold (accent) | `#D8A84E` | Logo, highlights, VIP seating |
+| Ink | `#17232D` | Headings and body text |
+| Muted grey | `#667681` | Secondary text |
+| Light background | `#F3F6F7` | Page and surface backgrounds |
