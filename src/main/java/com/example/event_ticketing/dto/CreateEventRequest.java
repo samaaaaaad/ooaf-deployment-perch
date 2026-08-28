@@ -8,6 +8,6 @@ package com.example.event_ticketing.dto;
  * which is also where a copied floor plan will live.
  */
 public class CreateEventRequest {
-    public String title; 
+    public String title;
     public String description;
 }

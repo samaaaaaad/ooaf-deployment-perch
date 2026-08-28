@@ -7,7 +7,10 @@ import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.util.PasswordUtil;
+import com.example.event_ticketing.util.PasswordValidator;
 import org.springframework.stereotype.Service;
+
+import java.util.Locale;
 
 @Service
 public class UserService {
@@ -19,32 +22,50 @@ public class UserService {
     }
 
     public UserDTO register(RegisterRequest req) {
-        if (req.email == null || req.email.isBlank()) {
+        if (req == null) {
+            throw new IllegalArgumentException("Registration details are required");
+        }
+
+        String fullName = req.fullName == null ? "" : req.fullName.trim();
+        if (fullName.isEmpty()) {
+            throw new IllegalArgumentException("Full name is required");
+        }
+
+        String email = normalizeEmail(req.email);
+        if (email.isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
-        if (req.password == null || req.password.isBlank()) {
-            throw new IllegalArgumentException("Password is required");
-        }
-        if (userRepository.existsByEmail(req.email)) {
+
+        PasswordValidator.validate(req.password);
+
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new IllegalArgumentException("An account with this email already exists");
         }
 
         // Every account starts as CUSTOMER. Upgrading to ORGANISER happens
         // later through a dedicated verification flow, not at registration.
-        User user = new User(req.fullName, req.email, PasswordUtil.hashPassword(req.password), UserRole.CUSTOMER);
+        User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), UserRole.CUSTOMER);
         User saved = userRepository.save(user);
         return toDTO(saved);
     }
 
     public UserDTO login(LoginRequest req) {
-        User user = userRepository.findByEmail(req.email)
+        if (req == null || req.password == null) {
+            throw new IllegalArgumentException("Invalid email or password");
+        }
+
+        User user = userRepository.findByEmailIgnoreCase(normalizeEmail(req.email))
                 .filter(u -> PasswordUtil.verifyPassword(req.password, u.getPasswordHash()))
                 .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
         return toDTO(user);
     }
 
     public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+        return userRepository.existsByEmailIgnoreCase(normalizeEmail(email));
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     private UserDTO toDTO(User user) {
