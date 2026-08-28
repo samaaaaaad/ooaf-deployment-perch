@@ -1,13 +1,17 @@
 package com.example.event_ticketing.controller;
 
+import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
 import com.example.event_ticketing.service.EventService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,5 +36,16 @@ public class EventController {
             @PathVariable UUID eventId
     ) {
         return ResponseEntity.ok(eventService.getEventForOrganiser(organiserId, eventId));
+    }
+
+    @PostMapping
+    public ResponseEntity<EventDTO> createEvent(
+            @PathVariable UUID organiserId,
+            @RequestBody CreateEventRequest request
+    ) {
+        EventDTO created = eventService.createEvent(organiserId, request);
+        URI location = URI.create(
+                "/api/organisers/" + organiserId + "/events/" + created.eventId);
+        return ResponseEntity.created(location).body(created);
     }
 }
