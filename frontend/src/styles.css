@@ -58,8 +58,8 @@ a { color: inherit; }
 .auth-layout { display: grid; min-height: 100vh; grid-template-columns: minmax(360px, 0.9fr) minmax(460px, 1.1fr); }
 .auth-intro {
   background:
-    radial-gradient(circle at 12% 15%, rgba(216, 168, 78, 0.26), transparent 32%),
-    linear-gradient(145deg, #0c4b46, #123d46 72%);
+          radial-gradient(circle at 12% 15%, rgba(216, 168, 78, 0.26), transparent 32%),
+          linear-gradient(145deg, #0c4b46, #123d46 72%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -91,6 +91,8 @@ a { color: inherit; }
 .field label { display: block; font-size: 0.82rem; font-weight: 750; margin-bottom: 0.4rem; }
 .field input { background: #fff; border: 1px solid #cbd5d9; border-radius: 10px; min-height: 46px; padding: 0.72rem 0.8rem; width: 100%; }
 .field input::placeholder { color: #9aa7ad; }
+.field textarea { background: #fff; border: 1px solid #cbd5d9; border-radius: 10px; min-height: 96px; padding: 0.72rem 0.8rem; resize: vertical; width: 100%; }
+.field textarea::placeholder { color: #9aa7ad; }
 .field small { color: var(--muted); display: block; font-size: 0.72rem; line-height: 1.45; margin-top: 0.35rem; }
 .form-message { border-radius: 8px; font-size: 0.82rem; margin-bottom: 1rem; padding: 0.7rem 0.8rem; }
 .form-message-error { background: #fff1f0; color: var(--danger); }
@@ -150,6 +152,7 @@ a { color: inherit; }
 .status-published { background: #e1f2e8; color: #1d6942; }
 .status-cancelled { background: #fde8e7; color: #9b2c25; }
 .status-completed { background: #e6edf6; color: #335b88; }
+.events-form-slot { margin-bottom: 1.25rem; }
 .table-wrap { overflow-x: auto; padding: 0; }
 table { border-collapse: collapse; min-width: 640px; width: 100%; }
 th, td { border-bottom: 1px solid var(--line); padding: 1rem 1.25rem; text-align: left; }
