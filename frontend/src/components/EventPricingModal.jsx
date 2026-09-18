@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getFloorplans, updateEventPricing } from '../api/eventApi';
+import { useRouter } from '../utils/router';
 
 // Reusable SVG Stage Layout generator with Premium (rows A-B) and Standard (rows C-F) seats
 function StagePreview({ standardPrice, premiumPrice }) {
@@ -47,6 +48,7 @@ function StagePreview({ standardPrice, premiumPrice }) {
 }
 
 export default function EventPricingModal({ organiserId, event, onClose, onSaved }) {
+  const { navigate } = useRouter();
   const [floorplans, setFloorplans] = useState([]);
   const [selectedPlanId, setSelectedPlanId] = useState(event.floorPlanId || '');
   const [standardPrice, setStandardPrice] = useState(
@@ -137,7 +139,16 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
 
         <form onSubmit={handleSave} noValidate>
           <div className="field">
-            <label htmlFor="floorplan-select">Reusable Floorplan</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <label htmlFor="floorplan-select">Reusable Floorplan</label>
+              <button
+                type="button"
+                onClick={() => navigate('/floorplan')}
+                style={{ background: 'none', border: 0, color: 'var(--brand, #176b63)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', padding: 0 }}
+              >
+                Edit floorplan →
+              </button>
+            </div>
             <select
               id="floorplan-select"
               value={selectedPlanId}
