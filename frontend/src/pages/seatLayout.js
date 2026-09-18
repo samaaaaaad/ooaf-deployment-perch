@@ -16,6 +16,13 @@ function makeRng(seed) {
 }
 
 function priceTiers(event) {
+  if (event.standardPrice !== undefined && event.standardPrice !== null) {
+    const standard = Number(event.standardPrice);
+    const premium = event.premiumPrice !== undefined && event.premiumPrice !== null
+      ? Number(event.premiumPrice)
+      : standard;
+    return { premium, standard };
+  }
   const base = event.price > 0 ? event.price : 15;
   return { vip: base * 2, premium: Math.round(base * 1.5), standard: base };
 }
@@ -27,11 +34,16 @@ function stage(event, price, rng) {
   for (let r = 0; r < 6; r += 1) {
     for (let c = 0; c < 10; c += 1) {
       const aisle = c >= 5 ? 24 : 0;
-      const tier = r < 2 ? 'vip' : r < 4 ? 'premium' : 'standard';
+      let tier = 'standard';
+      if (r < 2) {
+        tier = price.premium !== undefined ? 'premium' : price.vip !== undefined ? 'vip' : 'standard';
+      } else if (r < 4 && price.vip !== undefined) {
+        tier = 'premium';
+      }
       seats.push({
         id: `${rowLetters[r]}${c + 1}`, label: `${rowLetters[r]}${c + 1}`,
         x: 182 + c * 26 + aisle, y: 104 + r * 34,
-        tier, price: price[tier], booked: rng() < 0.16,
+        tier, price: price[tier] ?? price.standard, booked: rng() < 0.16,
       });
     }
   }
@@ -48,13 +60,13 @@ function cabaret(event, price, rng) {
     xs.forEach((cx) => {
       t += 1;
       decor.push({ shape: 'ellipse', cx, cy, rx: 42, ry: 28, label: `T${t}`, kind: 'table' });
-      const tier = ty === 0 ? 'premium' : 'standard';
+      const tier = ty === 0 && price.premium !== undefined ? 'premium' : 'standard';
       for (let s = 0; s < 6; s += 1) {
         const ang = (Math.PI * 2 * s) / 6 - Math.PI / 2;
         seats.push({
           id: `T${t}-${s + 1}`, label: `T${t} · ${s + 1}`,
           x: cx + Math.cos(ang) * 66, y: cy + Math.sin(ang) * 50,
-          tier, price: price[tier], booked: rng() < 0.15,
+          tier, price: price[tier] ?? price.standard, booked: rng() < 0.15,
         });
       }
     });
@@ -70,18 +82,21 @@ function arena(event, price, rng) {
     for (let c = 0; c < 12; c += 1) {
       seats.push({
         id: `${prefix}${idx}-${c + 1}`, label: `${prefix}${idx} · ${c + 1}`,
-        x: 160 + c * 28, y, tier, price: price[tier], booked: rng() < 0.15,
+        x: 160 + c * 28, y, tier, price: price[tier] ?? price.standard, booked: rng() < 0.15,
       });
     }
   };
-  [70, 100, 130].forEach((y, i) => row(y, i === 2 ? 'premium' : 'standard', 'N', i + 1));
-  [354, 384, 414].forEach((y, i) => row(y, i === 0 ? 'premium' : 'standard', 'S', i + 1));
+  [70, 100, 130].forEach((y, i) => row(y, i === 2 && price.premium !== undefined ? 'premium' : 'standard', 'N', i + 1));
+  [354, 384, 414].forEach((y, i) => row(y, i === 0 && price.premium !== undefined ? 'premium' : 'standard', 'S', i + 1));
   return { width: 640, height: 462, decor, seats };
 }
 
 export function generateLayout(event) {
   const price = priceTiers(event);
-  const rng = makeRng(event.id * 97 + 13);
+  const seed = typeof event.id === 'string'
+    ? event.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    : (event.id || 1) * 97 + 13;
+  const rng = makeRng(seed);
   if (event.layout === 'cabaret') return cabaret(event, price, rng);
   if (event.layout === 'arena') return arena(event, price, rng);
   return stage(event, price, rng);

@@ -19,6 +19,8 @@ export default function AppShell({ children }) {
     navigate('/login', { replace: true });
   }
 
+  const isOrganiser = user?.role === 'ORGANISER';
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -32,8 +34,8 @@ export default function AppShell({ children }) {
 
         <nav className="primary-nav" aria-label="Primary navigation">
           <NavLink to="/browse">Browse</NavLink>
-          <NavLink to="/events">My Events</NavLink>
-          <NavLink to="/venues">Venues</NavLink>
+          {isOrganiser && <NavLink to="/events">My Events</NavLink>}
+          {isOrganiser && <NavLink to="/venues">Venues</NavLink>}
         </nav>
 
         <div className="account-menu">

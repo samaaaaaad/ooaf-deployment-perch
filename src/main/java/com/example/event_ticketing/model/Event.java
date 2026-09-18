@@ -49,6 +49,20 @@ public class Event {
     @Column(name = "status", nullable = false, length = 20)
     private EventStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "floor_plan_id", nullable = true)
+    private FloorPlan floorPlan;
+
+    @Column(name = "standard_price", precision = 12, scale = 2)
+    private java.math.BigDecimal standardPrice;
+
+    @Column(name = "premium_price", precision = 12, scale = 2)
+    private java.math.BigDecimal premiumPrice;
+
+    @Lob
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -96,6 +110,18 @@ public class Event {
 
     public EventStatus getStatus() { return status; }
     public void setStatus(EventStatus status) { this.status = status; }
+
+    public FloorPlan getFloorPlan() { return floorPlan; }
+    public void setFloorPlan(FloorPlan floorPlan) { this.floorPlan = floorPlan; }
+
+    public java.math.BigDecimal getStandardPrice() { return standardPrice; }
+    public void setStandardPrice(java.math.BigDecimal standardPrice) { this.standardPrice = standardPrice; }
+
+    public java.math.BigDecimal getPremiumPrice() { return premiumPrice; }
+    public void setPremiumPrice(java.math.BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
     public Instant getPublishedAt() { return publishedAt; }
     public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }

@@ -2,16 +2,24 @@ package com.example.event_ticketing.service;
 
 import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
+import com.example.event_ticketing.dto.FloorPlanDTO;
+import com.example.event_ticketing.dto.PublishEventRequest;
+import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.Event;
+import com.example.event_ticketing.model.EventStatus;
+import com.example.event_ticketing.model.FloorPlan;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.EventRepository;
+import com.example.event_ticketing.repository.FloorPlanRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,10 +31,24 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final FloorPlanRepository floorPlanRepository;
 
-    public EventService(EventRepository eventRepository, UserRepository userRepository) {
+    public EventService(
+            EventRepository eventRepository,
+            UserRepository userRepository
+    ) {
+        this(eventRepository, userRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public EventService(
+            EventRepository eventRepository,
+            UserRepository userRepository,
+            FloorPlanRepository floorPlanRepository
+    ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.floorPlanRepository = floorPlanRepository;
     }
 
     public List<EventDTO> getEventsForOrganiser(UUID organiserId) {
@@ -43,11 +65,118 @@ public class EventService {
     }
 
     /**
+     * Public feed of published events for customer browsing.
+     */
+    public List<EventDTO> getPublishedEvents() {
+        return eventRepository.findAllByStatusOrderByCreatedAtDesc(EventStatus.PUBLISHED)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    /**
+     * Retrieves available reusable floorplans, ensuring the default Stage floorplan exists in H2.
+     */
+    @Transactional
+    public List<FloorPlanDTO> getAvailableFloorPlans(UUID organiserId) {
+        List<FloorPlan> plans = floorPlanRepository.findAvailableForOrganiser(organiserId);
+        if (plans.isEmpty()) {
+            FloorPlan defaultStage = floorPlanRepository.save(
+                    new FloorPlan(null, "Stage Layout (60 Seats)", "STAGE", 60)
+            );
+            plans = List.of(defaultStage);
+        }
+        return plans.stream()
+                .map(p -> new FloorPlanDTO(
+                        p.getFloorPlanId(),
+                        p.getOrganiser() != null ? p.getOrganiser().getUserId() : null,
+                        p.getName(),
+                        p.getLayoutType(),
+                        p.getCapacity()
+                ))
+                .toList();
+    }
+
+    /**
+     * Updates an event's floorplan attachment, standard price, and premium price.
+     */
+    @Transactional
+    public EventDTO updateEventPricing(UUID organiserId, UUID eventId, UpdatePricingRequest request) {
+        if (request == null) {
+            throw new ValidationException("Pricing details are required");
+        }
+        if (request.standardPrice == null || request.standardPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Standard price must be 0 or greater");
+        }
+        if (request.premiumPrice != null && request.premiumPrice.compareTo(BigDecimal.ZERO) < 0) {
+            throw new ValidationException("Premium price must be 0 or greater");
+        }
+
+        Event event = eventRepository.findByEventIdAndOrganiserUserId(eventId, organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        if (request.floorPlanId != null) {
+            FloorPlan plan = floorPlanRepository.findById(request.floorPlanId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+            event.setFloorPlan(plan);
+        }
+
+        event.setStandardPrice(request.standardPrice);
+        event.setPremiumPrice(request.premiumPrice != null ? request.premiumPrice : request.standardPrice);
+        Event saved = eventRepository.save(event);
+        return toDTO(saved);
+    }
+
+    /**
+     * Publishes a draft event once floorplan, pricing, and banner image are configured.
+     */
+    @Transactional
+    public EventDTO publishEvent(UUID organiserId, UUID eventId, PublishEventRequest request) {
+        Event event = eventRepository.findByEventIdAndOrganiserUserId(eventId, organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        if (event.getFloorPlan() == null) {
+            throw new ValidationException("Cannot publish event without a configured floor plan");
+        }
+        if (event.getStandardPrice() == null) {
+            throw new ValidationException("Cannot publish event without ticket pricing");
+        }
+
+        String img = request != null && request.imageUrl != null ? request.imageUrl.trim() : event.getImageUrl();
+        if (img == null || img.isEmpty()) {
+            throw new ValidationException("A banner image is required to publish the event");
+        }
+
+        if (!isValidImage(img)) {
+            throw new ValidationException("Invalid image format. Please provide a JPG, JPEG, or PNG image.");
+        }
+
+        event.setImageUrl(img);
+        event.setStatus(EventStatus.PUBLISHED);
+        event.setPublishedAt(Instant.now());
+        Event saved = eventRepository.save(event);
+        return toDTO(saved);
+    }
+
+    @Transactional
+    public EventDTO publishEvent(UUID organiserId, UUID eventId) {
+        return publishEvent(organiserId, eventId, null);
+    }
+
+    private boolean isValidImage(String img) {
+        if (img == null || img.isBlank()) return false;
+        String lower = img.toLowerCase();
+        if (lower.startsWith("data:image/jpeg") || lower.startsWith("data:image/jpg") ||
+            lower.startsWith("data:image/png") || lower.startsWith("data:image/webp")) {
+            return true;
+        }
+        int qIdx = lower.indexOf('?');
+        String clean = qIdx >= 0 ? lower.substring(0, qIdx) : lower;
+        return clean.endsWith(".jpg") || clean.endsWith(".jpeg") || clean.endsWith(".png") || clean.endsWith(".webp");
+    }
+
+    /**
      * Creates a DRAFT event for an organiser.
-     *
-     * The role check is a data-integrity guard, not request authorisation:
-     * until Spring Security is configured (see docs/adr/0003), any caller who
-     * knows an organiser id can reach this endpoint.
      */
     @Transactional
     public EventDTO createEvent(UUID organiserId, CreateEventRequest request) {
@@ -80,12 +209,19 @@ public class EventService {
     }
 
     private EventDTO toDTO(Event event) {
+        FloorPlan fp = event.getFloorPlan();
         return new EventDTO(
                 event.getEventId(),
                 event.getOrganiser().getUserId(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getStatus(),
+                fp != null ? fp.getFloorPlanId() : null,
+                fp != null ? fp.getName() : null,
+                fp != null ? fp.getLayoutType() : null,
+                event.getStandardPrice(),
+                event.getPremiumPrice(),
+                event.getImageUrl(),
                 event.getPublishedAt(),
                 event.getCreatedAt(),
                 event.getUpdatedAt()

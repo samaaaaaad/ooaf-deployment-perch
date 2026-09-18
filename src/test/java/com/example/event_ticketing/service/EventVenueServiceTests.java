@@ -188,4 +188,21 @@ class EventVenueServiceTests {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Organiser not found");
     }
+
+    @Test
+    void updatesEventPricingAndFloorPlan() {
+        Event event = new Event(organiser, "Concert", "Live music");
+        event.setEventId(UUID.randomUUID());
+
+        when(eventRepository.findByEventIdAndOrganiserUserId(event.getEventId(), organiser.getUserId()))
+                .thenReturn(Optional.of(event));
+        when(eventRepository.save(any(Event.class))).thenAnswer(i -> i.getArgument(0));
+
+        com.example.event_ticketing.dto.UpdatePricingRequest request =
+                new com.example.event_ticketing.dto.UpdatePricingRequest(null, new java.math.BigDecimal("35.50"));
+
+        EventDTO updated = eventService.updateEventPricing(organiser.getUserId(), event.getEventId(), request);
+
+        assertThat(updated.standardPrice).isEqualByComparingTo("35.50");
+    }
 }

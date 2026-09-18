@@ -25,6 +25,7 @@ export default function AuthPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -62,7 +63,7 @@ export default function AuthPage() {
     setSubmitting(true);
     try {
       const user = isRegistering
-        ? await authApi.register({ fullName: fullName.trim(), email: canonicalEmail, password })
+        ? await authApi.register({ fullName: fullName.trim(), email: canonicalEmail, password, role })
         : await authApi.login({ email: canonicalEmail, password });
 
       signIn(user);
@@ -95,6 +96,48 @@ export default function AuthPage() {
         </p>
 
         <form onSubmit={handleSubmit} noValidate>
+          {isRegistering && (
+            <div className="au-field">
+              <label>Account type</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setRole('CUSTOMER')}
+                  style={{
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    border: role === 'CUSTOMER' ? '2px solid var(--brand)' : '1px solid #cbd5d9',
+                    background: role === 'CUSTOMER' ? '#e3efed' : '#ffffff',
+                    color: role === 'CUSTOMER' ? 'var(--brand-dark)' : 'var(--muted)',
+                    fontWeight: 750,
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                    transition: 'all 120ms ease'
+                  }}
+                >
+                  🎫 Ticket Buyer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole('ORGANISER')}
+                  style={{
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    border: role === 'ORGANISER' ? '2px solid var(--brand)' : '1px solid #cbd5d9',
+                    background: role === 'ORGANISER' ? '#e3efed' : '#ffffff',
+                    color: role === 'ORGANISER' ? 'var(--brand-dark)' : 'var(--muted)',
+                    fontWeight: 750,
+                    cursor: 'pointer',
+                    fontSize: '0.82rem',
+                    transition: 'all 120ms ease'
+                  }}
+                >
+                  🎪 Organiser
+                </button>
+              </div>
+            </div>
+          )}
+
           {isRegistering && (
             <div className="au-field">
               <label htmlFor="fullName">Full name</label>

@@ -42,9 +42,8 @@ public class UserService {
             throw new IllegalArgumentException("An account with this email already exists");
         }
 
-        // Every account starts as CUSTOMER. Upgrading to ORGANISER happens
-        // later through a dedicated verification flow, not at registration.
-        User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), UserRole.CUSTOMER);
+        UserRole role = req.role != null ? req.role : UserRole.CUSTOMER;
+        User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), role);
         User saved = userRepository.save(user);
         return toDTO(saved);
     }
