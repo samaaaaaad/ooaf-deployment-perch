@@ -1,20 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { createFloorplan, getFloorplans, updateFloorplan } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
 import './FloorPlanEditorPage.css';
 
-// A deliberately basic floorplan builder (US 4.0 starting point). Organisers
-// drag items from the palette onto the board, reposition them, and delete them.
-// Two item types for now: seats (circles) and a single fixed-size stage.
-// The layout is kept in the browser only; persisting coordinates to the backend
-// comes later once the FloorPlan schema carries seat positions.
+// Floorplan builder (US 4.0). Organisers drag shapes from the palette onto the
+// board, reposition and delete them, then save the plan to the backend so it
+// becomes selectable when configuring an event.
 
-const BOARD_W = 800;
-const BOARD_H = 520;
-const SEAT_R = 13;
-const STAGE_W = 320;
-const STAGE_H = 64;
+const BOARD_W = 900;
+const BOARD_H = 560;
+
+// Per-shape geometry. Circles (seat, table) are positioned by their centre;
+// rectangles (stage, barrier) by their top-left corner.
+const SHAPES = {
+  seat: { kind: 'circle', r: 13, fill: '#3b82f6', label: 'Seat', counts: true },
+  table: { kind: 'circle', r: 26, fill: '#14544d', label: 'Table', counts: false },
+  stage: { kind: 'rect', w: 320, h: 64, fill: '#176b63', label: 'Stage', single: true },
+  barrier: { kind: 'rect', w: 150, h: 16, fill: '#4b5563', label: 'Barrier', single: false },
+};
 
 let idCounter = 0;
 const nextId = () => {
@@ -22,43 +27,64 @@ const nextId = () => {
   return `it-${Date.now()}-${idCounter}`;
 };
 
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+const isRect = (type) => SHAPES[type].kind === 'rect';
+
+function clampItem(type, x, y) {
+  const s = SHAPES[type];
+  if (s.kind === 'rect') {
+    return { x: clamp(x, 0, BOARD_W - s.w), y: clamp(y, 0, BOARD_H - s.h) };
+  }
+  return { x: clamp(x, s.r, BOARD_W - s.r), y: clamp(y, s.r, BOARD_H - s.r) };
 }
 
 export default function FloorPlanEditorPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
-  const storageKey = `perch:floorplan:${user.userId}`;
 
+  const editId = new URLSearchParams(window.location.search).get('id');
   const svgRef = useRef(null);
-  const dragState = useRef(null); // { id, offsetX, offsetY }
+  const dragState = useRef(null);
 
-  const [name, setName] = useState('Untitled floorplan');
+  const [name, setName] = useState('Untitled floor plan');
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [savedNote, setSavedNote] = useState('');
+  const [gridRows, setGridRows] = useState(2);
+  const [gridCols, setGridCols] = useState(6);
+  const [loading, setLoading] = useState(Boolean(editId));
+  const [saving, setSaving] = useState(false);
+  const [note, setNote] = useState('');
 
-  // Load any previously saved draft for this organiser.
+  // Load an existing plan when editing.
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.items)) {
-          setItems(parsed.items);
-          if (parsed.name) setName(parsed.name);
+    if (!editId) return;
+    let active = true;
+    getFloorplans(user.userId)
+      .then((plans) => {
+        if (!active) return;
+        const plan = (plans || []).find((p) => p.floorPlanId === editId);
+        if (!plan) {
+          setNote('That floor plan could not be found.');
+          return;
         }
-      }
-    } catch {
-      // ignore corrupt or unavailable storage
-    }
-  }, [storageKey]);
+        setName(plan.name || 'Untitled floor plan');
+        if (plan.layoutJson) {
+          try {
+            const parsed = JSON.parse(plan.layoutJson);
+            if (Array.isArray(parsed)) setItems(parsed);
+          } catch {
+            // ignore malformed layout
+          }
+        }
+      })
+      .catch((err) => { if (active) setNote(err.message || 'Unable to load floor plan'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [editId, user.userId]);
 
-  const seatCount = items.filter((it) => it.type === 'seat').length;
-  const hasStage = items.some((it) => it.type === 'stage');
+  const seatCount = items.filter((it) => SHAPES[it.type]?.counts).length;
+  const hasSingle = (type) => items.some((it) => it.type === type);
 
-  // Convert a client (screen) point into board (viewBox) coordinates.
   const toBoard = useCallback((clientX, clientY) => {
     const rect = svgRef.current.getBoundingClientRect();
     return {
@@ -67,35 +93,46 @@ export default function FloorPlanEditorPage() {
     };
   }, []);
 
-  const addItem = useCallback((type, x, y) => {
-    if (type === 'stage' && hasStage) {
-      setSavedNote('Only one stage is supported for now.');
+  const addItem = useCallback((type, cx, cy) => {
+    const s = SHAPES[type];
+    if (s.single && hasSingle(type)) {
+      setNote(`Only one ${s.label.toLowerCase()} is supported.`);
       return;
     }
     const id = nextId();
-    if (type === 'stage') {
-      const px = clamp(x - STAGE_W / 2, 0, BOARD_W - STAGE_W);
-      const py = clamp(y - STAGE_H / 2, 0, BOARD_H - STAGE_H);
-      setItems((prev) => [...prev, { id, type, x: px, y: py }]);
-    } else {
-      const px = clamp(x, SEAT_R, BOARD_W - SEAT_R);
-      const py = clamp(y, SEAT_R, BOARD_H - SEAT_R);
-      setItems((prev) => [...prev, { id, type, x: px, y: py }]);
-    }
+    const raw = s.kind === 'rect' ? { x: cx - s.w / 2, y: cy - s.h / 2 } : { x: cx, y: cy };
+    const pos = clampItem(type, raw.x, raw.y);
+    setItems((prev) => [...prev, { id, type, ...pos }]);
     setSelectedId(id);
-    setSavedNote('');
-  }, [hasStage]);
+    setNote('');
+  }, [items]);
 
-  // ---- Palette drag-and-drop onto the board ----
+  function addGrid() {
+    const s = SHAPES.seat;
+    const rows = clamp(Number(gridRows) || 1, 1, 8);
+    const cols = clamp(Number(gridCols) || 1, 1, 14);
+    const gap = s.r * 2 + 10;
+    const startX = BOARD_W / 2 - ((cols - 1) * gap) / 2;
+    const startY = BOARD_H / 2 - ((rows - 1) * gap) / 2;
+    const block = [];
+    for (let r = 0; r < rows; r += 1) {
+      for (let c = 0; c < cols; c += 1) {
+        const pos = clampItem('seat', startX + c * gap, startY + r * gap);
+        block.push({ id: nextId(), type: 'seat', ...pos });
+      }
+    }
+    setItems((prev) => [...prev, ...block]);
+    setNote(`Added a ${rows} x ${cols} block.`);
+  }
+
   function handleDrop(e) {
     e.preventDefault();
     const type = e.dataTransfer.getData('perch/item');
-    if (!type) return;
+    if (!SHAPES[type]) return;
     const { x, y } = toBoard(e.clientX, e.clientY);
     addItem(type, x, y);
   }
 
-  // ---- Repositioning placed items by dragging them ----
   const onItemPointerDown = useCallback((e, item) => {
     e.stopPropagation();
     setSelectedId(item.id);
@@ -108,27 +145,13 @@ export default function FloorPlanEditorPage() {
       const drag = dragState.current;
       if (!drag) return;
       const { x, y } = toBoard(e.clientX, e.clientY);
-      setItems((prev) =>
-        prev.map((it) => {
-          if (it.id !== drag.id) return it;
-          if (it.type === 'stage') {
-            return {
-              ...it,
-              x: clamp(x - drag.offsetX, 0, BOARD_W - STAGE_W),
-              y: clamp(y - drag.offsetY, 0, BOARD_H - STAGE_H),
-            };
-          }
-          return {
-            ...it,
-            x: clamp(x - drag.offsetX, SEAT_R, BOARD_W - SEAT_R),
-            y: clamp(y - drag.offsetY, SEAT_R, BOARD_H - SEAT_R),
-          };
-        })
-      );
+      setItems((prev) => prev.map((it) => {
+        if (it.id !== drag.id) return it;
+        const pos = clampItem(it.type, x - drag.offsetX, y - drag.offsetY);
+        return { ...it, ...pos };
+      }));
     }
-    function handleUp() {
-      dragState.current = null;
-    }
+    function handleUp() { dragState.current = null; }
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
     return () => {
@@ -154,45 +177,57 @@ export default function FloorPlanEditorPage() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [selectedId, deleteSelected]);
 
-  function handleSave() {
+  async function handleSave() {
+    if (!name.trim()) {
+      setNote('Give the floor plan a name before saving.');
+      return;
+    }
+    setSaving(true);
+    setNote('');
+    const payload = {
+      name: name.trim(),
+      layoutType: 'CUSTOM',
+      capacity: seatCount,
+      layoutJson: JSON.stringify(items),
+    };
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ name, items }));
-      setSavedNote(`Saved · ${seatCount} seat${seatCount === 1 ? '' : 's'}`);
-    } catch {
-      setSavedNote('Could not save to this browser.');
+      if (editId) {
+        await updateFloorplan(user.userId, editId, payload);
+      } else {
+        await createFloorplan(user.userId, payload);
+      }
+      navigate('/floorplans');
+    } catch (err) {
+      setNote(err.message || 'Could not save the floor plan');
+      setSaving(false);
     }
   }
 
-  function handleClear() {
-    setItems([]);
-    setSelectedId(null);
-    setSavedNote('');
-  }
+  const paletteTypes = ['seat', 'table', 'stage', 'barrier'];
 
   return (
     <section className="fp">
       <div className="fp-head">
         <div>
-          <p className="eyebrow">Floorplan builder</p>
+          <p className="eyebrow">Floor Plan builder</p>
           <input
             className="fp-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            aria-label="Floorplan name"
+            aria-label="Floor Plan name"
           />
         </div>
         <div className="fp-head-actions">
-          <button type="button" className="button button-secondary" onClick={() => navigate('/events')}>
-            Back to events
+          <button type="button" className="button button-secondary" onClick={() => navigate('/floorplans')} disabled={saving}>
+            Back
           </button>
-          <button type="button" className="button button-primary" onClick={handleSave}>
-            Save floorplan
+          <button type="button" className="button button-primary" onClick={handleSave} disabled={saving || loading}>
+            {saving ? 'Saving…' : 'Save Floor Plan'}
           </button>
         </div>
       </div>
 
       <div className="fp-workspace">
-        {/* Drawing board */}
         <div className="fp-board-wrap">
           <svg
             ref={svgRef}
@@ -202,10 +237,9 @@ export default function FloorPlanEditorPage() {
             onDrop={handleDrop}
             onMouseDown={() => setSelectedId(null)}
             role="application"
-            aria-label="Floorplan drawing board"
+            aria-label="Floor Plan drawing board"
           >
             <rect x="0" y="0" width={BOARD_W} height={BOARD_H} fill="#0a2328" rx="14" />
-            {/* subtle grid */}
             {Array.from({ length: Math.floor(BOARD_W / 40) - 1 }, (_, i) => (
               <line key={`v${i}`} x1={(i + 1) * 40} y1="0" x2={(i + 1) * 40} y2={BOARD_H} stroke="#123037" strokeWidth="1" />
             ))}
@@ -214,48 +248,32 @@ export default function FloorPlanEditorPage() {
             ))}
 
             {items.map((it) => {
-              const isSelected = it.id === selectedId;
-              if (it.type === 'stage') {
+              const s = SHAPES[it.type];
+              const selected = it.id === selectedId;
+              if (s.kind === 'rect') {
                 return (
-                  <g
-                    key={it.id}
-                    className="fp-item"
-                    onMouseDown={(e) => onItemPointerDown(e, it)}
-                  >
+                  <g key={it.id} className="fp-item" onMouseDown={(e) => onItemPointerDown(e, it)}>
                     <rect
-                      x={it.x}
-                      y={it.y}
-                      width={STAGE_W}
-                      height={STAGE_H}
-                      rx="10"
-                      fill="#176b63"
-                      stroke={isSelected ? '#d8a84e' : 'transparent'}
-                      strokeWidth="3"
+                      x={it.x} y={it.y} width={s.w} height={s.h} rx="10"
+                      fill={s.fill}
+                      stroke={selected ? '#d8a84e' : 'transparent'} strokeWidth="3"
                     />
-                    <text
-                      x={it.x + STAGE_W / 2}
-                      y={it.y + STAGE_H / 2 + 5}
-                      textAnchor="middle"
-                      fill="#ffffff"
-                      fontSize="16"
-                      fontWeight="bold"
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      STAGE
-                    </text>
+                    {it.type === 'stage' && (
+                      <text
+                        x={it.x + s.w / 2} y={it.y + s.h / 2 + 5} textAnchor="middle"
+                        fill="#ffffff" fontSize="16" fontWeight="bold" style={{ pointerEvents: 'none' }}
+                      >
+                        STAGE
+                      </text>
+                    )}
                   </g>
                 );
               }
               return (
                 <circle
-                  key={it.id}
-                  className="fp-item"
-                  cx={it.x}
-                  cy={it.y}
-                  r={SEAT_R}
-                  fill="#3b82f6"
-                  stroke={isSelected ? '#d8a84e' : '#0a2328'}
-                  strokeWidth={isSelected ? 3 : 2}
+                  key={it.id} className="fp-item"
+                  cx={it.x} cy={it.y} r={s.r} fill={s.fill}
+                  stroke={selected ? '#d8a84e' : '#0a2328'} strokeWidth={selected ? 3 : 2}
                   onMouseDown={(e) => onItemPointerDown(e, it)}
                 />
               );
@@ -263,48 +281,68 @@ export default function FloorPlanEditorPage() {
           </svg>
         </div>
 
-        {/* Palette */}
         <aside className="fp-palette">
           <h3>Add items</h3>
-          <p className="fp-hint">Drag an item onto the board. Drag placed items to move them, and press Delete to remove the selected one.</p>
+          <p className="fp-hint">Drag a shape onto the board. Drag placed items to move them, and press Delete to remove the selected one.</p>
 
-          <div
-            className="fp-tile"
-            draggable
-            onDragStart={(e) => e.dataTransfer.setData('perch/item', 'seat')}
-          >
-            <span className="fp-tile-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="12" fill="#3b82f6" /></svg>
-            </span>
-            <span>Seat</span>
+          <div className="fp-tiles">
+            {paletteTypes.map((type) => {
+              const s = SHAPES[type];
+              const disabled = s.single && hasSingle(type);
+              return (
+                <div
+                  key={type}
+                  className={`fp-tile${disabled ? ' is-disabled' : ''}`}
+                  draggable={!disabled}
+                  onDragStart={(e) => {
+                    if (disabled) { e.preventDefault(); return; }
+                    e.dataTransfer.setData('perch/item', type);
+                  }}
+                >
+                  <span className="fp-tile-icon" aria-hidden="true">
+                    <svg viewBox="0 0 40 40">
+                      {s.kind === 'rect'
+                        ? <rect x="4" y="14" width="32" height="12" rx="3" fill={s.fill} />
+                        : <circle cx="20" cy="20" r={type === 'table' ? 15 : 11} fill={s.fill} />}
+                    </svg>
+                  </span>
+                  <span>{s.label}{disabled ? ' (added)' : ''}</span>
+                </div>
+              );
+            })}
           </div>
 
-          <div
-            className={`fp-tile${hasStage ? ' is-disabled' : ''}`}
-            draggable={!hasStage}
-            onDragStart={(e) => { if (hasStage) { e.preventDefault(); return; } e.dataTransfer.setData('perch/item', 'stage'); }}
-          >
-            <span className="fp-tile-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40"><rect x="4" y="14" width="32" height="12" rx="3" fill="#176b63" /></svg>
-            </span>
-            <span>Stage{hasStage ? ' (added)' : ''}</span>
+          <div className="fp-grid-tool">
+            <h4>Seat grid</h4>
+            <div className="fp-grid-inputs">
+              <label>Rows
+                <input type="number" min="1" max="8" value={gridRows} onChange={(e) => setGridRows(e.target.value)} />
+              </label>
+              <span className="fp-times">×</span>
+              <label>Cols
+                <input type="number" min="1" max="14" value={gridCols} onChange={(e) => setGridCols(e.target.value)} />
+              </label>
+            </div>
+            <button type="button" className="button button-secondary button-small" onClick={addGrid}>
+              Add {clamp(Number(gridRows) || 1, 1, 8)} × {clamp(Number(gridCols) || 1, 1, 14)} block
+            </button>
           </div>
 
           <div className="fp-stats">
             <div><strong>{seatCount}</strong><span>seats</span></div>
-            <div><strong>{hasStage ? 1 : 0}</strong><span>stage</span></div>
+            <div><strong>{items.length}</strong><span>items</span></div>
           </div>
 
           <div className="fp-palette-actions">
             <button type="button" className="button button-secondary button-small" onClick={deleteSelected} disabled={!selectedId}>
               Delete selected
             </button>
-            <button type="button" className="button button-secondary button-small" onClick={handleClear} disabled={items.length === 0}>
+            <button type="button" className="button button-secondary button-small" onClick={() => { setItems([]); setSelectedId(null); }} disabled={items.length === 0}>
               Clear board
             </button>
           </div>
 
-          {savedNote && <p className="fp-saved" role="status">{savedNote}</p>}
+          {note && <p className="fp-saved" role="status">{note}</p>}
         </aside>
       </div>
     </section>

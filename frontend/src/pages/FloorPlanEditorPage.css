@@ -75,6 +75,54 @@
   gap: 0.9rem;
   position: sticky;
   top: 1rem;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.fp-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.fp-grid-tool {
+  border-top: 1px solid #eef2f2;
+  padding-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.fp-grid-tool h4 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.fp-grid-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.fp-grid-inputs label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.72rem;
+  color: var(--muted, #667681);
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.fp-grid-inputs input {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #cbd5d9;
+  border-radius: 8px;
+}
+
+.fp-times {
+  padding-bottom: 0.5rem;
+  color: var(--muted, #667681);
 }
 
 .fp-palette h3 {

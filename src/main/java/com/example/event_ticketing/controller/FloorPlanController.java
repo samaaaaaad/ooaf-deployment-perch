@@ -1,10 +1,15 @@
 package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.FloorPlanDTO;
+import com.example.event_ticketing.dto.FloorPlanRequest;
 import com.example.event_ticketing.service.EventService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,5 +29,23 @@ public class FloorPlanController {
     @GetMapping
     public ResponseEntity<List<FloorPlanDTO>> getFloorPlans(@PathVariable UUID organiserId) {
         return ResponseEntity.ok(eventService.getAvailableFloorPlans(organiserId));
+    }
+
+    @PostMapping
+    public ResponseEntity<FloorPlanDTO> create(
+            @PathVariable UUID organiserId,
+            @RequestBody FloorPlanRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(eventService.createFloorPlan(organiserId, request));
+    }
+
+    @PutMapping("/{floorPlanId}")
+    public ResponseEntity<FloorPlanDTO> update(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID floorPlanId,
+            @RequestBody FloorPlanRequest request
+    ) {
+        return ResponseEntity.ok(eventService.updateFloorPlan(organiserId, floorPlanId, request));
     }
 }

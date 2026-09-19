@@ -134,7 +134,7 @@ export default function EventsPage() {
 
   function openPublishModal(event) {
     if (!event.floorPlanId || event.standardPrice === null || event.standardPrice === undefined) {
-      setError('Please configure the floorplan and ticket pricing before publishing.');
+      setError('Please configure the floor plan and ticket pricing before publishing.');
       return;
     }
     setError('');
@@ -165,8 +165,8 @@ export default function EventsPage() {
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {isOrganiser && (
-              <button type="button" className="button button-secondary" onClick={() => navigate('/floorplan')}>
-                Edit Floorplan
+              <button type="button" className="button button-secondary" onClick={() => navigate('/floorplans')}>
+                Manage Floor Plans
               </button>
             )}
             <span className="status-pill">{isOrganiser ? 'Draft on create' : 'Read-only'}</span>

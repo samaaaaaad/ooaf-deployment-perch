@@ -3,6 +3,7 @@ package com.example.event_ticketing.service;
 import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
 import com.example.event_ticketing.dto.FloorPlanDTO;
+import com.example.event_ticketing.dto.FloorPlanRequest;
 import com.example.event_ticketing.dto.PublishEventRequest;
 import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
@@ -87,14 +88,66 @@ public class EventService {
             plans = List.of(defaultStage);
         }
         return plans.stream()
-                .map(p -> new FloorPlanDTO(
-                        p.getFloorPlanId(),
-                        p.getOrganiser() != null ? p.getOrganiser().getUserId() : null,
-                        p.getName(),
-                        p.getLayoutType(),
-                        p.getCapacity()
-                ))
+                .map(this::toFloorPlanDTO)
                 .toList();
+    }
+
+    /**
+     * Creates a reusable floorplan owned by the organiser, from the builder.
+     */
+    @Transactional
+    public FloorPlanDTO createFloorPlan(UUID organiserId, FloorPlanRequest request) {
+        if (request == null || request.name == null || request.name.trim().isEmpty()) {
+            throw new ValidationException("Floorplan name is required");
+        }
+        User organiser = userRepository.findById(organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organiser not found"));
+
+        FloorPlan plan = new FloorPlan(
+                organiser,
+                request.name.trim(),
+                request.layoutType != null ? request.layoutType : "CUSTOM",
+                request.capacity != null ? request.capacity : 0
+        );
+        plan.setLayoutJson(request.layoutJson);
+        return toFloorPlanDTO(floorPlanRepository.save(plan));
+    }
+
+    /**
+     * Updates an organiser's own floorplan. Default (unowned) plans are read-only.
+     */
+    @Transactional
+    public FloorPlanDTO updateFloorPlan(UUID organiserId, UUID floorPlanId, FloorPlanRequest request) {
+        if (request == null) {
+            throw new ValidationException("Floorplan details are required");
+        }
+        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (plan.getOrganiser() == null || !plan.getOrganiser().getUserId().equals(organiserId)) {
+            throw new ValidationException("You can only edit your own floorplans");
+        }
+        if (request.name != null && !request.name.trim().isEmpty()) {
+            plan.setName(request.name.trim());
+        }
+        if (request.layoutType != null) {
+            plan.setLayoutType(request.layoutType);
+        }
+        if (request.capacity != null) {
+            plan.setCapacity(request.capacity);
+        }
+        plan.setLayoutJson(request.layoutJson);
+        return toFloorPlanDTO(floorPlanRepository.save(plan));
+    }
+
+    private FloorPlanDTO toFloorPlanDTO(FloorPlan p) {
+        return new FloorPlanDTO(
+                p.getFloorPlanId(),
+                p.getOrganiser() != null ? p.getOrganiser().getUserId() : null,
+                p.getName(),
+                p.getLayoutType(),
+                p.getCapacity(),
+                p.getLayoutJson()
+        );
     }
 
     /**
