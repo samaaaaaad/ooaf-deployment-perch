@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
+import { getPublishedEvents } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
-import { categories, events, labelFor } from '../data/events';
+import { categories, events as mockEvents, labelFor, setDynamicEvents } from '../data/events';
 import { useRouter } from '../utils/router';
 import './BrowseEventsPage.css';
 
@@ -21,17 +22,52 @@ export default function BrowseEventsPage() {
   const { navigate } = useRouter();
   const [active, setActive] = useState('all');
   const [query, setQuery] = useState('');
+  const [liveEvents, setLiveEvents] = useState([]);
 
-  const firstName = user.fullName.split(' ')[0];
+  useEffect(() => {
+    let activeReq = true;
+    getPublishedEvents()
+      .then((data) => {
+        if (!activeReq || !data) return;
+        const mapped = data.map((e, idx) => ({
+          id: e.eventId,
+          title: e.title,
+          description: e.description,
+          venue: 'Main Stage Pop-up',
+          city: 'Sydney',
+          date: 'Upcoming',
+          time: '7:30pm',
+          cat: 'music',
+          price: e.standardPrice !== null && e.standardPrice !== undefined ? Number(e.standardPrice) : 25,
+          standardPrice: e.standardPrice,
+          premiumPrice: e.premiumPrice,
+          layout: (e.layoutType || 'stage').toLowerCase(),
+          isLiveH2: true,
+          mockCoverIdx: (idx % 16) + 1,
+        }));
+        setLiveEvents(mapped);
+        setDynamicEvents(mapped);
+      })
+      .catch(() => {
+        // Fallback gracefully to catalogue
+      });
+    return () => { activeReq = false; };
+  }, []);
+
+  const allEvents = useMemo(() => {
+    return [...liveEvents, ...mockEvents];
+  }, [liveEvents]);
+
+  const firstName = user?.fullName?.split(' ')[0] || 'there';
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return events.filter((e) => {
+    return allEvents.filter((e) => {
       if (active !== 'all' && e.cat !== active) return false;
       if (!q) return true;
       return `${e.title} ${e.venue} ${e.city}`.toLowerCase().includes(q);
     });
-  }, [active, query]);
+  }, [allEvents, active, query]);
 
   function openEvent(id) {
     return (event) => { event.preventDefault(); navigate(`/event/${id}`); };
@@ -78,26 +114,29 @@ export default function BrowseEventsPage() {
         </div>
       ) : (
         <div className="be-grid">
-          {filtered.map((e) => (
-            <a className={`be-card be-cat-${e.cat}`} key={e.id} href={`/event/${e.id}`} onClick={openEvent(e.id)}>
-              <div className="be-cover">
-                <img className="be-cover-img" src={`/events/event-${e.id}.jpg`} alt="" loading="lazy" />
-                <span className="be-cover-scrim" aria-hidden="true" />
-                <div className="be-cover-top">
-                  <span className="be-pill">{labelFor[e.cat]}</span>
-                  <span className="be-date">{e.date} · {e.time}</span>
+          {filtered.map((e) => {
+            const imgSrc = e.isLiveH2 ? `/events/event-${e.mockCoverIdx}.jpg` : `/events/event-${e.id}.jpg`;
+            return (
+              <a className={`be-card be-cat-${e.cat}`} key={e.id} href={`/event/${e.id}`} onClick={openEvent(e.id)}>
+                <div className="be-cover">
+                  <img className="be-cover-img" src={imgSrc} alt="" loading="lazy" />
+                  <span className="be-cover-scrim" aria-hidden="true" />
+                  <div className="be-cover-top">
+                    <span className="be-pill">{labelFor[e.cat] || 'Event'}</span>
+                    <span className="be-date">{e.date} · {e.time}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="be-body">
-                <h3 className="be-title">{e.title}</h3>
-                <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.venue}, {e.city}</span>
-                <div className="be-foot">
-                  <span className="be-price">{e.price === 0 ? 'Free' : `From $${e.price}`}</span>
-                  <span className="be-view">View seats →</span>
+                <div className="be-body">
+                  <h3 className="be-title">{e.title}</h3>
+                  <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.venue}, {e.city}</span>
+                  <div className="be-foot">
+                    <span className="be-price">{e.price === 0 ? 'Free' : `From $${e.price}`}</span>
+                    <span className="be-view">View seats →</span>
+                  </div>
                 </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            );
+          })}
         </div>
       )}
     </section>

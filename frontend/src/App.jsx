@@ -29,6 +29,10 @@ export default function App() {
     return <AppShell><EventDetailPage eventId={path.slice('/event/'.length)} /></AppShell>;
   }
 
+  if ((path === '/events' || path === '/venues') && user.role !== 'ORGANISER') {
+    return <Redirect to="/browse" />;
+  }
+
   const pages = {
     '/browse': <BrowseEventsPage />,
     '/checkout': <CheckoutPage />,

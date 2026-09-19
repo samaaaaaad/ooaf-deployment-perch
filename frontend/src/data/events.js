@@ -1,5 +1,4 @@
-// Shared dummy event data for the customer browse + seat-selection screens.
-// Replaced by the real events/browse API later.
+// Shared event data for customer browse + seat-selection screens.
 
 export const categories = [
   { key: 'music', label: 'Music' },
@@ -12,8 +11,6 @@ export const categories = [
   { key: 'community', label: 'Community' },
 ];
 
-// `img` is a concrete keyword handed to the LoremFlickr placeholder service.
-// `layout` picks the seat-plan style on the event detail page.
 export const events = [
   { id: 1, title: 'Sunset Rooftop Sessions', cat: 'music', img: 'concert', layout: 'stage', venue: 'Rooftop Bar', city: 'Alexandria', date: 'Fri 5 Sep', time: '7:00pm', price: 35 },
   { id: 2, title: 'Thursday Night Laughs', cat: 'comedy', img: 'comedian', layout: 'cabaret', venue: 'The Comedy Loft', city: 'Newtown', date: 'Thu 4 Sep', time: '8:00pm', price: 22 },
@@ -35,6 +32,14 @@ export const events = [
 
 export const labelFor = Object.fromEntries(categories.map((c) => [c.key, c.label]));
 
+let dynamicEvents = [];
+
+export function setDynamicEvents(newEvents) {
+  dynamicEvents = newEvents || [];
+}
+
 export function getEvent(id) {
+  const dyn = dynamicEvents.find((e) => String(e.id) === String(id));
+  if (dyn) return dyn;
   return events.find((e) => String(e.id) === String(id));
 }

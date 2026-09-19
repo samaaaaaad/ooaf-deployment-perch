@@ -48,4 +48,22 @@ public class EventController {
                 "/api/organisers/" + organiserId + "/events/" + created.eventId);
         return ResponseEntity.created(location).body(created);
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{eventId}/pricing")
+    public ResponseEntity<EventDTO> updatePricing(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID eventId,
+            @RequestBody com.example.event_ticketing.dto.UpdatePricingRequest request
+    ) {
+        return ResponseEntity.ok(eventService.updateEventPricing(organiserId, eventId, request));
+    }
+
+    @PostMapping("/{eventId}/publish")
+    public ResponseEntity<EventDTO> publishEvent(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID eventId,
+            @RequestBody(required = false) com.example.event_ticketing.dto.PublishEventRequest request
+    ) {
+        return ResponseEntity.ok(eventService.publishEvent(organiserId, eventId, request));
+    }
 }

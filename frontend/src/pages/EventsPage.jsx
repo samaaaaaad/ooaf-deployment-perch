@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
-import { createEvent, getEvents } from '../api/eventApi';
+import { createEvent, getEvents, publishEvent } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import EmptyState from '../components/EmptyState';
+import EventPricingModal from '../components/EventPricingModal';
 import LoadingState from '../components/LoadingState';
+import PublishEventModal from '../components/PublishEventModal';
 import { formatDate } from '../utils/formatDate';
 
 const MAX_TITLE_LENGTH = 150;
@@ -99,6 +101,9 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [publishingId, setPublishingId] = useState(null);
+  const [publishModalEvent, setPublishModalEvent] = useState(null);
+  const [editingPricingEvent, setEditingPricingEvent] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -117,6 +122,35 @@ export default function EventsPage() {
 
   function handleCreated(created) {
     setEvents((prev) => [created, ...prev]);
+  }
+
+  function handlePricingSaved(updatedEvent) {
+    setEvents((prev) =>
+      prev.map((ev) => (ev.eventId === updatedEvent.eventId ? updatedEvent : ev))
+    );
+  }
+
+  function openPublishModal(event) {
+    if (!event.floorPlanId || event.standardPrice === null || event.standardPrice === undefined) {
+      setError('Please configure the floorplan and ticket pricing before publishing.');
+      return;
+    }
+    setError('');
+    setPublishModalEvent(event);
+  }
+
+  async function handlePublish(imageUrl) {
+    const event = publishModalEvent;
+    setPublishingId(event.eventId);
+    try {
+      const published = await publishEvent(user.userId, event.eventId, imageUrl);
+      setEvents((prev) =>
+        prev.map((ev) => (ev.eventId === published.eventId ? published : ev))
+      );
+      setPublishModalEvent(null);
+    } finally {
+      setPublishingId(null);
+    }
   }
 
   return (
@@ -155,19 +189,93 @@ export default function EventsPage() {
             <div className="content-card table-wrap">
               <table>
                 <thead>
-                <tr><th>Event</th><th>Status</th><th>Created</th></tr>
+                <tr>
+                  <th>Event</th>
+                  <th>Floor Plan</th>
+                  <th>Tier Pricing</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  {isOrganiser && <th>Actions</th>}
+                </tr>
                 </thead>
                 <tbody>
-                {events.map((event) => (
+                {events.map((event) => {
+                    const isDraft = event.status === 'DRAFT';
+                    const hasPricing = event.standardPrice !== null && event.standardPrice !== undefined;
+                    return (
                     <tr key={event.eventId}>
-                      <td><strong>{event.title}</strong><small>{event.description || 'No description'}</small></td>
+                      <td>
+                        <strong>{event.title}</strong>
+                        <small>{event.description || 'No description'}</small>
+                      </td>
+                      <td>
+                        {event.floorPlanName ? (
+                          <span style={{ fontWeight: 600, color: 'var(--brand)' }}>{event.floorPlanName}</span>
+                        ) : (
+                          <small style={{ color: 'var(--muted)' }}>No layout assigned</small>
+                        )}
+                      </td>
+                      <td>
+                        {hasPricing ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.8rem' }}>
+                            <span><strong>Std:</strong> ${Number(event.standardPrice).toFixed(2)}</span>
+                            {event.premiumPrice && (
+                              <span style={{ color: '#7c3aed' }}><strong>Prem:</strong> ${Number(event.premiumPrice).toFixed(2)}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <small style={{ color: 'var(--muted)' }}>Unpriced</small>
+                        )}
+                      </td>
                       <td><span className={`status-badge status-${event.status?.toLowerCase()}`}>{event.status}</span></td>
                       <td>{formatDate(event.createdAt)}</td>
+                      {isOrganiser && (
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <button
+                              type="button"
+                              className="button button-secondary button-small"
+                              onClick={() => setEditingPricingEvent(event)}
+                            >
+                              Configure Pricing
+                            </button>
+                            {isDraft && (
+                              <button
+                                type="button"
+                                className="button button-primary button-small"
+                                onClick={() => openPublishModal(event)}
+                                disabled={publishingId === event.eventId || !hasPricing}
+                                title={!hasPricing ? 'Configure pricing before publishing' : 'Publish event to Browse'}
+                              >
+                                {publishingId === event.eventId ? 'Publishing…' : 'Publish'}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
-                ))}
+                    );
+                })}
                 </tbody>
               </table>
             </div>
+        )}
+
+        {editingPricingEvent && (
+          <EventPricingModal
+            organiserId={user.userId}
+            event={editingPricingEvent}
+            onClose={() => setEditingPricingEvent(null)}
+            onSaved={handlePricingSaved}
+          />
+        )}
+
+        {publishModalEvent && (
+          <PublishEventModal
+            event={publishModalEvent}
+            onClose={() => setPublishModalEvent(null)}
+            onPublish={handlePublish}
+          />
         )}
       </section>
   );
