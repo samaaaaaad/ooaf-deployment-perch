@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,6 +58,42 @@ class SeatHoldReleaseIntegrationTests {
                 "Holder", "holder-" + UUID.randomUUID() + "@example.com", "hash", UserRole.CUSTOMER));
         otherCustomer = userRepository.save(new User(
                 "Other", "other-" + UUID.randomUUID() + "@example.com", "hash", UserRole.CUSTOMER));
+    }
+
+    @Test
+    void releasingYourOwnHoldMakesTheSeatAvailableAgain() {
+        EventSeat held = save(seat("A1", s -> s.hold(holder, Instant.now().plusSeconds(300))));
+
+        seatHoldService.releaseHold(event.getEventId(), held.getEventSeatId(), holder.getUserId());
+
+        EventSeat after = reload(held);
+        assertThat(after.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
+        assertThat(after.getHeldBy()).isNull();
+        assertThat(after.getHoldExpiresAt()).isNull();
+        assertThat(after.getVersion()).isEqualTo(1L);
+    }
+
+    @Test
+    void releasingSomeoneElsesHoldChangesNothing() {
+        EventSeat held = save(seat("A1", s -> s.hold(holder, Instant.now().plusSeconds(300))));
+
+        seatHoldService.releaseHold(event.getEventId(), held.getEventSeatId(), otherCustomer.getUserId());
+
+        EventSeat after = reload(held);
+        assertThat(after.getStatus()).isEqualTo(SeatStatus.HELD);
+        assertThat(after.getVersion()).isEqualTo(0L);
+    }
+
+    @Test
+    void listsOnlyMyUnexpiredHolds() {
+        EventSeat mine = save(seat("A1", s -> s.hold(holder, Instant.now().plusSeconds(300))));
+        save(seat("A2", s -> s.hold(holder, Instant.now().minusSeconds(60))));
+        save(seat("A3", s -> s.hold(otherCustomer, Instant.now().plusSeconds(300))));
+        save(seat("A4", s -> { }));
+
+        List<SeatHoldDTO> holds = seatHoldService.getActiveHolds(event.getEventId(), holder.getUserId());
+
+        assertThat(holds).extracting(h -> h.seatId).containsExactly(mine.getEventSeatId());
     }
 
     @Test

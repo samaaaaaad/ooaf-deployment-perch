@@ -18,12 +18,18 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import java.util.List;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 
 class SeatHoldControllerTests {
 
@@ -92,5 +98,35 @@ class SeatHoldControllerTests {
         mockMvc.perform(post("/api/events/{eventId}/seats/{seatId}/hold", eventId, seatId))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Customer id is required"));
+    }
+
+    @Test
+    void releasingAHoldReturnsNoContent() throws Exception {
+        mockMvc.perform(delete("/api/events/{eventId}/seats/{seatId}/hold", eventId, seatId)
+                        .param("customerId", customerId.toString()))
+                .andExpect(status().isNoContent());
+
+        verify(seatHoldService).releaseHold(eventId, seatId, customerId);
+    }
+
+    @Test
+    void releasingAHoldWithoutACustomerIsABadRequest() throws Exception {
+        mockMvc.perform(delete("/api/events/{eventId}/seats/{seatId}/hold", eventId, seatId))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void listsTheCustomersOwnHolds() throws Exception {
+        Instant now = Instant.parse("2026-09-20T10:00:00Z");
+        when(seatHoldService.getActiveHolds(eventId, customerId)).thenReturn(List.of(new SeatHoldDTO(
+                seatId, eventId, "A1", SeatTier.PREMIUM, new BigDecimal("40.00"),
+                SeatStatus.HELD, now.plusSeconds(300), now)));
+
+        mockMvc.perform(get("/api/events/{eventId}/seats/mine", eventId)
+                        .param("customerId", customerId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].seatId").value(seatId.toString()))
+                .andExpect(jsonPath("$[0].label").value("A1"))
+                .andExpect(jsonPath("$[0].holdExpiresAt").exists());
     }
 }

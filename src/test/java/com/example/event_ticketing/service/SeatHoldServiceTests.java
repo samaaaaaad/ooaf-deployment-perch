@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,6 +35,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 class SeatHoldServiceTests {
@@ -68,6 +70,57 @@ class SeatHoldServiceTests {
 
         seat = new EventSeat(event, "A1", SeatTier.PREMIUM, new BigDecimal("40.00"), 182, 84);
         seat.setEventSeatId(UUID.randomUUID());
+    }
+    @Test
+    void releasingYourHoldAsksTheRepositoryToReleaseOnlyThisCustomersHold() {
+        when(eventSeatRepository.findByEventSeatIdAndEventEventId(seat.getEventSeatId(), event.getEventId()))
+                .thenReturn(Optional.of(seat));
+
+        service.releaseHold(event.getEventId(), seat.getEventSeatId(), customer.getUserId());
+
+        verify(eventSeatRepository).releaseHoldOf(seat.getEventSeatId(), customer.getUserId());
+    }
+
+    @Test
+    void releasingAHoldOnAnUnknownSeatIsNotFound() {
+        when(eventSeatRepository.findByEventSeatIdAndEventEventId(seat.getEventSeatId(), event.getEventId()))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.releaseHold(event.getEventId(), seat.getEventSeatId(), customer.getUserId()))
+                .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(eventSeatRepository, never()).releaseHoldOf(any(), any());
+    }
+
+    @Test
+    void releasingAHoldRequiresACustomerId() {
+        assertThatThrownBy(() -> service.releaseHold(event.getEventId(), seat.getEventSeatId(), null))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void listsOnlyTheCustomersUnexpiredHolds() {
+        EventSeat active = seat;
+        active.hold(customer, NOW.plusSeconds(120));
+        EventSeat expired = new EventSeat(event, "A2", SeatTier.PREMIUM, new BigDecimal("40.00"), 208, 84);
+        expired.setEventSeatId(UUID.randomUUID());
+        expired.hold(customer, NOW.minusSeconds(5));
+        when(eventSeatRepository.findAllByEventEventIdAndHeldByUserIdAndStatusOrderByYAscXAsc(
+                event.getEventId(), customer.getUserId(), SeatStatus.HELD))
+                .thenReturn(List.of(active, expired));
+
+        List<SeatHoldDTO> holds = service.getActiveHolds(event.getEventId(), customer.getUserId());
+
+        assertThat(holds).hasSize(1);
+        assertThat(holds.get(0).label).isEqualTo("A1");
+        assertThat(holds.get(0).holdExpiresAt).isEqualTo(NOW.plusSeconds(120));
+        assertThat(holds.get(0).serverTime).isEqualTo(NOW);
+    }
+
+    @Test
+    void listingHoldsRequiresACustomerId() {
+        assertThatThrownBy(() -> service.getActiveHolds(event.getEventId(), null))
+                .isInstanceOf(ValidationException.class);
     }
 
     @Test

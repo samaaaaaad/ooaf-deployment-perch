@@ -19,6 +19,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 /**
  * US 7 - temporary seat holds.
@@ -85,6 +86,37 @@ public class SeatHoldService {
             throw new SeatUnavailableException("Seat was just taken by another customer");
         }
         return toDTO(eventId, seat, now);
+    }
+    /**
+     * Lets a customer give up their own hold (e.g. they deselected the seat). Idempotent: if the seat is
+     * not currently held by this customer nothing changes and no error is raised.
+     */
+    @Transactional
+    public void releaseHold(UUID eventId, UUID seatId, UUID customerId) {
+        if (customerId == null) {
+            throw new ValidationException("Customer id is required");
+        }
+        eventSeatRepository.findByEventSeatIdAndEventEventId(seatId, eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seat not found"));
+        eventSeatRepository.releaseHoldOf(seatId, customerId);
+    }
+
+    /**
+     * The customer's own unexpired holds for an event, so the seat map can show which held seats are
+     * theirs (and restore them after a page reload).
+     */
+    @Transactional(readOnly = true)
+    public List<SeatHoldDTO> getActiveHolds(UUID eventId, UUID customerId) {
+        if (customerId == null) {
+            throw new ValidationException("Customer id is required");
+        }
+        Instant now = clock.instant();
+        return eventSeatRepository
+                .findAllByEventEventIdAndHeldByUserIdAndStatusOrderByYAscXAsc(eventId, customerId, SeatStatus.HELD)
+                .stream()
+                .filter(seat -> seat.isHoldActiveAt(now))
+                .map(seat -> toDTO(eventId, seat, now))
+                .toList();
     }
 
     @Transactional
