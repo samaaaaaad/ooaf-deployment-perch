@@ -8,14 +8,20 @@ public class FloorPlanDTO {
     public String name;
     public String layoutType;
     public Integer capacity;
+    public String layoutJson;
 
     public FloorPlanDTO() {}
 
     public FloorPlanDTO(UUID floorPlanId, UUID organiserId, String name, String layoutType, Integer capacity) {
+        this(floorPlanId, organiserId, name, layoutType, capacity, null);
+    }
+
+    public FloorPlanDTO(UUID floorPlanId, UUID organiserId, String name, String layoutType, Integer capacity, String layoutJson) {
         this.floorPlanId = floorPlanId;
         this.organiserId = organiserId;
         this.name = name;
         this.layoutType = layoutType;
         this.capacity = capacity;
+        this.layoutJson = layoutJson;
     }
 }

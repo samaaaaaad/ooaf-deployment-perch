@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getFloorplans, updateEventPricing } from '../api/eventApi';
+import { useRouter } from '../utils/router';
 
 // Reusable SVG Stage Layout generator with Premium (rows A-B) and Standard (rows C-F) seats
 function StagePreview({ standardPrice, premiumPrice }) {
@@ -25,7 +26,7 @@ function StagePreview({ standardPrice, premiumPrice }) {
       <div style={{ color: '#d8a84e', fontWeight: 700, fontSize: '0.85rem', marginBottom: '0.75rem' }}>
         Stage Layout Preview (60 Seats · Premium & Standard Tiers)
       </div>
-      <svg viewBox="0 0 640 280" style={{ width: '100%', height: 'auto', maxHeight: '240px' }} role="img" aria-label="Stage floorplan preview">
+      <svg viewBox="0 0 640 280" style={{ width: '100%', height: 'auto', maxHeight: '240px' }} role="img" aria-label="Stage floor plan preview">
         {/* Stage Area */}
         <rect x="200" y="16" width="240" height="34" rx="8" fill="#176b63" />
         <text x="320" y="38" textAnchor="middle" fill="#ffffff" fontSize="13" fontWeight="bold">STAGE</text>
@@ -47,6 +48,7 @@ function StagePreview({ standardPrice, premiumPrice }) {
 }
 
 export default function EventPricingModal({ organiserId, event, onClose, onSaved }) {
+  const { navigate } = useRouter();
   const [floorplans, setFloorplans] = useState([]);
   const [selectedPlanId, setSelectedPlanId] = useState(event.floorPlanId || '');
   const [standardPrice, setStandardPrice] = useState(
@@ -70,7 +72,7 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
         }
       })
       .catch((err) => {
-        if (active) setError(err.message || 'Unable to load floorplans');
+        if (active) setError(err.message || 'Unable to load floor plans');
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -137,7 +139,16 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
 
         <form onSubmit={handleSave} noValidate>
           <div className="field">
-            <label htmlFor="floorplan-select">Reusable Floorplan</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <label htmlFor="floorplan-select">Reusable Floor Plan</label>
+              <button
+                type="button"
+                onClick={() => navigate('/floorplans')}
+                style={{ background: 'none', border: 0, color: 'var(--brand, #176b63)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', padding: 0 }}
+              >
+                Manage Floor Plans →
+              </button>
+            </div>
             <select
               id="floorplan-select"
               value={selectedPlanId}

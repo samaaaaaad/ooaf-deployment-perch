@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -42,6 +43,13 @@ public class FloorPlan {
 
     @Column(name = "capacity", nullable = false)
     private Integer capacity;
+
+    // Serialised editor layout (seats, tables, stage and their positions).
+    // Stored as JSON so the builder can round-trip a plan without a separate
+    // seat table for now.
+    @Lob
+    @Column(name = "layout_json")
+    private String layoutJson;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -84,6 +92,9 @@ public class FloorPlan {
 
     public Integer getCapacity() { return capacity; }
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
+
+    public String getLayoutJson() { return layoutJson; }
+    public void setLayoutJson(String layoutJson) { this.layoutJson = layoutJson; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

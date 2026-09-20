@@ -35,6 +35,7 @@ export default function AppShell({ children }) {
         <nav className="primary-nav" aria-label="Primary navigation">
           <NavLink to="/browse">Browse</NavLink>
           {isOrganiser && <NavLink to="/events">My Events</NavLink>}
+          {isOrganiser && <NavLink to="/floorplans">Floor Plans</NavLink>}
           {isOrganiser && <NavLink to="/venues">Venues</NavLink>}
         </nav>
 

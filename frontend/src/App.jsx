@@ -5,6 +5,8 @@ import BrowseEventsPage from './pages/BrowseEventsPage';
 import CheckoutPage from './pages/CheckoutPage';
 import EventDetailPage from './pages/EventDetailPage';
 import EventsPage from './pages/EventsPage';
+import FloorPlanEditorPage from './pages/FloorPlanEditorPage';
+import FloorplansPage from './pages/FloorplansPage';
 import LandingPage from './pages/LandingPage';
 import VenuesPage from './pages/VenuesPage';
 import { Redirect, useRouter } from './utils/router';
@@ -29,7 +31,8 @@ export default function App() {
     return <AppShell><EventDetailPage eventId={path.slice('/event/'.length)} /></AppShell>;
   }
 
-  if ((path === '/events' || path === '/venues') && user.role !== 'ORGANISER') {
+  const organiserOnly = ['/events', '/venues', '/floorplan', '/floorplans'];
+  if (organiserOnly.includes(path) && user.role !== 'ORGANISER') {
     return <Redirect to="/browse" />;
   }
 
@@ -38,6 +41,8 @@ export default function App() {
     '/checkout': <CheckoutPage />,
     '/events': <EventsPage />,
     '/venues': <VenuesPage />,
+    '/floorplan': <FloorPlanEditorPage />,
+    '/floorplans': <FloorplansPage />,
   };
 
   return pages[path]

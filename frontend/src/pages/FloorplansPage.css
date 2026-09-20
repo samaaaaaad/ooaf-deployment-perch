@@ -1,0 +1,30 @@
+.fp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.9rem;
+}
+
+.fp-list-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #e5ecec;
+  border-radius: 14px;
+  padding: 1rem 1.15rem;
+}
+
+.fp-list-card.is-template {
+  background: #f7fafa;
+}
+
+.fp-list-card strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.fp-list-card small {
+  color: var(--muted, #667681);
+  font-size: 0.8rem;
+}

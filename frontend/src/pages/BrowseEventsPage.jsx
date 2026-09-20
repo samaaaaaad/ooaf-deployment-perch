@@ -43,6 +43,7 @@ export default function BrowseEventsPage() {
           premiumPrice: e.premiumPrice,
           layout: (e.layoutType || 'stage').toLowerCase(),
           isLiveH2: true,
+          imageUrl: e.imageUrl || null,
           mockCoverIdx: (idx % 16) + 1,
         }));
         setLiveEvents(mapped);
@@ -115,7 +116,9 @@ export default function BrowseEventsPage() {
       ) : (
         <div className="be-grid">
           {filtered.map((e) => {
-            const imgSrc = e.isLiveH2 ? `/events/event-${e.mockCoverIdx}.jpg` : `/events/event-${e.id}.jpg`;
+            const imgSrc = e.imageUrl
+              ? e.imageUrl
+              : e.isLiveH2 ? `/events/event-${e.mockCoverIdx}.jpg` : `/events/event-${e.id}.jpg`;
             return (
               <a className={`be-card be-cat-${e.cat}`} key={e.id} href={`/event/${e.id}`} onClick={openEvent(e.id)}>
                 <div className="be-cover">

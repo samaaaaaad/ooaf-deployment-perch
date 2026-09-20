@@ -45,10 +45,10 @@ const icons = {
 };
 
 const features = [
-  { key: 'grid', title: 'Drag-and-drop floorplan builder', body: 'Place seats, tables and sections on a grid canvas. Shape any room, from a 40-seat pop-up to a warehouse show.' },
+  { key: 'grid', title: 'Drag-and-drop floor plan builder', body: 'Place seats, tables and sections on a grid canvas. Shape any room, from a 40-seat pop-up to a warehouse show.' },
   { key: 'tag', title: 'Independent seat & section pricing', body: 'Price front tables, VIP and standard seats separately, so every seat earns exactly what it is worth.', gold: true },
   { key: 'cursor', title: 'Real-time seat selection', body: 'Customers pick an exact seat and watch availability update live. Temporary holds stop two people grabbing the same spot.' },
-  { key: 'copy', title: 'Reusable floorplans', body: 'Build a layout once, save it to your venue and clone it into every future event at that location.' },
+  { key: 'copy', title: 'Reusable floor plans', body: 'Build a layout once, save it to your venue and clone it into every future event at that location.' },
   { key: 'shield', title: 'Secure payments', body: 'Tokenised checkout keeps purchases secure. Raw card details are never stored on the platform.' },
   { key: 'qr', title: 'QR e-tickets & check-in', body: 'Confirmed bookings issue scannable e-tickets. Validate entry at the door and block duplicate scans.' },
 ];
@@ -105,7 +105,7 @@ function SeatMap() {
 
   return (
     <svg className="lp-seatmap-svg" viewBox="0 0 350 300" role="img"
-      aria-label="A floorplan editor showing rows of seats with a highlighted VIP row and a selected seat.">
+      aria-label="A floor plan editor showing rows of seats with a highlighted VIP row and a selected seat.">
       <rect x="44" y="44" width="262" height="26" rx="13" fill="rgba(255,255,255,0.08)" />
       <text x="175" y="61" textAnchor="middle" fill="rgba(255,255,255,0.55)"
         fontSize="11" fontWeight="700" letterSpacing="3">STAGE</text>
@@ -214,7 +214,7 @@ export default function LandingPage() {
           <p className="lp-eyebrow">Ticketing for pop-ups, promoters and independent venues</p>
           <h1 className="lp-hero-title">Find your seat or <span className="lp-underline">sell out the room</span>.</h1>
           <p className="lp-hero-lead">
-            Perch is where small venues build custom floorplans and event-goers browse,
+            Perch is where small venues build custom floor plans and event-goers browse,
             pick a seat and check out in real time.
           </p>
           <div className="lp-cta-row">
@@ -262,7 +262,7 @@ export default function LandingPage() {
               <span className="lp-audience-tag">For organisers</span>
               <h3>Build the room and sell every seat</h3>
               <ul>
-                <li>Design a floorplan for any temporary or mobile space</li>
+                <li>Design a floor plan for any temporary or mobile space</li>
                 <li>Price seats and sections independently, then publish</li>
                 <li>Check guests in at the door with a quick QR scan</li>
               </ul>
@@ -314,7 +314,7 @@ export default function LandingPage() {
       <section className="lp-section lp-showcase" id="editor">
         <div className="lp-shell lp-showcase-inner">
           <div className="lp-showcase-copy lp-reveal">
-            <p className="lp-eyebrow">The floorplan editor</p>
+            <p className="lp-eyebrow">The floor plan editor</p>
             <h2>Your seating map, built your way</h2>
             <p>
               Lay out the room exactly as it stands, mark a VIP row and watch seats move between
@@ -331,7 +331,7 @@ export default function LandingPage() {
                 <span className="lp-dot" style={{ background: '#ff5f57' }} />
                 <span className="lp-dot" style={{ background: '#febc2e' }} />
                 <span className="lp-dot" style={{ background: '#28c840' }} />
-                <span className="lp-card-title">Floorplan editor · Rooftop Session</span>
+                <span className="lp-card-title">Floor Plan editor · Rooftop Session</span>
               </div>
               <SeatMap />
             </div>
@@ -355,7 +355,7 @@ export default function LandingPage() {
                 <h4>Product</h4>
                 <a href="/login" onClick={go('/login')}>Browse events</a>
                 <a href="#features" onClick={scrollTo('features')}>Features</a>
-                <a href="#editor" onClick={scrollTo('editor')}>Floorplan editor</a>
+                <a href="#editor" onClick={scrollTo('editor')}>Floor Plan editor</a>
               </div>
               <div className="lp-footer-col">
                 <h4>Account</h4>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { createEvent, getEvents, publishEvent } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
+import { useRouter } from '../utils/router';
 import EmptyState from '../components/EmptyState';
 import EventPricingModal from '../components/EventPricingModal';
 import LoadingState from '../components/LoadingState';
@@ -97,6 +98,7 @@ function CreateEventForm({ organiserId, onCreated }) {
 
 export default function EventsPage() {
   const { user } = useAuth();
+  const { navigate } = useRouter();
   const isOrganiser = user.role === 'ORGANISER';
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -132,7 +134,7 @@ export default function EventsPage() {
 
   function openPublishModal(event) {
     if (!event.floorPlanId || event.standardPrice === null || event.standardPrice === undefined) {
-      setError('Please configure the floorplan and ticket pricing before publishing.');
+      setError('Please configure the floor plan and ticket pricing before publishing.');
       return;
     }
     setError('');
@@ -161,7 +163,14 @@ export default function EventsPage() {
             <h1>Events</h1>
             <p>Productions are independent from their future dated venue sessions.</p>
           </div>
-          <span className="status-pill">{isOrganiser ? 'Draft on create' : 'Read-only'}</span>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {isOrganiser && (
+              <button type="button" className="button button-secondary" onClick={() => navigate('/floorplans')}>
+                Manage Floor Plans
+              </button>
+            )}
+            <span className="status-pill">{isOrganiser ? 'Draft on create' : 'Read-only'}</span>
+          </div>
         </div>
 
         {error && <div className="notice notice-error" role="alert">{error}</div>}
