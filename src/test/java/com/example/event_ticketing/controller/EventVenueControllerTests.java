@@ -2,11 +2,14 @@ package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
+import com.example.event_ticketing.dto.EventSeatDTO;
 import com.example.event_ticketing.dto.VenueDTO;
 import com.example.event_ticketing.exception.ApiExceptionHandler;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.EventStatus;
+import com.example.event_ticketing.model.SeatStatus;
+import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.service.EventService;
 import com.example.event_ticketing.service.VenueService;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +44,8 @@ class EventVenueControllerTests {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(
                         new EventController(eventService),
-                        new VenueController(venueService)
+                        new VenueController(venueService),
+                        new PublicEventController(eventService)
                 )
                 .setControllerAdvice(new ApiExceptionHandler())
                 .build();
@@ -123,5 +127,27 @@ class EventVenueControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"   \"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void exposesSeatsOnlyForPublishedEvents() throws Exception {
+        UUID eventId = UUID.randomUUID();
+        EventSeatDTO seat = new EventSeatDTO(
+                UUID.randomUUID(), "A1", SeatTier.PREMIUM,
+                new java.math.BigDecimal("45.00"), 182, 84, SeatStatus.AVAILABLE
+        );
+        when(eventService.getPublishedEventSeats(eventId)).thenReturn(List.of(seat));
+
+        mockMvc.perform(get("/api/events/{eventId}/seats", eventId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(seat.id.toString()))
+                .andExpect(jsonPath("$[0].label").value("A1"))
+                .andExpect(jsonPath("$[0].tier").value("PREMIUM"))
+                .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+
+        when(eventService.getPublishedEventSeats(eventId))
+                .thenThrow(new ResourceNotFoundException("Published event not found"));
+        mockMvc.perform(get("/api/events/{eventId}/seats", eventId))
+                .andExpect(status().isNotFound());
     }
 }

@@ -9,19 +9,27 @@ import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.model.EventStatus;
+import com.example.event_ticketing.model.EventSeat;
+import com.example.event_ticketing.model.FloorPlan;
+import com.example.event_ticketing.model.SeatStatus;
+import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.model.Venue;
 import com.example.event_ticketing.repository.EventRepository;
+import com.example.event_ticketing.repository.EventSeatRepository;
+import com.example.event_ticketing.repository.FloorPlanRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.repository.VenueRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class EventVenueServiceTests {
@@ -42,13 +51,19 @@ class EventVenueServiceTests {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private FloorPlanRepository floorPlanRepository;
+
+    @Mock
+    private EventSeatRepository eventSeatRepository;
+
     private EventService eventService;
     private VenueService venueService;
     private User organiser;
 
     @BeforeEach
     void setUp() {
-        eventService = new EventService(eventRepository, userRepository);
+        eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository);
         venueService = new VenueService(venueRepository);
         organiser = new User("Owner", "owner@example.com", "hash", UserRole.ORGANISER);
         organiser.setUserId(UUID.randomUUID());
@@ -204,5 +219,67 @@ class EventVenueServiceTests {
         EventDTO updated = eventService.updateEventPricing(organiser.getUserId(), event.getEventId(), request);
 
         assertThat(updated.standardPrice).isEqualByComparingTo("35.50");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void publishesAStageEventAndGeneratesItsSixtySeatSnapshotOnce() {
+        Event event = new Event(organiser, "Concert", "Live music");
+        event.setEventId(UUID.randomUUID());
+        event.setFloorPlan(new FloorPlan(null, "Stage Layout (60 Seats)", "STAGE", 60));
+        event.setStandardPrice(new BigDecimal("25.00"));
+        event.setPremiumPrice(new BigDecimal("40.00"));
+
+        com.example.event_ticketing.dto.PublishEventRequest request = new com.example.event_ticketing.dto.PublishEventRequest();
+        request.imageUrl = "https://example.com/banner.jpg";
+
+        when(eventRepository.findByEventIdAndOrganiserUserId(event.getEventId(), organiser.getUserId()))
+                .thenReturn(Optional.of(event));
+        when(eventRepository.save(event)).thenReturn(event);
+        when(eventSeatRepository.existsByEventEventId(event.getEventId())).thenReturn(false, true);
+
+        eventService.publishEvent(organiser.getUserId(), event.getEventId(), request);
+
+        ArgumentCaptor<List<EventSeat>> seatsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(eventSeatRepository).saveAll(seatsCaptor.capture());
+        List<EventSeat> seats = seatsCaptor.getValue();
+        assertThat(seats).hasSize(60);
+        assertThat(seats.get(0).getLabel()).isEqualTo("A1");
+        assertThat(seats.get(0).getTier()).isEqualTo(SeatTier.PREMIUM);
+        assertThat(seats.get(0).getPrice()).isEqualByComparingTo("40.00");
+        assertThat(seats.get(0).getX()).isEqualTo(182);
+        assertThat(seats.get(0).getY()).isEqualTo(84);
+        assertThat(seats.get(0).getStatus()).isEqualTo(SeatStatus.AVAILABLE);
+        assertThat(seats.get(59).getLabel()).isEqualTo("F10");
+        assertThat(seats.get(59).getTier()).isEqualTo(SeatTier.STANDARD);
+        assertThat(seats.get(59).getPrice()).isEqualByComparingTo("25.00");
+        assertThat(seats.get(59).getX()).isEqualTo(440);
+        assertThat(seats.get(59).getY()).isEqualTo(234);
+
+        when(eventSeatRepository.existsByEventEventId(event.getEventId())).thenReturn(true);
+        eventService.publishEvent(organiser.getUserId(), event.getEventId(), request);
+        verify(eventSeatRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void readsPublishedSeatsWithoutGeneratingThem() {
+        UUID eventId = UUID.randomUUID();
+        Event event = new Event(organiser, "Concert", "Live music");
+        event.setEventId(eventId);
+        event.setStatus(EventStatus.PUBLISHED);
+        EventSeat seat = new EventSeat(event, "A1", SeatTier.PREMIUM, new BigDecimal("40.00"), 182, 84);
+        seat.setEventSeatId(UUID.randomUUID());
+        seat.setStatus(SeatStatus.HELD);
+
+        when(eventRepository.findById(eventId)).thenReturn(Optional.of(event));
+        when(eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(eventId)).thenReturn(List.of(seat));
+
+        List<com.example.event_ticketing.dto.EventSeatDTO> seats = eventService.getPublishedEventSeats(eventId);
+
+        assertThat(seats).singleElement().satisfies(dto -> {
+            assertThat(dto.label).isEqualTo("A1");
+            assertThat(dto.status).isEqualTo(SeatStatus.HELD);
+        });
+        verify(eventSeatRepository, never()).saveAll(any());
     }
 }

@@ -32,3 +32,11 @@ export function publishEvent(organiserId, eventId, imageUrl) {
 export function getPublishedEvents() {
   return request('/api/events/published');
 }
+
+export function getPublishedEvent(eventId) {
+  return request(`/api/events/${encodeURIComponent(eventId)}`);
+}
+
+export function getEventSeats(eventId) {
+  return request(`/api/events/${encodeURIComponent(eventId)}/seats`);
+}
