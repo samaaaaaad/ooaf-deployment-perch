@@ -87,6 +87,11 @@ public class SeatHoldService {
         return toDTO(eventId, seat, now);
     }
 
+    @Transactional
+    public int releaseExpiredHolds() {
+        return eventSeatRepository.releaseExpiredHolds(clock.instant());
+    }
+
     private boolean isHeldBy(EventSeat seat, UUID customerId) {
         return seat.getHeldBy() != null && customerId.equals(seat.getHeldBy().getUserId());
     }

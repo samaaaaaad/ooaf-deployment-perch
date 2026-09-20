@@ -208,6 +208,13 @@ class SeatHoldServiceTests {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void releasingExpiredHoldsUsesTheCurrentTimeAndReturnsTheCount() {
+        when(eventSeatRepository.releaseExpiredHolds(NOW)).thenReturn(3);
+
+        assertThat(service.releaseExpiredHolds()).isEqualTo(3);
+    }
+
     private void givenCustomerAndSeatExist(User requester) {
         when(userRepository.findById(requester.getUserId())).thenReturn(Optional.of(requester));
         when(eventSeatRepository.findByEventSeatIdAndEventEventId(seat.getEventSeatId(), event.getEventId()))
