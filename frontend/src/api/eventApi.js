@@ -54,3 +54,24 @@ export function getPublishedEvent(eventId) {
 export function getEventSeats(eventId) {
   return request(`/api/events/${encodeURIComponent(eventId)}/seats`);
 }
+
+/** Holds a seat for the customer. Resolves with { holdExpiresAt, serverTime, ... }; rejects (409) if taken. */
+export function holdSeat(eventId, seatId, customerId) {
+  return request(`/api/events/${encodeURIComponent(eventId)}/seats/${encodeURIComponent(seatId)}/hold`, {
+    method: 'POST',
+    body: JSON.stringify({ customerId }),
+  });
+}
+
+/** Gives up the customer's own hold on a seat (deselecting it). */
+export function releaseSeatHold(eventId, seatId, customerId) {
+  return request(
+      `/api/events/${encodeURIComponent(eventId)}/seats/${encodeURIComponent(seatId)}/hold?customerId=${encodeURIComponent(customerId)}`,
+      { method: 'DELETE' },
+  );
+}
+
+/** The customer's own active holds for an event (used to restore selection after a reload). */
+export function getMyHolds(eventId, customerId) {
+  return request(`/api/events/${encodeURIComponent(eventId)}/seats/mine?customerId=${encodeURIComponent(customerId)}`);
+}
