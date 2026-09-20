@@ -38,9 +38,12 @@
 .ed-seat.tier-vip { fill: #d8a84e; }
 .ed-seat.tier-premium { fill: #2f9488; }
 .ed-seat.tier-standard { fill: #a7c6c1; }
-.ed-seat:hover:not(.is-booked) { stroke: #0d4d47; stroke-width: 2.5; }
+.ed-seat:hover:not(.is-booked):not(.is-held),
+.ed-seat.is-held.is-selected:hover { stroke: #0d4d47; stroke-width: 2.5; }
 .ed-seat.is-selected { fill: #0d4d47; stroke: #fff; stroke-width: 2; }
 .ed-seat.is-booked { cursor: not-allowed; fill: #d5dbdc; stroke: none; }
+.ed-seat.is-held { cursor: not-allowed; fill: #e4a33d; stroke: none; }
+.ed-seat.is-held.is-selected { cursor: pointer; fill: #e4a33d; stroke: #0d4d47; stroke-width: 2.5; }
 .ed-seat:focus-visible { outline: none; stroke: #0d4d47; stroke-width: 2.5; }
 
 .ed-legend { color: var(--muted); display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.78rem; font-weight: 600; margin-top: 0.9rem; }
@@ -51,6 +54,7 @@
 .sw.tier-standard { background: #a7c6c1; }
 .sw.is-selected { background: #0d4d47; box-shadow: 0 0 0 2px #fff inset; }
 .sw.is-booked { background: #d5dbdc; }
+.sw.is-held { background: #e4a33d; }
 
 /* ---- Cart ---- */
 .ed-cart { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 1.4rem; position: sticky; top: 92px; }

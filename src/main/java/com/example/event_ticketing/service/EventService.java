@@ -2,6 +2,7 @@ package com.example.event_ticketing.service;
 
 import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
+import com.example.event_ticketing.dto.EventSeatDTO;
 import com.example.event_ticketing.dto.FloorPlanDTO;
 import com.example.event_ticketing.dto.PublishEventRequest;
 import com.example.event_ticketing.dto.UpdatePricingRequest;
@@ -9,10 +10,13 @@ import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.EventStatus;
+import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
+import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.EventRepository;
+import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.FloorPlanRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,23 +37,26 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final FloorPlanRepository floorPlanRepository;
+    private final EventSeatRepository eventSeatRepository;
 
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository
     ) {
-        this(eventRepository, userRepository, null);
+        this(eventRepository, userRepository, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository,
-            FloorPlanRepository floorPlanRepository
+            FloorPlanRepository floorPlanRepository,
+            EventSeatRepository eventSeatRepository
     ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.floorPlanRepository = floorPlanRepository;
+        this.eventSeatRepository = eventSeatRepository;
     }
 
     public List<EventDTO> getEventsForOrganiser(UUID organiserId) {
@@ -72,6 +80,15 @@ public class EventService {
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    public EventDTO getPublishedEvent(UUID eventId) {
+        return toDTO(requirePublishedEvent(eventId));
+    }
+
+    public List<EventSeatDTO> getPublishedEventSeats(UUID eventId) {
+        requirePublishedEvent(eventId);
+        return toSeatDTOs(eventId);
     }
 
     /**
@@ -155,6 +172,7 @@ public class EventService {
         event.setStatus(EventStatus.PUBLISHED);
         event.setPublishedAt(Instant.now());
         Event saved = eventRepository.save(event);
+        generateStageSeatsIfNeeded(saved);
         return toDTO(saved);
     }
 
@@ -173,6 +191,51 @@ public class EventService {
         int qIdx = lower.indexOf('?');
         String clean = qIdx >= 0 ? lower.substring(0, qIdx) : lower;
         return clean.endsWith(".jpg") || clean.endsWith(".jpeg") || clean.endsWith(".png") || clean.endsWith(".webp");
+    }
+
+    private Event requirePublishedEvent(UUID eventId) {
+        return eventRepository.findById(eventId)
+                .filter(candidate -> candidate.getStatus() == EventStatus.PUBLISHED)
+                .orElseThrow(() -> new ResourceNotFoundException("Published event not found"));
+    }
+
+    private List<EventSeatDTO> toSeatDTOs(UUID eventId) {
+        return eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(eventId)
+                .stream()
+                .map(seat -> new EventSeatDTO(
+                        seat.getEventSeatId(), seat.getLabel(), seat.getTier(), seat.getPrice(),
+                        seat.getX(), seat.getY(), seat.getStatus()))
+                .toList();
+    }
+
+    private void generateStageSeatsIfNeeded(Event event) {
+        if (eventSeatRepository.existsByEventEventId(event.getEventId())) {
+            return;
+        }
+        if (event.getFloorPlan() == null || !"STAGE".equalsIgnoreCase(event.getFloorPlan().getLayoutType())) {
+            throw new ValidationException("Seat generation is currently supported only for Stage layouts");
+        }
+        eventSeatRepository.saveAll(stageSeats(event));
+    }
+
+    private List<EventSeat> stageSeats(Event event) {
+        List<EventSeat> seats = new ArrayList<>();
+        String rowLetters = "ABCDEF";
+        for (int row = 0; row < 6; row++) {
+            boolean premium = row < 2;
+            for (int column = 0; column < 10; column++) {
+                int aisle = column >= 5 ? 24 : 0;
+                seats.add(new EventSeat(
+                        event,
+                        rowLetters.charAt(row) + String.valueOf(column + 1),
+                        premium ? SeatTier.PREMIUM : SeatTier.STANDARD,
+                        premium ? event.getPremiumPrice() : event.getStandardPrice(),
+                        182 + column * 26 + aisle,
+                        84 + row * 30
+                ));
+            }
+        }
+        return seats;
     }
 
     /**
