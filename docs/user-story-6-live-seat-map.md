@@ -1,98 +1,98 @@
 # User Story 6.0 — Live Seat Map
 
+**Status: complete.** Stage maps shipped in PR #52. Custom US 4 layouts are generated from `layout_json` on publish. Hold/book on click is **not** part of this story.
+
 ## Goal
 
 As a **customer**, I want to see an event’s real seating layout with live availability, so I know exactly which seats I can choose.
 
-The Sprint 1 event page used a fake map (`seatLayout.js`) with randomly “booked” seats. US 6 replaces that, for **published Stage events**, with seats stored in the database.
+The Sprint 1 event page used a fake map (`seatLayout.js`) with randomly “booked” seats. US 6 replaces that for **published H2 events**: seats are stored in `event_seats` and drawn from the API.
 
 ## Acceptance criteria
 
-| Criterion | How it is met |
-|---|---|
-| Event details uses the organiser’s floorplan, not the Sprint 1 placeholder | Published events load seats from H2. The Stage layout is 60 seats (rows A–F). |
-| Each seat shows available, held, or booked | The map colours seats from `EventSeat.status`. |
-| Status comes from data, not a cached/static view | `GET /api/events/{id}/seats` reads the table on each request. The page also refreshes every 4 seconds. |
-| Selecting a seat shows category and price | Hover/click shows Premium/Standard and the stored price. |
+| Criterion | Done | How |
+|---|---|---|
+| Event details uses the organiser’s floorplan, not the Sprint 1 placeholder | Yes | Published UUID events load seats from H2. Stage → 60 seats (`A1`–`F10`). Custom builder plans → one seat per `type=seat` item in `layout_json`. |
+| Each seat shows available, held, or booked | Yes | Map colours come from `EventSeat.status` (`AVAILABLE` teal, `HELD` orange, `BOOKED` grey). |
+| Status comes from data, not a cached/static view | Yes | `GET /api/events/{id}/seats` only reads the table. The page polls every 4 seconds. |
+| Selecting a seat shows category and price | Yes | Hover/click shows Premium/Standard (or VIP) and the stored price. |
 
-Checkout and payment are **not** part of this story. Selecting a seat is local only (cart + placeholder checkout). It does **not** hold or book the row in the database.
+## Out of scope (later stories)
 
-Custom drag-and-drop floor plans (`layout_json`) wait for **User Story 4**. This story only generates the default **Stage** layout.
+- Clicking a seat does **not** hold it in the database.
+- Checkout does **not** book a seat.
+- There are no hold / release / book APIs.
+
+Selection is cart-only. To demo held/booked colours without a booking story, update `EVENT_SEATS.STATUS` in H2 (see below).
+
+Mock catalogue events (`/event/1` … `/event/16`) still use `seatLayout.js`. Live events use a UUID in the URL.
 
 ---
 
 ## How a customer sees the map
 
 ```text
-Organiser publishes a Stage event
+Organiser publishes (Stage or custom floor plan)
         ↓
-Backend writes 60 EventSeat rows (all AVAILABLE)
+Backend writes EventSeat rows (all AVAILABLE)
         ↓
 Customer opens /event/{eventId}
         ↓
-Frontend GET /api/events/{id}
-Frontend GET /api/events/{id}/seats
+GET /api/events/{id}            event + layoutJson (stage/tables/barriers)
+GET /api/events/{id}/seats      live seat status
         ↓
-SVG map drawn from x, y, tier, price, status
+SVG map: seats at stored x,y + organiser decor
 ```
 
-1. Sign up / log in as a customer.
-2. Browse → open a **published** event (UUID in the URL, not mock catalogue id `1`–`16`).
-3. The map is the organiser’s Stage plan: 6 rows × 10 seats, aisle in the middle.
+1. Log in as a customer.
+2. Browse → open a **published** event (UUID in the URL).
+3. The map is the organiser’s plan: Stage (6×10 with an aisle) or the custom builder layout.
 4. Hover a seat → label, category, price, and status.
 5. Click an **available** seat → it goes into Your selection (frontend only).
 6. Held/booked seats cannot be selected.
 7. Continue to payment → placeholder checkout. **No booking is saved.**
 
-Mock events on Browse still use the old generated map. Live H2 events use the API.
-
 ---
 
 ## Backend
 
-### When seats are created
+Seats are created **only inside `publishEvent`**, after the event has a floor plan, prices, and banner.
 
-Seats are created **only inside `publishEvent`**, after the event is valid (floor plan, prices, banner).
+`EventService.generateSeatsIfNeeded`:
 
-`EventService.generateStageSeatsIfNeeded`:
+1. If that event already has seats → skip (no duplicates).
+2. If `layout_json` has `type=seat` items → one `EventSeat` per seat (`S1`, `S2`, …) at those `x`/`y`. Tables, stage, and barriers are not seats.
+3. Else if the floor plan is `STAGE` → insert the 60-seat grid (`A1`–`F10`).
+4. Else reject publish: `Cannot generate seats: the floor plan has no seat items`.
 
-- If that event already has seats → skip (no duplicates).
-- If the floor plan is not `STAGE` → reject publish (`Seat generation is currently supported only for Stage layouts`).
-- Otherwise insert 60 rows.
+| Source | Labels | Tier | Price |
+|---|---|---|---|
+| Stage rows A–B | `A1`…`B10` | `PREMIUM` | `premiumPrice` |
+| Stage rows C–F | `C1`…`F10` | `STANDARD` | `standardPrice` |
+| Custom `type=seat` | `S1`, `S2`, … | `STANDARD` | `standardPrice` |
 
-| Rows | Tier | Price field on the event |
-|---|---|---|
-| A–B (front) | `PREMIUM` | `premiumPrice` |
-| C–F | `STANDARD` | `standardPrice` |
+Stage coordinates match the organiser pricing preview. Custom coordinates match the editor board (900×560). All seats start as `AVAILABLE`.
 
-Coordinates match the organiser pricing preview (so the customer map looks the same).
-
-Labels: `A1` … `A10`, `B1` … `F10`. All start as `AVAILABLE`.
-
-`GET /api/events/{id}/seats` **does not** create seats. It only reads.
+`GET /api/events/{id}/seats` **does not** create seats. The published event DTO includes `layoutJson` so the customer map can draw stage, tables, and barriers.
 
 ### Table: `event_seats`
-
-Entity: `EventSeat`
 
 | Column | Meaning |
 |---|---|
 | `event_seat_id` | UUID primary key |
 | `event_id` | Which published event |
-| `label` | `A1`, `C4`, … |
+| `label` | `A1`, `S1`, … |
 | `tier` | `PREMIUM` or `STANDARD` |
 | `price` | Copied from the event at publish time |
 | `x`, `y` | Where to draw the circle |
 | `status` | `AVAILABLE`, `HELD`, or `BOOKED` |
-
-Enums: `SeatStatus`, `SeatTier`.
 
 ### Public APIs (published events only)
 
 | Method | Path | What it does |
 |---|---|---|
 | GET | `/api/events/published` | List published events |
-| GET | `/api/events/{eventId}` | One published event |
+| GET | `/api/events/{eventId}` | One published event (includes `layoutJson`) |
 | GET | `/api/events/{eventId}/seats` | Live seats for that event |
 
 Example seat JSON:
@@ -109,8 +109,6 @@ Example seat JSON:
 }
 ```
 
-Draft events are not exposed here. There are **no** hold/release/book endpoints in US 6.
-
 ---
 
 ## Frontend
@@ -122,16 +120,7 @@ Draft events are not exposed here. There are **no** hold/release/book endpoints 
 | `frontend/src/pages/EventDetailPage.css` | Colours: teal available, orange held, grey booked |
 | `frontend/src/pages/seatLayout.js` | **Only** used for mock catalogue events |
 
-If the URL id is a UUID, the page treats it as a live event and calls the API. If it is a mock id (`1`, `2`, …), it still uses `generateLayout()`.
-
-Colours:
-
-- Available Premium / Standard → teal shades  
-- Selected (local click) → dark green  
-- Held → orange  
-- Booked → grey  
-
-The page polls `GET .../seats` every 4 seconds so if status rows change in H2, the map updates without a full reload.
+UUID in the URL → live API map. Mock id (`1`, `2`, …) → `generateLayout()`.
 
 ---
 
@@ -139,11 +128,10 @@ The page polls `GET .../seats` every 4 seconds so if status rows change in H2, t
 
 1. Run backend (`./gradlew bootRun`) and frontend (`npm run dev` in `frontend/`).
 2. Log in as an **organiser**.
-3. Create an event → Configure Pricing (Stage layout + prices) → Publish with a banner.
-4. Log in as a **customer** (or the same session if you can browse).
-5. Open the published event. You should see 60 seats from H2.
+3. Create an event → Configure Pricing (Stage **or** a saved custom floor plan + prices) → Publish with a banner.
+4. Open the published event as a customer. Stage shows 60 seats; a custom plan shows the seats placed in the builder.
 
-Inspect seats in the H2 console (`http://localhost:8080/h2-console`):
+H2 console (`http://localhost:8080/h2-console`):
 
 ```sql
 SELECT LABEL, TIER, PRICE, STATUS, X, Y
@@ -151,25 +139,21 @@ FROM EVENT_SEATS
 ORDER BY Y, X;
 ```
 
-To **see** held/booked colours without a booking story, update rows in H2:
+Held/booked colours (no booking story yet):
 
 ```sql
 UPDATE EVENT_SEATS SET STATUS = 'HELD' WHERE LABEL = 'A2';
 UPDATE EVENT_SEATS SET STATUS = 'BOOKED' WHERE LABEL = 'A1';
 ```
 
-Refresh the event page. A1 should be grey, A2 orange. Those statuses are stored data, not random numbers.
+Refresh the event page. A1 should be grey, A2 orange.
 
 ---
 
-## What this story does not do
+## Tests
 
-- Does not hold a seat when you click it  
-- Does not book a seat at checkout  
-- Does not parse US 4 `layout_json` custom editors  
-- Does not generate seats for non-Stage floor plans  
-
-Those belong to later stories (checkout/holds, and US 4 floor-plan builder).
+- `EventVenueServiceTests` — Stage 60-seat snapshot; custom `layout_json` seats; GET does not write; custom plan with no seats is rejected.
+- `EventDetailPage.test.jsx` — live held/booked/available colours and prices; custom layout plots seats and STAGE decor from `layoutJson`.
 
 ---
 
@@ -182,7 +166,7 @@ Those belong to later stories (checkout/holds, and US 4 floor-plan builder).
 `src/main/java/com/example/event_ticketing/controller/PublicEventController.java`
 
 **Model**  
-`EventSeat.java`, `SeatStatus.java`, `SeatTier.java`, `EventSeatRepository.java`, `EventSeatDTO.java`
+`EventSeat.java`, `SeatStatus.java`, `SeatTier.java`, `EventSeatRepository.java`, `EventSeatDTO.java`, `EventDTO.java` (`layoutJson`)
 
 **UI**  
 `frontend/src/pages/EventDetailPage.jsx`, `frontend/src/api/eventApi.js`

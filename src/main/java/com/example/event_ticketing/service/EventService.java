@@ -26,14 +26,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional(readOnly = true)
 public class EventService {
 
     private static final int MAX_TITLE_LENGTH = 150;
+    private static final Pattern LAYOUT_OBJECT = Pattern.compile("\\{[^{}]*\\}");
+    private static final Pattern LAYOUT_FIELD = Pattern.compile(
+            "\"(\\w+)\"\\s*:\\s*(?:\"([^\"]*)\"|(-?\\d+(?:\\.\\d+)?))"
+    );
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -225,7 +233,7 @@ public class EventService {
         event.setStatus(EventStatus.PUBLISHED);
         event.setPublishedAt(Instant.now());
         Event saved = eventRepository.save(event);
-        generateStageSeatsIfNeeded(saved);
+        generateSeatsIfNeeded(saved);
         return toDTO(saved);
     }
 
@@ -261,14 +269,95 @@ public class EventService {
                 .toList();
     }
 
-    private void generateStageSeatsIfNeeded(Event event) {
+    /**
+     * Snapshot seats once at publish. Custom editor JSON is preferred when it
+     * contains seat items; otherwise the built-in Stage 60-seat grid is used.
+     * GET /seats never writes.
+     */
+    private void generateSeatsIfNeeded(Event event) {
         if (eventSeatRepository.existsByEventEventId(event.getEventId())) {
             return;
         }
-        if (event.getFloorPlan() == null || !"STAGE".equalsIgnoreCase(event.getFloorPlan().getLayoutType())) {
-            throw new ValidationException("Seat generation is currently supported only for Stage layouts");
+        FloorPlan plan = event.getFloorPlan();
+        if (plan == null) {
+            throw new ValidationException("Cannot publish event without a configured floor plan");
         }
-        eventSeatRepository.saveAll(stageSeats(event));
+        List<EventSeat> fromLayout = seatsFromLayoutJson(event, plan.getLayoutJson());
+        if (!fromLayout.isEmpty()) {
+            eventSeatRepository.saveAll(fromLayout);
+            return;
+        }
+        if ("STAGE".equalsIgnoreCase(plan.getLayoutType())) {
+            eventSeatRepository.saveAll(stageSeats(event));
+            return;
+        }
+        throw new ValidationException("Cannot generate seats: the floor plan has no seat items");
+    }
+
+    /**
+     * US 4 editor items: {@code [{id, type, x, y}]} with type seat/table/stage/barrier.
+     * Only {@code type=seat} become EventSeat rows (S1, S2, …).
+     */
+    private List<EventSeat> seatsFromLayoutJson(Event event, String layoutJson) {
+        List<EventSeat> seats = new ArrayList<>();
+        int index = 0;
+        for (Map<String, String> item : parseLayoutItems(layoutJson)) {
+            if (!"seat".equalsIgnoreCase(item.getOrDefault("type", ""))) {
+                continue;
+            }
+            Integer x = toInt(item.get("x"));
+            Integer y = toInt(item.get("y"));
+            if (x == null || y == null) {
+                continue;
+            }
+            index++;
+            SeatTier tier = parseSeatTier(item.get("tier"));
+            BigDecimal price = tier == SeatTier.PREMIUM && event.getPremiumPrice() != null
+                    ? event.getPremiumPrice()
+                    : event.getStandardPrice();
+            seats.add(new EventSeat(event, "S" + index, tier, price, x, y));
+        }
+        return seats;
+    }
+
+    private static List<Map<String, String>> parseLayoutItems(String layoutJson) {
+        List<Map<String, String>> items = new ArrayList<>();
+        if (layoutJson == null || layoutJson.isBlank()) {
+            return items;
+        }
+        Matcher objects = LAYOUT_OBJECT.matcher(layoutJson);
+        while (objects.find()) {
+            Map<String, String> fields = new LinkedHashMap<>();
+            Matcher field = LAYOUT_FIELD.matcher(objects.group());
+            while (field.find()) {
+                fields.put(field.group(1), field.group(2) != null ? field.group(2) : field.group(3));
+            }
+            if (!fields.isEmpty()) {
+                items.add(fields);
+            }
+        }
+        return items;
+    }
+
+    private static SeatTier parseSeatTier(String value) {
+        if (value == null) {
+            return SeatTier.STANDARD;
+        }
+        if ("PREMIUM".equalsIgnoreCase(value) || "VIP".equalsIgnoreCase(value)) {
+            return SeatTier.PREMIUM;
+        }
+        return SeatTier.STANDARD;
+    }
+
+    private static Integer toInt(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return (int) Math.round(Double.parseDouble(value));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private List<EventSeat> stageSeats(Event event) {
@@ -326,7 +415,7 @@ public class EventService {
 
     private EventDTO toDTO(Event event) {
         FloorPlan fp = event.getFloorPlan();
-        return new EventDTO(
+        EventDTO dto = new EventDTO(
                 event.getEventId(),
                 event.getOrganiser().getUserId(),
                 event.getTitle(),
@@ -342,5 +431,7 @@ public class EventService {
                 event.getCreatedAt(),
                 event.getUpdatedAt()
         );
+        dto.layoutJson = fp != null ? fp.getLayoutJson() : null;
+        return dto;
     }
 }

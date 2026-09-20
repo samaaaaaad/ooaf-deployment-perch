@@ -30,6 +30,8 @@
 
 .ed-decor { fill: #d2e0dc; stroke: none; }
 .ed-decor.ed-stage { fill: #14322e; stroke: none; }
+.ed-decor.ed-table { fill: #14544d; }
+.ed-decor.ed-barrier { fill: #4b5563; }
 .ed-decor.ed-court { fill: #e6efed; stroke: none; }
 .ed-decor-label { fill: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .ed-stage + .ed-decor-label, .ed-decor.ed-stage ~ .ed-decor-label { fill: #fff; }
