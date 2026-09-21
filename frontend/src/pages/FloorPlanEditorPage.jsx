@@ -54,6 +54,8 @@ export default function FloorPlanEditorPage() {
   const [loading, setLoading] = useState(Boolean(editId));
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
+  const [noteType, setNoteType] = useState('info');
+  const [nameError, setNameError] = useState(false);
 
   // Load an existing plan when editing.
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function FloorPlanEditorPage() {
         if (!active) return;
         const plan = (plans || []).find((p) => p.floorPlanId === editId);
         if (!plan) {
+          setNoteType('warning');
           setNote('That floor plan could not be found.');
           return;
         }
@@ -77,7 +80,7 @@ export default function FloorPlanEditorPage() {
           }
         }
       })
-      .catch((err) => { if (active) setNote(err.message || 'Unable to load floor plan'); })
+      .catch((err) => { if (active) { setNoteType('warning'); setNote(err.message || 'Unable to load floor plan'); } })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [editId, user.userId]);
@@ -179,9 +182,12 @@ export default function FloorPlanEditorPage() {
 
   async function handleSave() {
     if (!name.trim()) {
+      setNameError(true);
+      setNoteType('warning');
       setNote('Give the floor plan a name before saving.');
       return;
     }
+    setNameError(false);
     setSaving(true);
     setNote('');
     const payload = {
@@ -198,6 +204,7 @@ export default function FloorPlanEditorPage() {
       }
       navigate('/floorplans');
     } catch (err) {
+      setNoteType('warning');
       setNote(err.message || 'Could not save the floor plan');
       setSaving(false);
     }
@@ -211,10 +218,17 @@ export default function FloorPlanEditorPage() {
         <div>
           <p className="eyebrow">Floor Plan builder</p>
           <input
-            className="fp-name"
+            className={`fp-name${nameError ? ' is-invalid' : ''}`}
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError && e.target.value.trim()) {
+                setNameError(false);
+                setNote('');
+              }
+            }}
             aria-label="Floor Plan name"
+            aria-invalid={nameError}
           />
         </div>
         <div className="fp-head-actions">
@@ -342,7 +356,11 @@ export default function FloorPlanEditorPage() {
             </button>
           </div>
 
-          {note && <p className="fp-saved" role="status">{note}</p>}
+          {note && (
+            <p className={noteType === 'warning' ? 'fp-note-warning' : 'fp-saved'} role={noteType === 'warning' ? 'alert' : 'status'}>
+              {note}
+            </p>
+          )}
         </aside>
       </div>
     </section>

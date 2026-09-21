@@ -31,6 +31,11 @@
   outline: none;
 }
 
+.fp-name.is-invalid {
+  border-color: #dc2626;
+  background: #fff;
+}
+
 .fp-head-actions {
   display: flex;
   gap: 0.6rem;
@@ -213,6 +218,13 @@
   margin: 0;
   font-size: 0.82rem;
   color: var(--brand, #176b63);
+  font-weight: 600;
+}
+
+.fp-note-warning {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #dc2626;
   font-weight: 600;
 }
 
