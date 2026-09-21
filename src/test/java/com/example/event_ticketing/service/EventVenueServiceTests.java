@@ -282,4 +282,73 @@ class EventVenueServiceTests {
         });
         verify(eventSeatRepository, never()).saveAll(any());
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void publishesACustomLayoutEventAndGeneratesSeatsFromLayoutJson() {
+        Event event = new Event(organiser, "Custom Hall", "Builder plan");
+        event.setEventId(UUID.randomUUID());
+        FloorPlan custom = new FloorPlan(organiser, "Hall A", "CUSTOM", 2);
+        custom.setLayoutJson("""
+                [
+                  {"id":"st","type":"stage","x":290,"y":16},
+                  {"id":"tb","type":"table","x":80,"y":200},
+                  {"id":"s1","type":"seat","x":140.4,"y":220.6},
+                  {"id":"br","type":"barrier","x":100,"y":500},
+                  {"id":"s2","type":"seat","x":180,"y":220}
+                ]
+                """);
+        event.setFloorPlan(custom);
+        event.setStandardPrice(new BigDecimal("20.00"));
+        event.setPremiumPrice(new BigDecimal("35.00"));
+
+        com.example.event_ticketing.dto.PublishEventRequest request = new com.example.event_ticketing.dto.PublishEventRequest();
+        request.imageUrl = "https://example.com/banner.jpg";
+
+        when(eventRepository.findByEventIdAndOrganiserUserId(event.getEventId(), organiser.getUserId()))
+                .thenReturn(Optional.of(event));
+        when(eventRepository.save(event)).thenReturn(event);
+        when(eventSeatRepository.existsByEventEventId(event.getEventId())).thenReturn(false);
+
+        EventDTO published = eventService.publishEvent(organiser.getUserId(), event.getEventId(), request);
+
+        ArgumentCaptor<List<EventSeat>> seatsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(eventSeatRepository).saveAll(seatsCaptor.capture());
+        List<EventSeat> seats = seatsCaptor.getValue();
+        assertThat(seats).hasSize(2);
+        assertThat(seats.get(0).getLabel()).isEqualTo("S1");
+        assertThat(seats.get(0).getX()).isEqualTo(140);
+        assertThat(seats.get(0).getY()).isEqualTo(221);
+        assertThat(seats.get(0).getTier()).isEqualTo(SeatTier.STANDARD);
+        assertThat(seats.get(0).getPrice()).isEqualByComparingTo("20.00");
+        assertThat(seats.get(0).getStatus()).isEqualTo(SeatStatus.AVAILABLE);
+        assertThat(seats.get(1).getLabel()).isEqualTo("S2");
+        assertThat(seats.get(1).getX()).isEqualTo(180);
+        assertThat(published.layoutJson).contains("\"type\":\"seat\"");
+        assertThat(published.layoutType).isEqualTo("CUSTOM");
+    }
+
+    @Test
+    void rejectsACustomFloorPlanWithNoSeatItems() {
+        Event event = new Event(organiser, "Empty Hall", "No seats");
+        event.setEventId(UUID.randomUUID());
+        FloorPlan custom = new FloorPlan(organiser, "Empty", "CUSTOM", 0);
+        custom.setLayoutJson("[{\"id\":\"st\",\"type\":\"stage\",\"x\":290,\"y\":16}]");
+        event.setFloorPlan(custom);
+        event.setStandardPrice(new BigDecimal("20.00"));
+        event.setPremiumPrice(new BigDecimal("20.00"));
+
+        com.example.event_ticketing.dto.PublishEventRequest request = new com.example.event_ticketing.dto.PublishEventRequest();
+        request.imageUrl = "https://example.com/banner.jpg";
+
+        when(eventRepository.findByEventIdAndOrganiserUserId(event.getEventId(), organiser.getUserId()))
+                .thenReturn(Optional.of(event));
+        when(eventRepository.save(event)).thenReturn(event);
+        when(eventSeatRepository.existsByEventEventId(event.getEventId())).thenReturn(false);
+
+        assertThatThrownBy(() -> eventService.publishEvent(organiser.getUserId(), event.getEventId(), request))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Cannot generate seats: the floor plan has no seat items");
+        verify(eventSeatRepository, never()).saveAll(any());
+    }
 }

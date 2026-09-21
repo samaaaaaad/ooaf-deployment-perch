@@ -10,17 +10,53 @@ const tierName = { vip: 'VIP', premium: 'Premium', standard: 'Standard' };
 const statusName = { HELD: 'Held', BOOKED: 'Already booked' };
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function liveLayout(seats, layoutType) {
-  if (!seats.length) {
-    return { width: 640, height: 280, decor: [], seats: [] };
+// Matches FloorPlanEditorPage so custom maps line up with the organiser board.
+const BOARD_W = 900;
+const BOARD_H = 560;
+const DECOR = {
+  stage: { shape: 'rect', w: 320, h: 64, label: 'STAGE' },
+  barrier: { shape: 'rect', w: 150, h: 16, label: '' },
+  table: { shape: 'ellipse', r: 26, label: '' },
+};
+
+function parseLayoutItems(layoutJson) {
+  if (!layoutJson) return [];
+  try {
+    const parsed = typeof layoutJson === 'string' ? JSON.parse(layoutJson) : layoutJson;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
   }
+}
+
+function liveLayout(seats, layoutType, layoutJson) {
+  const items = parseLayoutItems(layoutJson);
+  const hasCustomDecor = items.some((item) => item && item.type && item.type !== 'seat');
+  if (!seats.length) {
+    return { width: hasCustomDecor ? BOARD_W : 640, height: hasCustomDecor ? BOARD_H : 280, decor: [], seats: [] };
+  }
+
+  const isDefaultStage = (layoutType || 'STAGE').toUpperCase() === 'STAGE' && items.length === 0;
+  let decor = [];
+  if (isDefaultStage) {
+    decor = [{ shape: 'rect', x: 200, y: 16, w: 240, h: 34, label: 'Stage', kind: 'stage' }];
+  } else {
+    decor = items.flatMap((item) => {
+      const spec = item && DECOR[item.type];
+      if (!spec) return [];
+      if (spec.shape === 'rect') {
+        return [{ shape: 'rect', x: item.x, y: item.y, w: spec.w, h: spec.h, label: spec.label, kind: item.type }];
+      }
+      return [{ shape: 'ellipse', cx: item.x, cy: item.y, rx: spec.r, ry: spec.r, label: spec.label, kind: item.type }];
+    });
+  }
+
   const maxX = Math.max(640, ...seats.map((seat) => seat.x + 18));
   const maxY = Math.max(280, ...seats.map((seat) => seat.y + 26));
-  const isStage = (layoutType || 'STAGE').toUpperCase() === 'STAGE';
   return {
-    width: maxX,
-    height: maxY,
-    decor: isStage ? [{ shape: 'rect', x: 200, y: 16, w: 240, h: 34, label: 'Stage', kind: 'stage' }] : [],
+    width: items.length ? BOARD_W : maxX,
+    height: items.length ? BOARD_H : maxY,
+    decor,
     seats: seats.map((seat) => ({
       ...seat,
       price: Number(seat.price),
@@ -96,7 +132,7 @@ export default function EventDetailPage({ eventId }) {
 
   const event = isLiveEvent ? liveEvent : mockEvent;
   const layout = useMemo(() => {
-    if (isLiveEvent) return liveSeats === null ? null : liveLayout(liveSeats, liveEvent?.layoutType);
+    if (isLiveEvent) return liveSeats === null ? null : liveLayout(liveSeats, liveEvent?.layoutType, liveEvent?.layoutJson);
     return event ? generateLayout(event) : null;
   }, [event, isLiveEvent, liveEvent, liveSeats]);
   const seatById = useMemo(
@@ -176,12 +212,16 @@ export default function EventDetailPage({ eventId }) {
               {layout.decor.map((d, i) => (d.shape === 'rect' ? (
                 <g key={i}>
                   <rect x={d.x} y={d.y} width={d.w} height={d.h} rx="9" className={`ed-decor ed-${d.kind}`} />
-                  <text x={d.x + d.w / 2} y={d.y + d.h / 2 + 4} textAnchor="middle" className="ed-decor-label">{d.label}</text>
+                  {d.label ? (
+                    <text x={d.x + d.w / 2} y={d.y + d.h / 2 + 4} textAnchor="middle" className="ed-decor-label">{d.label}</text>
+                  ) : null}
                 </g>
               ) : (
                 <g key={i}>
-                  <ellipse cx={d.cx} cy={d.cy} rx={d.rx} ry={d.ry} className="ed-decor ed-table" />
-                  <text x={d.cx} y={d.cy + 4} textAnchor="middle" className="ed-decor-label">{d.label}</text>
+                  <ellipse cx={d.cx} cy={d.cy} rx={d.rx} ry={d.ry} className={`ed-decor ed-${d.kind || 'table'}`} />
+                  {d.label ? (
+                    <text x={d.cx} y={d.cy + 4} textAnchor="middle" className="ed-decor-label">{d.label}</text>
+                  ) : null}
                 </g>
               )))}
 
