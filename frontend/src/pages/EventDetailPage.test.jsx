@@ -115,6 +115,33 @@ describe('EventDetailPage live seats', () => {
     expect(screen.getByText('Seat A2')).toBeInTheDocument();
     expect(screen.getByRole('timer')).toHaveTextContent(/2:00|1:59/);
   });
+
+  test('plots custom floor-plan seats and organiser decor from layoutJson', async () => {
+    const eventId = '80c3fcd5-c837-41df-9a0e-b447f6d4c528';
+    eventApi.getPublishedEvent.mockResolvedValue({
+      eventId,
+      title: 'Custom Hall',
+      layoutType: 'CUSTOM',
+      layoutJson: JSON.stringify([
+        { id: 'st', type: 'stage', x: 290, y: 16 },
+        { id: 'tb', type: 'table', x: 80, y: 200 },
+        { id: 's1', type: 'seat', x: 140, y: 220 },
+      ]),
+      standardPrice: 20,
+      premiumPrice: 20,
+    });
+    eventApi.getEventSeats.mockResolvedValue([
+      { id: 'seat-s1', label: 'S1', tier: 'STANDARD', price: 20, x: 140, y: 220, status: 'AVAILABLE' },
+    ]);
+
+    renderPage(eventId);
+
+    const seat = await screen.findByRole('button', { name: /Seat S1, Standard, \$20/i });
+    expect(seat).toHaveAttribute('cx', '140');
+    expect(seat).toHaveAttribute('cy', '220');
+    expect(screen.getByText('STAGE')).toBeInTheDocument();
+    expect(screen.queryByText('Stage')).not.toBeInTheDocument();
+  });
 });
 
 describe('EventDetailPage hold expiry', () => {

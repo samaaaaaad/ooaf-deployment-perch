@@ -15,6 +15,7 @@ public class EventDTO {
     public UUID floorPlanId;
     public String floorPlanName;
     public String layoutType;
+    public String layoutJson;
     public BigDecimal standardPrice;
     public BigDecimal premiumPrice;
     public String imageUrl;
