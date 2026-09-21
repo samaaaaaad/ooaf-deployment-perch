@@ -17,6 +17,7 @@ import com.example.event_ticketing.model.Venue;
 import com.example.event_ticketing.repository.EventRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.FloorPlanRepository;
+import com.example.event_ticketing.repository.SeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.repository.VenueRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,13 +58,16 @@ class EventVenueServiceTests {
     @Mock
     private EventSeatRepository eventSeatRepository;
 
+    @Mock
+    private SeatRepository seatRepository;
+
     private EventService eventService;
     private VenueService venueService;
     private User organiser;
 
     @BeforeEach
     void setUp() {
-        eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository);
+        eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository, seatRepository);
         venueService = new VenueService(venueRepository);
         organiser = new User("Owner", "owner@example.com", "hash", UserRole.ORGANISER);
         organiser.setUserId(UUID.randomUUID());

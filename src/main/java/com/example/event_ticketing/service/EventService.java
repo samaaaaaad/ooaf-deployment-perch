@@ -19,6 +19,7 @@ import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.EventRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.FloorPlanRepository;
+import com.example.event_ticketing.repository.SeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,12 +48,13 @@ public class EventService {
     private final UserRepository userRepository;
     private final FloorPlanRepository floorPlanRepository;
     private final EventSeatRepository eventSeatRepository;
+    private final SeatRepository seatRepository;
 
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository
     ) {
-        this(eventRepository, userRepository, null, null);
+        this(eventRepository, userRepository, null, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -60,12 +62,14 @@ public class EventService {
             EventRepository eventRepository,
             UserRepository userRepository,
             FloorPlanRepository floorPlanRepository,
-            EventSeatRepository eventSeatRepository
+            EventSeatRepository eventSeatRepository,
+            SeatRepository seatRepository
     ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.floorPlanRepository = floorPlanRepository;
         this.eventSeatRepository = eventSeatRepository;
+        this.seatRepository = seatRepository;
     }
 
     public List<EventDTO> getEventsForOrganiser(UUID organiserId) {
@@ -122,16 +126,17 @@ public class EventService {
      */
     @Transactional
     public FloorPlanDTO createFloorPlan(UUID organiserId, FloorPlanRequest request) {
-        if (request == null || request.name == null || request.name.trim().isEmpty()) {
-            throw new ValidationException("Floorplan name is required");
-        }
+        validateFloorPlanRequest(request, true);
         User organiser = userRepository.findById(organiserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organiser not found"));
+        if (organiser.getRole() != UserRole.ORGANISER) {
+            throw new ValidationException("Only organisers can create floor plans");
+        }
 
         FloorPlan plan = new FloorPlan(
                 organiser,
                 request.name.trim(),
-                request.layoutType != null ? request.layoutType : "CUSTOM",
+                request.layoutType != null && !request.layoutType.isBlank() ? request.layoutType.trim() : "CUSTOM",
                 request.capacity != null ? request.capacity : 0
         );
         plan.setLayoutJson(request.layoutJson);
@@ -143,25 +148,57 @@ public class EventService {
      */
     @Transactional
     public FloorPlanDTO updateFloorPlan(UUID organiserId, UUID floorPlanId, FloorPlanRequest request) {
-        if (request == null) {
-            throw new ValidationException("Floorplan details are required");
-        }
-        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
-                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
-        if (plan.getOrganiser() == null || !plan.getOrganiser().getUserId().equals(organiserId)) {
-            throw new ValidationException("You can only edit your own floorplans");
-        }
+        validateFloorPlanRequest(request, false);
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
         if (request.name != null && !request.name.trim().isEmpty()) {
             plan.setName(request.name.trim());
         }
-        if (request.layoutType != null) {
-            plan.setLayoutType(request.layoutType);
+        if (request.layoutType != null && !request.layoutType.isBlank()) {
+            plan.setLayoutType(request.layoutType.trim());
         }
         if (request.capacity != null) {
             plan.setCapacity(request.capacity);
         }
         plan.setLayoutJson(request.layoutJson);
         return toFloorPlanDTO(floorPlanRepository.save(plan));
+    }
+
+    /**
+     * Deletes an organiser's own floorplan, along with any persisted seats.
+     * Floor plans still attached to an event cannot be deleted.
+     */
+    @Transactional
+    public void deleteFloorPlan(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
+        if (eventRepository.existsByFloorPlanFloorPlanId(plan.getFloorPlanId())) {
+            throw new ValidationException("Floor plan is in use by an event and cannot be deleted");
+        }
+        seatRepository.deleteAllByFloorPlanFloorPlanId(plan.getFloorPlanId());
+        floorPlanRepository.delete(plan);
+    }
+
+    private void validateFloorPlanRequest(FloorPlanRequest request, boolean nameRequired) {
+        if (request == null) {
+            throw new ValidationException("Floorplan details are required");
+        }
+        if (nameRequired && (request.name == null || request.name.trim().isEmpty())) {
+            throw new ValidationException("Floorplan name is required");
+        }
+        if (request.name != null && request.name.trim().length() > MAX_TITLE_LENGTH) {
+            throw new ValidationException("Floorplan name must be " + MAX_TITLE_LENGTH + " characters or fewer");
+        }
+        if (request.capacity != null && request.capacity < 0) {
+            throw new ValidationException("Capacity must be 0 or greater");
+        }
+    }
+
+    private FloorPlan requireOwnedFloorPlan(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (plan.getOrganiser() == null || !plan.getOrganiser().getUserId().equals(organiserId)) {
+            throw new ValidationException("You can only edit your own floorplans");
+        }
+        return plan;
     }
 
     private FloorPlanDTO toFloorPlanDTO(FloorPlan p) {
