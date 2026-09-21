@@ -98,3 +98,18 @@
   .ed-main, .co-grid { grid-template-columns: 1fr; }
   .ed-cart { position: static; }
 }
+
+/* ---- Seat hold countdown (US 7.3) ---- */
+.ed-hold-banner {
+  background: #e3efed; border-radius: 10px; color: var(--brand-dark); font-size: 0.85rem;
+  font-weight: 600; margin: 0 0 1rem; padding: 0.6rem 0.9rem; text-align: center;
+}
+.ed-hold-banner strong { font-variant-numeric: tabular-nums; }
+.ed-hold-banner.is-urgent { background: #fbe9e7; color: var(--danger); }
+.ed-notice {
+  background: #fff4dc; border-radius: 10px; color: #7a5300; font-size: 0.86rem;
+  font-weight: 600; margin: 0 0 1rem; padding: 0.6rem 0.9rem;
+}
+.ed-li-timer { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; font-weight: 700; }
+.ed-li-timer.is-urgent { color: var(--danger); }
+.ed-seat.is-pending { cursor: progress; opacity: 0.6; }

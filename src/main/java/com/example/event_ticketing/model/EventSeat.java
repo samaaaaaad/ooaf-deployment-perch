@@ -13,6 +13,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+import java.time.Instant;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -57,6 +59,19 @@ public class EventSeat {
     @Column(name = "status", nullable = false, length = 20)
     private SeatStatus status;
 
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "bigint default 0")
+    private Long version;
+
+    /** Who holds the seat. Only meaningful while status is HELD. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "held_by_user_id")
+    private User heldBy;
+
+    /** When the hold lapses. Only meaningful while status is HELD. */
+    @Column(name = "hold_expires_at")
+    private Instant holdExpiresAt;
+
     public EventSeat() {}
 
     public EventSeat(Event event, String label, SeatTier tier, BigDecimal price, int x, int y) {
@@ -85,4 +100,26 @@ public class EventSeat {
     public void setY(Integer y) { this.y = y; }
     public SeatStatus getStatus() { return status; }
     public void setStatus(SeatStatus status) { this.status = status; }
+    public Long getVersion() { return version; }
+    public User getHeldBy() { return heldBy; }
+    public void setHeldBy(User heldBy) { this.heldBy = heldBy; }
+    public Instant getHoldExpiresAt() { return holdExpiresAt; }
+
+    public void setHoldExpiresAt(Instant holdExpiresAt) { this.holdExpiresAt = holdExpiresAt; }
+
+    /**
+     * True while someone genuinely holds this seat at {@code now}. A HELD row whose expiry has passed is
+     * NOT an active hold, so it can be taken again even before the cleanup job (7.2) has reset it.
+     * A HELD row with no expiry (e.g. set by hand in the H2 console) is treated as held.
+     */
+    public boolean isHoldActiveAt(Instant now) {
+        return status == SeatStatus.HELD && (holdExpiresAt == null || holdExpiresAt.isAfter(now));
+    }
+
+    /** Marks the seat as held by {@code customer} until {@code expiresAt}. */
+    public void hold(User customer, Instant expiresAt) {
+        this.status = SeatStatus.HELD;
+        this.heldBy = customer;
+        this.holdExpiresAt = expiresAt;
+    }
 }
