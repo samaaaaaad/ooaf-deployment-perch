@@ -6,6 +6,7 @@ import com.example.event_ticketing.dto.EventSeatDTO;
 import com.example.event_ticketing.dto.FloorPlanDTO;
 import com.example.event_ticketing.dto.FloorPlanRequest;
 import com.example.event_ticketing.dto.PublishEventRequest;
+import com.example.event_ticketing.dto.SeatDTO;
 import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
@@ -13,6 +14,7 @@ import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
+import com.example.event_ticketing.model.Seat;
 import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
@@ -140,7 +142,9 @@ public class EventService {
                 request.capacity != null ? request.capacity : 0
         );
         plan.setLayoutJson(request.layoutJson);
-        return toFloorPlanDTO(floorPlanRepository.save(plan));
+        FloorPlan saved = floorPlanRepository.save(plan);
+        replaceSeats(saved);
+        return toFloorPlanDTO(saved);
     }
 
     /**
@@ -160,7 +164,43 @@ public class EventService {
             plan.setCapacity(request.capacity);
         }
         plan.setLayoutJson(request.layoutJson);
-        return toFloorPlanDTO(floorPlanRepository.save(plan));
+        FloorPlan saved = floorPlanRepository.save(plan);
+        replaceSeats(saved);
+        return toFloorPlanDTO(saved);
+    }
+
+    /**
+     * Migrates the interim {@code layoutJson} blob (PR #50) into real Seat rows:
+     * every save replaces the floor plan's seats with what the layout currently describes.
+     */
+    private void replaceSeats(FloorPlan plan) {
+        seatRepository.deleteAllByFloorPlanFloorPlanId(plan.getFloorPlanId());
+        List<Seat> seats = seatsFromLayoutJson(plan, plan.getLayoutJson());
+        if (!seats.isEmpty()) {
+            seatRepository.saveAll(seats);
+        }
+    }
+
+    /**
+     * US 4 editor items: {@code [{id, type, x, y, tier}]} with type seat/table/stage/barrier.
+     * Only {@code type=seat} become Seat rows (S1, S2, …).
+     */
+    private List<Seat> seatsFromLayoutJson(FloorPlan plan, String layoutJson) {
+        List<Seat> seats = new ArrayList<>();
+        int index = 0;
+        for (Map<String, String> item : parseLayoutItems(layoutJson)) {
+            if (!"seat".equalsIgnoreCase(item.getOrDefault("type", ""))) {
+                continue;
+            }
+            Integer x = toInt(item.get("x"));
+            Integer y = toInt(item.get("y"));
+            if (x == null || y == null) {
+                continue;
+            }
+            index++;
+            seats.add(new Seat(plan, "S" + index, parseSeatTier(item.get("tier")), x, y));
+        }
+        return seats;
     }
 
     /**
@@ -199,6 +239,22 @@ public class EventService {
             throw new ValidationException("You can only edit your own floorplans");
         }
         return plan;
+    }
+
+    /**
+     * Seats for a floor plan the organiser can see: their own plans, or a shared
+     * default (unowned) plan such as the built-in Stage layout.
+     */
+    public List<SeatDTO> getFloorPlanSeats(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (plan.getOrganiser() != null && !plan.getOrganiser().getUserId().equals(organiserId)) {
+            throw new ValidationException("You can only view your own floorplans");
+        }
+        return seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId())
+                .stream()
+                .map(s -> new SeatDTO(s.getSeatId(), s.getLabel(), s.getTier(), s.getX(), s.getY()))
+                .toList();
     }
 
     private FloorPlanDTO toFloorPlanDTO(FloorPlan p) {

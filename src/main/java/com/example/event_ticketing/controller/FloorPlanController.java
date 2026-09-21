@@ -2,6 +2,7 @@ package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.FloorPlanDTO;
 import com.example.event_ticketing.dto.FloorPlanRequest;
+import com.example.event_ticketing.dto.SeatDTO;
 import com.example.event_ticketing.service.EventService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,5 +58,13 @@ public class FloorPlanController {
     ) {
         eventService.deleteFloorPlan(organiserId, floorPlanId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{floorPlanId}/seats")
+    public ResponseEntity<List<SeatDTO>> getSeats(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID floorPlanId
+    ) {
+        return ResponseEntity.ok(eventService.getFloorPlanSeats(organiserId, floorPlanId));
     }
 }
