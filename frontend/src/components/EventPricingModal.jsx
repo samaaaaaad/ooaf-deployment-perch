@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getFloorplans, getFloorplanSeats, updateEventPricing } from '../api/eventApi';
+import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { useRouter } from '../utils/router';
 
 // Reusable SVG Stage Layout generator with Premium (rows A-B) and Standard (rows C-F) seats
@@ -47,10 +48,12 @@ function StagePreview({ standardPrice, premiumPrice }) {
   );
 }
 
-// Preview for a custom (builder-drawn) floor plan: the same seats, in the same
-// positions, that publishing will actually persist as EventSeat rows.
-function CustomPreview({ seats, standardPrice, premiumPrice }) {
-  if (seats.length === 0) {
+// Preview for a custom (builder-drawn) floor plan: the same seats and decor (tables,
+// stage, barriers), in the same positions, that publishing will actually persist as
+// EventSeat rows / that the builder drew.
+function CustomPreview({ seats, layoutJson, standardPrice, premiumPrice }) {
+  const decor = decorFromLayoutJson(layoutJson);
+  if (seats.length === 0 && decor.length === 0) {
     return (
       <div style={{ background: '#0a2328', borderRadius: '12px', padding: '1.25rem', textAlign: 'center', marginTop: '1rem', color: '#c7d6d8', fontSize: '0.85rem' }}>
         This layout has no seats yet. Add seats to it in the Floor Plan builder.
@@ -63,6 +66,16 @@ function CustomPreview({ seats, standardPrice, premiumPrice }) {
         Floor Plan Preview ({seats.length} seats)
       </div>
       <svg viewBox="0 0 900 560" style={{ width: '100%', height: 'auto', maxHeight: '240px' }} role="img" aria-label="Floor plan preview">
+        {decor.map((d, i) => (d.shape === 'rect' ? (
+          <g key={`d${i}`}>
+            <rect x={d.x} y={d.y} width={d.w} height={d.h} rx="9" fill={d.kind === 'stage' ? '#176b63' : '#4b5563'} />
+            {d.kind === 'stage' && (
+              <text x={d.x + d.w / 2} y={d.y + d.h / 2 + 5} textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">STAGE</text>
+            )}
+          </g>
+        ) : (
+          <ellipse key={`d${i}`} cx={d.cx} cy={d.cy} rx={d.rx} ry={d.ry} fill="#14544d" />
+        )))}
         {seats.map((s) => {
           const isPremium = s.tier === 'PREMIUM';
           const price = isPremium ? premiumPrice : standardPrice;
@@ -262,7 +275,7 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
               Loading floor plan preview…
             </div>
           ) : planSeats ? (
-            <CustomPreview seats={planSeats} standardPrice={standardPrice} premiumPrice={premiumPrice} />
+            <CustomPreview seats={planSeats} layoutJson={selectedPlan?.layoutJson} standardPrice={standardPrice} premiumPrice={premiumPrice} />
           ) : (
             <StagePreview standardPrice={standardPrice} premiumPrice={premiumPrice} />
           )}

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getEvent as getMockEvent, labelFor } from '../data/events';
 import { getEventSeats, getMyHolds, getPublishedEvent, holdSeat, releaseSeatHold } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
+import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
 import { useRouter } from '../utils/router';
 import { generateLayout } from './seatLayout';
@@ -39,17 +40,17 @@ const STAGE_H = 280;
 const CUSTOM_W = 900;
 const CUSTOM_H = 560;
 
-function liveLayout(seats, layoutType) {
+function liveLayout(seats, layoutType, layoutJson) {
   const isStage = (layoutType || 'STAGE').toUpperCase() === 'STAGE';
   const width = isStage ? STAGE_W : CUSTOM_W;
   const height = isStage ? STAGE_H : CUSTOM_H;
-  if (!seats.length) {
-    return { width, height, decor: [], seats: [] };
-  }
+  const decor = isStage
+    ? [{ shape: 'rect', x: 200, y: 16, w: 240, h: 34, label: 'Stage', kind: 'stage' }]
+    : decorFromLayoutJson(layoutJson);
   return {
     width,
     height,
-    decor: isStage ? [{ shape: 'rect', x: 200, y: 16, w: 240, h: 34, label: 'Stage', kind: 'stage' }] : [],
+    decor,
     seats: seats.map((seat) => ({
       ...seat,
       price: Number(seat.price),
@@ -171,7 +172,7 @@ export default function EventDetailPage({ eventId }) {
 
   const event = isLiveEvent ? liveEvent : mockEvent;
   const layout = useMemo(() => {
-    if (isLiveEvent) return liveSeats === null ? null : liveLayout(liveSeats, liveEvent?.layoutType);
+    if (isLiveEvent) return liveSeats === null ? null : liveLayout(liveSeats, liveEvent?.layoutType, liveEvent?.layoutJson);
     return event ? generateLayout(event) : null;
   }, [event, isLiveEvent, liveEvent, liveSeats]);
   const seatById = useMemo(
