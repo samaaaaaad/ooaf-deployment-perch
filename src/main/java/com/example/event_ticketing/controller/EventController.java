@@ -4,6 +4,7 @@ import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
 import com.example.event_ticketing.service.EventService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -65,5 +66,14 @@ public class EventController {
             @RequestBody(required = false) com.example.event_ticketing.dto.PublishEventRequest request
     ) {
         return ResponseEntity.ok(eventService.publishEvent(organiserId, eventId, request));
+    }
+
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID eventId
+    ) {
+        eventService.deleteEvent(organiserId, eventId);
+        return ResponseEntity.noContent().build();
     }
 }

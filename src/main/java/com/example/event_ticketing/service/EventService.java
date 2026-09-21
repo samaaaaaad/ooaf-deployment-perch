@@ -6,6 +6,7 @@ import com.example.event_ticketing.dto.EventSeatDTO;
 import com.example.event_ticketing.dto.FloorPlanDTO;
 import com.example.event_ticketing.dto.FloorPlanRequest;
 import com.example.event_ticketing.dto.PublishEventRequest;
+import com.example.event_ticketing.dto.SeatDTO;
 import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
@@ -13,12 +14,15 @@ import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
+import com.example.event_ticketing.model.Seat;
+import com.example.event_ticketing.model.SeatStatus;
 import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.EventRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.FloorPlanRepository;
+import com.example.event_ticketing.repository.SeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +33,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -47,12 +53,13 @@ public class EventService {
     private final UserRepository userRepository;
     private final FloorPlanRepository floorPlanRepository;
     private final EventSeatRepository eventSeatRepository;
+    private final SeatRepository seatRepository;
 
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository
     ) {
-        this(eventRepository, userRepository, null, null);
+        this(eventRepository, userRepository, null, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -60,12 +67,14 @@ public class EventService {
             EventRepository eventRepository,
             UserRepository userRepository,
             FloorPlanRepository floorPlanRepository,
-            EventSeatRepository eventSeatRepository
+            EventSeatRepository eventSeatRepository,
+            SeatRepository seatRepository
     ) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.floorPlanRepository = floorPlanRepository;
         this.eventSeatRepository = eventSeatRepository;
+        this.seatRepository = seatRepository;
     }
 
     public List<EventDTO> getEventsForOrganiser(UUID organiserId) {
@@ -95,8 +104,10 @@ public class EventService {
         return toDTO(requirePublishedEvent(eventId));
     }
 
+    @Transactional
     public List<EventSeatDTO> getPublishedEventSeats(UUID eventId) {
-        requirePublishedEvent(eventId);
+        Event event = requirePublishedEvent(eventId);
+        resyncSeatsWithFloorPlan(event);
         return toSeatDTOs(eventId);
     }
 
@@ -122,20 +133,23 @@ public class EventService {
      */
     @Transactional
     public FloorPlanDTO createFloorPlan(UUID organiserId, FloorPlanRequest request) {
-        if (request == null || request.name == null || request.name.trim().isEmpty()) {
-            throw new ValidationException("Floorplan name is required");
-        }
+        validateFloorPlanRequest(request, true);
         User organiser = userRepository.findById(organiserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organiser not found"));
+        if (organiser.getRole() != UserRole.ORGANISER) {
+            throw new ValidationException("Only organisers can create floor plans");
+        }
 
         FloorPlan plan = new FloorPlan(
                 organiser,
                 request.name.trim(),
-                request.layoutType != null ? request.layoutType : "CUSTOM",
+                request.layoutType != null && !request.layoutType.isBlank() ? request.layoutType.trim() : "CUSTOM",
                 request.capacity != null ? request.capacity : 0
         );
         plan.setLayoutJson(request.layoutJson);
-        return toFloorPlanDTO(floorPlanRepository.save(plan));
+        FloorPlan saved = floorPlanRepository.save(plan);
+        replaceSeats(saved);
+        return toFloorPlanDTO(saved);
     }
 
     /**
@@ -143,25 +157,109 @@ public class EventService {
      */
     @Transactional
     public FloorPlanDTO updateFloorPlan(UUID organiserId, UUID floorPlanId, FloorPlanRequest request) {
-        if (request == null) {
-            throw new ValidationException("Floorplan details are required");
-        }
-        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
-                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
-        if (plan.getOrganiser() == null || !plan.getOrganiser().getUserId().equals(organiserId)) {
-            throw new ValidationException("You can only edit your own floorplans");
-        }
+        validateFloorPlanRequest(request, false);
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
         if (request.name != null && !request.name.trim().isEmpty()) {
             plan.setName(request.name.trim());
         }
-        if (request.layoutType != null) {
-            plan.setLayoutType(request.layoutType);
+        if (request.layoutType != null && !request.layoutType.isBlank()) {
+            plan.setLayoutType(request.layoutType.trim());
         }
         if (request.capacity != null) {
             plan.setCapacity(request.capacity);
         }
         plan.setLayoutJson(request.layoutJson);
-        return toFloorPlanDTO(floorPlanRepository.save(plan));
+        FloorPlan saved = floorPlanRepository.save(plan);
+        replaceSeats(saved);
+        return toFloorPlanDTO(saved);
+    }
+
+    /**
+     * Migrates the interim {@code layoutJson} blob (PR #50) into real Seat rows:
+     * every save replaces the floor plan's seats with what the layout currently describes.
+     */
+    private void replaceSeats(FloorPlan plan) {
+        seatRepository.deleteAllByFloorPlanFloorPlanId(plan.getFloorPlanId());
+        List<Seat> seats = seatsFromLayoutJson(plan, plan.getLayoutJson());
+        if (!seats.isEmpty()) {
+            seatRepository.saveAll(seats);
+        }
+    }
+
+    /**
+     * US 4 editor items: {@code [{id, type, x, y, tier}]} with type seat/table/stage/barrier.
+     * Only {@code type=seat} become Seat rows (S1, S2, …).
+     */
+    private List<Seat> seatsFromLayoutJson(FloorPlan plan, String layoutJson) {
+        List<Seat> seats = new ArrayList<>();
+        int index = 0;
+        for (Map<String, String> item : parseLayoutItems(layoutJson)) {
+            if (!"seat".equalsIgnoreCase(item.getOrDefault("type", ""))) {
+                continue;
+            }
+            Integer x = toInt(item.get("x"));
+            Integer y = toInt(item.get("y"));
+            if (x == null || y == null) {
+                continue;
+            }
+            index++;
+            seats.add(new Seat(plan, "S" + index, parseSeatTier(item.get("tier")), x, y));
+        }
+        return seats;
+    }
+
+    /**
+     * Deletes an organiser's own floorplan, along with any persisted seats.
+     * Floor plans still attached to an event cannot be deleted.
+     */
+    @Transactional
+    public void deleteFloorPlan(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
+        if (eventRepository.existsByFloorPlanFloorPlanId(plan.getFloorPlanId())) {
+            throw new ValidationException("Floor plan is in use by an event and cannot be deleted");
+        }
+        seatRepository.deleteAllByFloorPlanFloorPlanId(plan.getFloorPlanId());
+        floorPlanRepository.delete(plan);
+    }
+
+    private void validateFloorPlanRequest(FloorPlanRequest request, boolean nameRequired) {
+        if (request == null) {
+            throw new ValidationException("Floorplan details are required");
+        }
+        if (nameRequired && (request.name == null || request.name.trim().isEmpty())) {
+            throw new ValidationException("Floorplan name is required");
+        }
+        if (request.name != null && request.name.trim().length() > MAX_TITLE_LENGTH) {
+            throw new ValidationException("Floorplan name must be " + MAX_TITLE_LENGTH + " characters or fewer");
+        }
+        if (request.capacity != null && request.capacity < 0) {
+            throw new ValidationException("Capacity must be 0 or greater");
+        }
+    }
+
+    private FloorPlan requireOwnedFloorPlan(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (plan.getOrganiser() == null || !plan.getOrganiser().getUserId().equals(organiserId)) {
+            throw new ValidationException("You can only edit your own floorplans");
+        }
+        return plan;
+    }
+
+    /**
+     * Seats for a floor plan the organiser can see: their own plans, or a shared
+     * default (unowned) plan such as the built-in Stage layout.
+     */
+    public List<SeatDTO> getFloorPlanSeats(UUID organiserId, UUID floorPlanId) {
+        FloorPlan plan = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (plan.getOrganiser() != null && !plan.getOrganiser().getUserId().equals(organiserId)) {
+            throw new ValidationException("You can only view your own floorplans");
+        }
+        return seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId())
+                .stream()
+                .map(s -> new SeatDTO(s.getSeatId(), s.getLabel(), s.getTier(), s.getX(), s.getY()))
+                .toList();
     }
 
     private FloorPlanDTO toFloorPlanDTO(FloorPlan p) {
@@ -295,6 +393,56 @@ public class EventService {
     }
 
     /**
+     * Keeps a published event's seats in sync with its floor plan when it's safe to:
+     * nothing books tickets yet (no BOOKED status is ever reached), so as long as no seat
+     * is actively held, re-snapshotting from the floor plan's current Seat rows can't
+     * disrupt anyone. This is what lets an organiser edit a floor plan after publishing
+     * and have customers browsing the event see the up-to-date layout.
+     */
+    private void resyncSeatsWithFloorPlan(Event event) {
+        FloorPlan plan = event.getFloorPlan();
+        if (plan == null) {
+            return;
+        }
+        List<Seat> planSeats = seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId());
+        if (planSeats.isEmpty()) {
+            return; // e.g. the built-in Stage layout, which has no persisted Seat rows
+        }
+        List<EventSeat> current = eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(event.getEventId());
+        Instant now = Instant.now();
+        boolean anyActive = current.stream()
+                .anyMatch(s -> s.getStatus() == SeatStatus.BOOKED || s.isHoldActiveAt(now));
+        if (anyActive || seatsMatch(current, planSeats)) {
+            return;
+        }
+        eventSeatRepository.deleteAll(current);
+        eventSeatRepository.flush(); // old rows must be gone before the same (event, label) pairs are reinserted
+        eventSeatRepository.saveAll(planSeats.stream()
+                .map(s -> new EventSeat(
+                        event, s.getLabel(), s.getTier(),
+                        s.getTier() == SeatTier.PREMIUM && event.getPremiumPrice() != null
+                                ? event.getPremiumPrice() : event.getStandardPrice(),
+                        s.getX(), s.getY()))
+                .toList());
+    }
+
+    private static boolean seatsMatch(List<EventSeat> current, List<Seat> planSeats) {
+        if (current.size() != planSeats.size()) {
+            return false;
+        }
+        Set<String> currentKeys = current.stream().map(EventService::seatKey).collect(Collectors.toSet());
+        return planSeats.stream().allMatch(s -> currentKeys.contains(seatKey(s)));
+    }
+
+    private static String seatKey(EventSeat s) {
+        return s.getLabel() + '|' + s.getTier() + '|' + s.getX() + '|' + s.getY();
+    }
+
+    private static String seatKey(Seat s) {
+        return s.getLabel() + '|' + s.getTier() + '|' + s.getX() + '|' + s.getY();
+    }
+
+    /**
      * US 4 editor items: {@code [{id, type, x, y}]} with type seat/table/stage/barrier.
      * Only {@code type=seat} become EventSeat rows (S1, S2, …).
      */
@@ -378,6 +526,17 @@ public class EventService {
             }
         }
         return seats;
+    }
+
+    /**
+     * Deletes an organiser's own event, along with any seats generated for it.
+     */
+    @Transactional
+    public void deleteEvent(UUID organiserId, UUID eventId) {
+        Event event = eventRepository.findByEventIdAndOrganiserUserId(eventId, organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        eventSeatRepository.deleteAllByEventEventId(event.getEventId());
+        eventRepository.delete(event);
     }
 
     /**

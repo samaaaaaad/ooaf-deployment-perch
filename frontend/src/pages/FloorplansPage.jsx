@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { getFloorplans } from '../api/eventApi';
+import { deleteFloorplan, getFloorplans } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
@@ -15,6 +15,7 @@ export default function FloorplansPage() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -24,6 +25,20 @@ export default function FloorplansPage() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [user.userId]);
+
+  async function handleDelete(plan) {
+    if (!window.confirm(`Delete "${plan.name}"? This cannot be undone.`)) return;
+    setError('');
+    setDeletingId(plan.floorPlanId);
+    try {
+      await deleteFloorplan(user.userId, plan.floorPlanId);
+      setPlans((prev) => prev.filter((p) => p.floorPlanId !== plan.floorPlanId));
+    } catch (err) {
+      setError(err.message || 'Unable to delete floor plan');
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   const owned = plans.filter((p) => p.organiserId === user.userId);
   const templates = plans.filter((p) => p.organiserId !== user.userId);
@@ -62,13 +77,23 @@ export default function FloorplansPage() {
                     <strong>{p.name}</strong>
                     <small>{p.capacity} seats · {p.layoutType}</small>
                   </div>
-                  <button
-                    type="button"
-                    className="button button-secondary button-small"
-                    onClick={() => navigate(`/floorplan?id=${p.floorPlanId}`)}
-                  >
-                    Edit
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className="button button-secondary button-small"
+                      onClick={() => navigate(`/floorplan?id=${p.floorPlanId}`)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary button-small"
+                      onClick={() => handleDelete(p)}
+                      disabled={deletingId === p.floorPlanId}
+                    >
+                      {deletingId === p.floorPlanId ? 'Deleting…' : 'Delete'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

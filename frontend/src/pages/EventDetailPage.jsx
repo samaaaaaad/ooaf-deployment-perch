@@ -29,16 +29,26 @@ function without(map, key) {
   return rest;
 }
 
+// Custom (builder-drawn) layouts are authored on a 900x560 board (see
+// FloorPlanEditorPage/BOARD_W/BOARD_H) and Stage layouts on a 640x280 grid
+// (see EventService#stageSeats). Reusing those same fixed canvases here keeps
+// a seat's on-screen position identical to where it was placed in the builder,
+// instead of cropping the viewBox to the seats' bounding box.
+const STAGE_W = 640;
+const STAGE_H = 280;
+const CUSTOM_W = 900;
+const CUSTOM_H = 560;
+
 function liveLayout(seats, layoutType) {
-  if (!seats.length) {
-    return { width: 640, height: 280, decor: [], seats: [] };
-  }
-  const maxX = Math.max(640, ...seats.map((seat) => seat.x + 18));
-  const maxY = Math.max(280, ...seats.map((seat) => seat.y + 26));
   const isStage = (layoutType || 'STAGE').toUpperCase() === 'STAGE';
+  const width = isStage ? STAGE_W : CUSTOM_W;
+  const height = isStage ? STAGE_H : CUSTOM_H;
+  if (!seats.length) {
+    return { width, height, decor: [], seats: [] };
+  }
   return {
-    width: maxX,
-    height: maxY,
+    width,
+    height,
     decor: isStage ? [{ shape: 'rect', x: 200, y: 16, w: 240, h: 34, label: 'Stage', kind: 'stage' }] : [],
     seats: seats.map((seat) => ({
       ...seat,

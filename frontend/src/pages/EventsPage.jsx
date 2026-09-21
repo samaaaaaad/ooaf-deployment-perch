@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { createEvent, getEvents, publishEvent } from '../api/eventApi';
+import { createEvent, deleteEvent, getEvents, publishEvent } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
 import EmptyState from '../components/EmptyState';
@@ -104,6 +104,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [publishingId, setPublishingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [publishModalEvent, setPublishModalEvent] = useState(null);
   const [editingPricingEvent, setEditingPricingEvent] = useState(null);
 
@@ -152,6 +153,20 @@ export default function EventsPage() {
       setPublishModalEvent(null);
     } finally {
       setPublishingId(null);
+    }
+  }
+
+  async function handleDelete(event) {
+    if (!window.confirm(`Delete "${event.title}"? This cannot be undone.`)) return;
+    setError('');
+    setDeletingId(event.eventId);
+    try {
+      await deleteEvent(user.userId, event.eventId);
+      setEvents((prev) => prev.filter((ev) => ev.eventId !== event.eventId));
+    } catch (requestError) {
+      setError(requestError.message || 'Unable to delete event');
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -259,6 +274,14 @@ export default function EventsPage() {
                                 {publishingId === event.eventId ? 'Publishing…' : 'Publish'}
                               </button>
                             )}
+                            <button
+                              type="button"
+                              className="button button-secondary button-small"
+                              onClick={() => handleDelete(event)}
+                              disabled={deletingId === event.eventId}
+                            >
+                              {deletingId === event.eventId ? 'Deleting…' : 'Delete'}
+                            </button>
                           </div>
                         </td>
                       )}

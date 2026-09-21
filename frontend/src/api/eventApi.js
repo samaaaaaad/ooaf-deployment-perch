@@ -29,6 +29,16 @@ export function updateFloorplan(organiserId, floorPlanId, data) {
   });
 }
 
+export function getFloorplanSeats(organiserId, floorPlanId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/floorplans/${encodeURIComponent(floorPlanId)}/seats`);
+}
+
+export function deleteFloorplan(organiserId, floorPlanId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/floorplans/${encodeURIComponent(floorPlanId)}`, {
+    method: 'DELETE',
+  });
+}
+
 export function updateEventPricing(organiserId, eventId, data) {
   return request(`/api/organisers/${encodeURIComponent(organiserId)}/events/${encodeURIComponent(eventId)}/pricing`, {
     method: 'PUT',
@@ -40,6 +50,12 @@ export function publishEvent(organiserId, eventId, imageUrl) {
   return request(`/api/organisers/${encodeURIComponent(organiserId)}/events/${encodeURIComponent(eventId)}/publish`, {
     method: 'POST',
     body: JSON.stringify({ imageUrl }),
+  });
+}
+
+export function deleteEvent(organiserId, eventId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/events/${encodeURIComponent(eventId)}`, {
+    method: 'DELETE',
   });
 }
 

@@ -18,6 +18,7 @@ import java.util.Optional;
 public interface EventSeatRepository extends JpaRepository<EventSeat, UUID> {
     boolean existsByEventEventId(UUID eventId);
     List<EventSeat> findAllByEventEventIdOrderByYAscXAsc(UUID eventId);
+    void deleteAllByEventEventId(UUID eventId);
     Optional<EventSeat> findByEventSeatIdAndEventEventId(UUID eventSeatId, UUID eventId);
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
