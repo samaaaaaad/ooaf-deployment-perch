@@ -15,6 +15,7 @@ import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
 import com.example.event_ticketing.model.Seat;
+import com.example.event_ticketing.model.SeatStatus;
 import com.example.event_ticketing.model.SeatTier;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
@@ -32,9 +33,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -101,8 +104,10 @@ public class EventService {
         return toDTO(requirePublishedEvent(eventId));
     }
 
+    @Transactional
     public List<EventSeatDTO> getPublishedEventSeats(UUID eventId) {
-        requirePublishedEvent(eventId);
+        Event event = requirePublishedEvent(eventId);
+        resyncSeatsWithFloorPlan(event);
         return toSeatDTOs(eventId);
     }
 
@@ -388,6 +393,56 @@ public class EventService {
     }
 
     /**
+     * Keeps a published event's seats in sync with its floor plan when it's safe to:
+     * nothing books tickets yet (no BOOKED status is ever reached), so as long as no seat
+     * is actively held, re-snapshotting from the floor plan's current Seat rows can't
+     * disrupt anyone. This is what lets an organiser edit a floor plan after publishing
+     * and have customers browsing the event see the up-to-date layout.
+     */
+    private void resyncSeatsWithFloorPlan(Event event) {
+        FloorPlan plan = event.getFloorPlan();
+        if (plan == null) {
+            return;
+        }
+        List<Seat> planSeats = seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId());
+        if (planSeats.isEmpty()) {
+            return; // e.g. the built-in Stage layout, which has no persisted Seat rows
+        }
+        List<EventSeat> current = eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(event.getEventId());
+        Instant now = Instant.now();
+        boolean anyActive = current.stream()
+                .anyMatch(s -> s.getStatus() == SeatStatus.BOOKED || s.isHoldActiveAt(now));
+        if (anyActive || seatsMatch(current, planSeats)) {
+            return;
+        }
+        eventSeatRepository.deleteAll(current);
+        eventSeatRepository.flush(); // old rows must be gone before the same (event, label) pairs are reinserted
+        eventSeatRepository.saveAll(planSeats.stream()
+                .map(s -> new EventSeat(
+                        event, s.getLabel(), s.getTier(),
+                        s.getTier() == SeatTier.PREMIUM && event.getPremiumPrice() != null
+                                ? event.getPremiumPrice() : event.getStandardPrice(),
+                        s.getX(), s.getY()))
+                .toList());
+    }
+
+    private static boolean seatsMatch(List<EventSeat> current, List<Seat> planSeats) {
+        if (current.size() != planSeats.size()) {
+            return false;
+        }
+        Set<String> currentKeys = current.stream().map(EventService::seatKey).collect(Collectors.toSet());
+        return planSeats.stream().allMatch(s -> currentKeys.contains(seatKey(s)));
+    }
+
+    private static String seatKey(EventSeat s) {
+        return s.getLabel() + '|' + s.getTier() + '|' + s.getX() + '|' + s.getY();
+    }
+
+    private static String seatKey(Seat s) {
+        return s.getLabel() + '|' + s.getTier() + '|' + s.getX() + '|' + s.getY();
+    }
+
+    /**
      * US 4 editor items: {@code [{id, type, x, y}]} with type seat/table/stage/barrier.
      * Only {@code type=seat} become EventSeat rows (S1, S2, …).
      */
@@ -471,6 +526,17 @@ public class EventService {
             }
         }
         return seats;
+    }
+
+    /**
+     * Deletes an organiser's own event, along with any seats generated for it.
+     */
+    @Transactional
+    public void deleteEvent(UUID organiserId, UUID eventId) {
+        Event event = eventRepository.findByEventIdAndOrganiserUserId(eventId, organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+        eventSeatRepository.deleteAllByEventEventId(event.getEventId());
+        eventRepository.delete(event);
     }
 
     /**
