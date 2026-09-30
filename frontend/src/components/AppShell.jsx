@@ -20,6 +20,7 @@ export default function AppShell({ children }) {
   }
 
   const isOrganiser = user?.role === 'ORGANISER';
+  const isAdmin = user?.role === 'ADMIN';
 
   return (
     <div className="app-shell">
@@ -34,6 +35,7 @@ export default function AppShell({ children }) {
 
         <nav className="primary-nav" aria-label="Primary navigation">
           <NavLink to="/browse">Browse</NavLink>
+          {isAdmin && <NavLink to="/admin">Dashboard</NavLink>}
           {isOrganiser && <NavLink to="/events">My Events</NavLink>}
           {isOrganiser && <NavLink to="/floorplans">Floor Plans</NavLink>}
           {isOrganiser && <NavLink to="/venues">Venues</NavLink>}

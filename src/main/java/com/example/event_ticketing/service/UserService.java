@@ -43,6 +43,9 @@ public class UserService {
         }
 
         UserRole role = req.role != null ? req.role : UserRole.CUSTOMER;
+        if (role == UserRole.ADMIN) {
+            throw new IllegalArgumentException("Cannot self-register as admin");
+        }
         User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), role);
         User saved = userRepository.save(user);
         return toDTO(saved);
