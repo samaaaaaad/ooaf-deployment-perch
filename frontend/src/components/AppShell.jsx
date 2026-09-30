@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   acknowledgeOrganiserRequest,
@@ -25,6 +25,9 @@ export default function AppShell({ children }) {
   const [latestRequest, setLatestRequest] = useState(null);
   const [outcomeBanner, setOutcomeBanner] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null); // 'request' | 'cancel'
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [pendingNoticeDismissed, setPendingNoticeDismissed] = useState(false);
+  const menuRef = useRef(null);
 
   function handleLogout() {
     signOut();
@@ -58,11 +61,23 @@ export default function AppShell({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [menuOpen]);
+
   async function handleConfirmRequest() {
     const updated = await submitOrganiserRequest(user.userId);
     signIn(updated);
     const latest = await getLatestOrganiserRequest(user.userId);
     setLatestRequest(latest);
+    setPendingNoticeDismissed(false);
     setConfirmAction(null);
   }
 
@@ -92,40 +107,79 @@ export default function AppShell({ children }) {
           {canViewOrganiserPages && <NavLink to="/venues">Venues</NavLink>}
         </nav>
 
-        <div className="account-menu">
-          {isCustomer && (
-            <button
-              className="button button-secondary button-small"
-              type="button"
-              onClick={() => setConfirmAction('request')}
-            >
-              Become an organiser
-            </button>
-          )}
-          {isPendingOrganiser && (
-            <>
-              <span className="status-pill">Organiser request pending</span>
-              <button
-                className="button button-secondary button-small"
-                type="button"
-                onClick={() => setConfirmAction('cancel')}
-              >
-                Cancel request
-              </button>
-            </>
-          )}
-          <span className="avatar" aria-hidden="true">{initials(user.fullName)}</span>
-          <span className="account-copy">
-            <strong>{user.fullName}</strong>
-            <small>{user.email}</small>
-          </span>
-          <button className="button button-secondary button-small" type="button" onClick={handleLogout}>
-            Log out
+        <div className="account-menu" ref={menuRef}>
+          <button
+            type="button"
+            className="avatar-button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Account menu"
+            aria-expanded={menuOpen}
+          >
+            <span className="avatar" aria-hidden="true">{initials(user.fullName)}</span>
           </button>
+
+          {menuOpen && (
+            <div className="account-popover">
+              <div className="account-popover-header">
+                <span className="avatar avatar-large" aria-hidden="true">{initials(user.fullName)}</span>
+                <strong>{user.fullName}</strong>
+                <small>{user.email}</small>
+              </div>
+
+              {isCustomer && (
+                <>
+                  <div className="account-popover-divider" />
+                  <button
+                    type="button"
+                    className="account-popover-item"
+                    onClick={() => { setMenuOpen(false); setConfirmAction('request'); }}
+                  >
+                    Become an Organiser
+                  </button>
+                </>
+              )}
+
+              {isPendingOrganiser && (
+                <>
+                  <div className="account-popover-divider" />
+                  <button
+                    type="button"
+                    className="account-popover-item"
+                    onClick={() => { setMenuOpen(false); setConfirmAction('cancel'); }}
+                  >
+                    Cancel organiser request
+                  </button>
+                </>
+              )}
+
+              <div className="account-popover-divider" />
+              <button type="button" className="account-popover-item" onClick={handleLogout}>
+                Log out
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       <main className="page-container">
+        {isPendingOrganiser && !pendingNoticeDismissed && (
+          <div className="notice notice-info" role="status">
+            <span>Your organiser request is pending admin review.</span>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button type="button" className="notice-action" onClick={() => setConfirmAction('cancel')}>
+                Cancel request
+              </button>
+              <button
+                type="button"
+                className="notice-dismiss"
+                onClick={() => setPendingNoticeDismissed(true)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
         {outcomeBanner && (
           <div
             className={outcomeBanner === 'APPROVED' ? 'notice notice-success' : 'notice notice-error'}
