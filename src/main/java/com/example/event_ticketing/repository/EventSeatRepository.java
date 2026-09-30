@@ -1,12 +1,14 @@
 package com.example.event_ticketing.repository;
 
 
+import com.example.event_ticketing.dto.PopularEventDTO;
 import com.example.event_ticketing.model.EventSeat;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.math.BigDecimal;
 import java.time.Instant;
 import com.example.event_ticketing.model.SeatStatus;
 
@@ -55,4 +57,17 @@ public interface EventSeatRepository extends JpaRepository<EventSeat, UUID> {
                and s.heldBy.userId = :customerId
             """)
     int releaseHoldOf(@Param("seatId") UUID seatId, @Param("customerId") UUID customerId);
+
+    @Query("select coalesce(sum(s.price), 0) from EventSeat s where s.status = com.example.event_ticketing.model.SeatStatus.BOOKED")
+    BigDecimal sumRevenue();
+
+    @Query("""
+            select new com.example.event_ticketing.dto.PopularEventDTO(
+                s.event.eventId, s.event.title, count(s), coalesce(sum(s.price), 0))
+            from EventSeat s
+            where s.status = com.example.event_ticketing.model.SeatStatus.BOOKED
+            group by s.event.eventId, s.event.title
+            order by count(s) desc
+            """)
+    List<PopularEventDTO> findPopularEventsByTicketsSold();
 }

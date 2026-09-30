@@ -3,12 +3,15 @@ package com.example.event_ticketing.service;
 import com.example.event_ticketing.dto.LoginRequest;
 import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
+import com.example.event_ticketing.model.OrganiserRequest;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
+import com.example.event_ticketing.repository.OrganiserRequestRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.util.PasswordUtil;
 import com.example.event_ticketing.util.PasswordValidator;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
 
@@ -16,11 +19,14 @@ import java.util.Locale;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final OrganiserRequestRepository organiserRequestRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, OrganiserRequestRepository organiserRequestRepository) {
         this.userRepository = userRepository;
+        this.organiserRequestRepository = organiserRequestRepository;
     }
 
+    @Transactional
     public UserDTO register(RegisterRequest req) {
         if (req == null) {
             throw new IllegalArgumentException("Registration details are required");
@@ -42,12 +48,19 @@ public class UserService {
             throw new IllegalArgumentException("An account with this email already exists");
         }
 
-        UserRole role = req.role != null ? req.role : UserRole.CUSTOMER;
-        if (role == UserRole.ADMIN) {
-            throw new IllegalArgumentException("Cannot self-register as admin");
+        UserRole requestedRole = req.role != null ? req.role : UserRole.CUSTOMER;
+        if (requestedRole == UserRole.ADMIN || requestedRole == UserRole.PENDING_ORGANISER) {
+            throw new IllegalArgumentException("Cannot self-register with this role");
         }
-        User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), role);
+
+        // Organiser access always goes through admin approval: sign up as PENDING_ORGANISER
+        // and open a request, rather than granting ORGANISER outright.
+        UserRole initialRole = requestedRole == UserRole.ORGANISER ? UserRole.PENDING_ORGANISER : requestedRole;
+        User user = new User(fullName, email, PasswordUtil.hashPassword(req.password), initialRole);
         User saved = userRepository.save(user);
+        if (initialRole == UserRole.PENDING_ORGANISER) {
+            organiserRequestRepository.save(new OrganiserRequest(saved));
+        }
         return toDTO(saved);
     }
 
