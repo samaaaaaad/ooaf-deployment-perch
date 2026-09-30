@@ -43,6 +43,8 @@ a { color: inherit; }
 .button-primary { color: #fff; background: var(--brand); box-shadow: 0 8px 18px rgba(23, 107, 99, 0.18); }
 .button-primary:hover { background: var(--brand-dark); }
 .button-secondary { color: var(--ink); background: #edf1f2; }
+.button-danger { color: #fff; background: var(--danger); box-shadow: 0 8px 18px rgba(180, 35, 24, 0.18); }
+.button-danger:hover { background: #8f1b12; }
 .button-full { width: 100%; }
 .button-small { min-height: 36px; padding: 0.5rem 0.8rem; font-size: 0.82rem; }
 
@@ -110,8 +112,20 @@ a { color: inherit; }
 .primary-nav { align-items: stretch; display: flex; gap: 0.4rem; height: 76px; }
 .primary-nav a { align-items: center; border-bottom: 3px solid transparent; color: var(--muted); display: inline-flex; font-size: 0.86rem; font-weight: 700; padding: 0 0.8rem; text-decoration: none; }
 .primary-nav a.active { border-color: var(--brand); color: var(--ink); }
-.account-menu { align-items: center; display: flex; gap: 0.65rem; justify-self: end; }
+.account-menu { align-items: center; display: flex; gap: 0.65rem; justify-self: end; position: relative; }
 .avatar { align-items: center; background: #e0eeec; border-radius: 50%; color: var(--brand-dark); display: inline-flex; font-size: 0.7rem; font-weight: 900; height: 34px; justify-content: center; width: 34px; }
+.avatar-large { font-size: 1.1rem; height: 56px; width: 56px; }
+.avatar-button { background: none; border: 0; border-radius: 50%; cursor: pointer; padding: 0; }
+.avatar-button:focus-visible { outline: 3px solid rgba(23, 107, 99, 0.22); outline-offset: 2px; }
+.account-popover { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 0.5rem; position: absolute; right: 0; top: calc(100% + 10px); width: 260px; z-index: 30; }
+.account-popover-header { align-items: center; display: flex; flex-direction: column; gap: 0.5rem; padding: 1.1rem 1rem; text-align: center; }
+.account-popover-header strong { font-size: 0.95rem; }
+.account-popover-header small { color: var(--muted); font-size: 0.8rem; word-break: break-all; }
+.account-popover-divider { border-top: 1px solid var(--line); margin: 0.25rem 0; }
+.account-popover-item { background: none; border: 0; border-radius: 8px; color: var(--ink); cursor: pointer; display: block; font-size: 0.88rem; font-weight: 700; padding: 0.7rem 0.85rem; text-align: left; width: 100%; }
+.account-popover-item:hover { background: var(--surface-soft); }
+.notice-info { background: #eef1f2; color: var(--ink); }
+.notice-action { background: none; border: 0; color: inherit; cursor: pointer; font-size: 0.82rem; font-weight: 800; padding: 0; text-decoration: underline; white-space: nowrap; }
 .account-copy { display: flex; flex-direction: column; max-width: 170px; }
 .account-copy strong, .account-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-copy strong { font-size: 0.78rem; }
@@ -128,6 +142,7 @@ a { color: inherit; }
 .metric-value { font-size: 3rem; letter-spacing: -0.05em; line-height: 1; margin: 0.7rem 0 auto; }
 .metric-card > span:last-child { color: var(--brand); font-size: 0.78rem; font-weight: 750; }
 .content-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; }
+.content-card + .content-card { margin-top: 1.25rem; }
 .card-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 1rem; }
 .card-heading h2 { margin: 0; }
 .card-heading a { color: var(--brand); font-size: 0.8rem; font-weight: 800; }
@@ -138,8 +153,11 @@ a { color: inherit; }
 .loading-state { align-items: center; color: var(--muted); display: flex; gap: 0.75rem; justify-content: center; min-height: 240px; }
 .spinner { animation: spin 700ms linear infinite; border: 2px solid #cedbde; border-radius: 50%; border-top-color: var(--brand); height: 20px; width: 20px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.notice { border-radius: 10px; margin-bottom: 1rem; padding: 0.8rem 1rem; }
+.notice { align-items: center; border-radius: 10px; display: flex; gap: 0.75rem; justify-content: space-between; margin-bottom: 1rem; padding: 0.8rem 1rem; }
 .notice-error { background: #fff1f0; color: var(--danger); }
+.notice-success { background: #e1f2e8; color: #1d6942; }
+.notice-dismiss { background: none; border: 0; color: inherit; cursor: pointer; font-size: 1.1rem; line-height: 1; opacity: 0.7; padding: 0; }
+.notice-dismiss:hover { opacity: 1; }
 .record-list { display: flex; flex-direction: column; }
 .record-row { align-items: center; border-top: 1px solid var(--line); display: flex; justify-content: space-between; padding: 1rem 0; }
 .record-row:first-child { border-top: 0; }
@@ -176,7 +194,6 @@ tbody tr:last-child td { border-bottom: 0; }
   .app-header { gap: 1rem; grid-template-columns: 1fr auto; padding: 0 1rem; }
   .primary-nav { grid-column: 1 / -1; grid-row: 2; height: 50px; order: 3; overflow-x: auto; }
   .app-header { padding-top: 0.75rem; }
-  .account-copy { display: none; }
 }
 
 @media (max-width: 620px) {
@@ -184,7 +201,6 @@ tbody tr:last-child td { border-bottom: 0; }
   .auth-intro-copy > p:last-child, .auth-intro-footnote { display: none; }
   .auth-intro h1 { font-size: 2.25rem; }
   .auth-card { padding: 1.5rem; }
-  .account-menu .avatar { display: none; }
   .page-heading { align-items: flex-start; flex-direction: column; }
   .metric-grid, .venue-grid { grid-template-columns: 1fr; }
   .record-row { align-items: flex-start; gap: 1rem; }
