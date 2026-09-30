@@ -12,6 +12,7 @@ import './FloorplansPage.css';
 export default function FloorplansPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const canManage = user.role === 'ORGANISER';
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -51,9 +52,11 @@ export default function FloorplansPage() {
           <h1>Saved Floor Plans</h1>
           <p>Design a seating layout once, then reuse it across your events.</p>
         </div>
-        <button type="button" className="button button-primary" onClick={() => navigate('/floorplan')}>
-          + New Floor Plan
-        </button>
+        {canManage && (
+          <button type="button" className="button button-primary" onClick={() => navigate('/floorplan')}>
+            + New Floor Plan
+          </button>
+        )}
       </div>
 
       {error && <div className="notice notice-error" role="alert">{error}</div>}
@@ -77,23 +80,27 @@ export default function FloorplansPage() {
                     <strong>{p.name}</strong>
                     <small>{p.capacity} seats · {p.layoutType}</small>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      type="button"
-                      className="button button-secondary button-small"
-                      onClick={() => navigate(`/floorplan?id=${p.floorPlanId}`)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="button button-secondary button-small"
-                      onClick={() => handleDelete(p)}
-                      disabled={deletingId === p.floorPlanId}
-                    >
-                      {deletingId === p.floorPlanId ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </div>
+                  {canManage ? (
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        className="button button-secondary button-small"
+                        onClick={() => navigate(`/floorplan?id=${p.floorPlanId}`)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-secondary button-small"
+                        onClick={() => handleDelete(p)}
+                        disabled={deletingId === p.floorPlanId}
+                      >
+                        {deletingId === p.floorPlanId ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="status-pill">Read-only</span>
+                  )}
                 </div>
               ))}
             </div>

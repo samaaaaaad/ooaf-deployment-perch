@@ -37,8 +37,10 @@ export default function App() {
     return <Redirect to="/browse" />;
   }
 
+  // Pending applicants can view organiser pages read-only while their request is reviewed.
   const organiserOnly = ['/events', '/venues', '/floorplan', '/floorplans'];
-  if (organiserOnly.includes(path) && user.role !== 'ORGANISER') {
+  const canViewOrganiserPages = user.role === 'ORGANISER' || user.role === 'PENDING_ORGANISER';
+  if (organiserOnly.includes(path) && !canViewOrganiserPages) {
     return <Redirect to="/browse" />;
   }
 

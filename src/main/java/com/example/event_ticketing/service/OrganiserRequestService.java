@@ -82,6 +82,29 @@ public class OrganiserRequestService {
         return toDTO(organiserRequestRepository.save(request));
     }
 
+    /** The applicant withdraws their own pending request. */
+    @Transactional
+    public UserDTO cancel(UUID userId, UUID requestId) {
+        OrganiserRequest request = organiserRequestRepository.findById(requestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Request not found"));
+        if (!request.getUser().getUserId().equals(userId)) {
+            throw new ValidationException("This request does not belong to this user");
+        }
+        if (request.getStatus() != OrganiserRequestStatus.PENDING) {
+            throw new ValidationException("This request has already been resolved");
+        }
+
+        User user = request.getUser();
+        user.setRole(UserRole.CUSTOMER);
+        userRepository.save(user);
+
+        request.setStatus(OrganiserRequestStatus.CANCELLED);
+        request.setResolvedAt(Instant.now());
+        request.setNotified(true);
+        organiserRequestRepository.save(request);
+        return toUserDTO(user);
+    }
+
     /** Latest request for a user, so the frontend can show a one-off approved/rejected banner. */
     @Transactional(readOnly = true)
     public OrganiserRequestDTO getLatestForUser(UUID userId) {

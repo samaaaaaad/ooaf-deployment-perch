@@ -41,6 +41,7 @@ function clampItem(type, x, y) {
 export default function FloorPlanEditorPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const canManage = user.role === 'ORGANISER';
 
   const editId = new URLSearchParams(window.location.search).get('id');
   const svgRef = useRef(null);
@@ -235,7 +236,13 @@ export default function FloorPlanEditorPage() {
           <button type="button" className="button button-secondary" onClick={() => navigate('/floorplans')} disabled={saving}>
             Back
           </button>
-          <button type="button" className="button button-primary" onClick={handleSave} disabled={saving || loading}>
+          <button
+            type="button"
+            className="button button-primary"
+            onClick={handleSave}
+            disabled={saving || loading || !canManage}
+            title={canManage ? undefined : 'Your organiser request is still pending approval'}
+          >
             {saving ? 'Saving…' : 'Save Floor Plan'}
           </button>
         </div>

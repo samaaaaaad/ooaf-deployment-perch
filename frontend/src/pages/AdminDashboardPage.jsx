@@ -6,6 +6,7 @@ import {
   getStats,
   rejectOrganiserRequest,
 } from '../api/adminApi';
+import ConfirmDialog from '../components/ConfirmDialog';
 import EmptyState from '../components/EmptyState';
 import LoadingState from '../components/LoadingState';
 import { formatDate } from '../utils/formatDate';
@@ -18,7 +19,7 @@ export default function AdminDashboardPage() {
   const [requests, setRequests] = useState([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [requestsError, setRequestsError] = useState('');
-  const [decidingId, setDecidingId] = useState(null);
+  const [pendingDecision, setPendingDecision] = useState(null); // { request, action: 'approve' | 'reject' }
 
   useEffect(() => {
     let active = true;
@@ -50,17 +51,13 @@ export default function AdminDashboardPage() {
     return () => { active = false; };
   }, []);
 
-  async function handleDecide(requestId, decide) {
+  async function handleConfirmDecision() {
+    const { request: req, action } = pendingDecision;
     setRequestsError('');
-    setDecidingId(requestId);
-    try {
-      await decide(requestId);
-      setRequests((prev) => prev.filter((r) => r.requestId !== requestId));
-    } catch (requestError) {
-      setRequestsError(requestError.message || 'Unable to update this request');
-    } finally {
-      setDecidingId(null);
-    }
+    const decide = action === 'approve' ? approveOrganiserRequest : rejectOrganiserRequest;
+    await decide(req.requestId);
+    setRequests((prev) => prev.filter((r) => r.requestId !== req.requestId));
+    setPendingDecision(null);
   }
 
   return (
@@ -83,7 +80,7 @@ export default function AdminDashboardPage() {
             <h2>${Number(stats?.totalRevenue || 0).toFixed(2)}</h2>
           </div>
 
-          <div className="content-card table-wrap">
+          <div className="content-card">
             <div className="card-heading">
               <div>
                 <p className="eyebrow">Popularity</p>
@@ -97,30 +94,32 @@ export default function AdminDashboardPage() {
                 description="Popular events will appear here once tickets start selling."
               />
             ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Tickets sold</th>
-                    <th>Revenue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.popularEventsByTicketsSold.map((event) => (
-                    <tr key={event.eventId}>
-                      <td><strong>{event.title}</strong></td>
-                      <td>{event.ticketsSold}</td>
-                      <td>${Number(event.revenue).toFixed(2)}</td>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Event</th>
+                      <th>Tickets sold</th>
+                      <th>Revenue</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {stats.popularEventsByTicketsSold.map((event) => (
+                      <tr key={event.eventId}>
+                        <td><strong>{event.title}</strong></td>
+                        <td>{event.ticketsSold}</td>
+                        <td>${Number(event.revenue).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </>
       )}
 
-      <div className="content-card table-wrap">
+      <div className="content-card">
         <div className="card-heading">
           <div>
             <p className="eyebrow">Organiser access</p>
@@ -138,48 +137,63 @@ export default function AdminDashboardPage() {
             description="Organiser applications will show up here for you to approve or reject."
           />
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Applicant</th>
-                <th>Requested</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((req) => (
-                <tr key={req.requestId}>
-                  <td>
-                    <strong>{req.userFullName}</strong>
-                    <small>{req.userEmail}</small>
-                  </td>
-                  <td>{formatDate(req.createdAt)}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        className="button button-primary button-small"
-                        onClick={() => handleDecide(req.requestId, approveOrganiserRequest)}
-                        disabled={decidingId === req.requestId}
-                      >
-                        {decidingId === req.requestId ? 'Working…' : 'Accept'}
-                      </button>
-                      <button
-                        type="button"
-                        className="button button-secondary button-small"
-                        onClick={() => handleDecide(req.requestId, rejectOrganiserRequest)}
-                        disabled={decidingId === req.requestId}
-                      >
-                        {decidingId === req.requestId ? 'Working…' : 'Reject'}
-                      </button>
-                    </div>
-                  </td>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Requested</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {requests.map((req) => (
+                  <tr key={req.requestId}>
+                    <td>
+                      <strong>{req.userFullName}</strong>
+                      <small>{req.userEmail}</small>
+                    </td>
+                    <td>{formatDate(req.createdAt)}</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="button button-primary button-small"
+                          onClick={() => setPendingDecision({ request: req, action: 'approve' })}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-secondary button-small"
+                          onClick={() => setPendingDecision({ request: req, action: 'reject' })}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
+
+      {pendingDecision && (
+        <ConfirmDialog
+          title={pendingDecision.action === 'approve' ? 'Accept organiser request' : 'Reject organiser request'}
+          message={
+            pendingDecision.action === 'approve'
+              ? `Are you sure you want ${pendingDecision.request.userEmail} to be accepted as an organiser?`
+              : `Are you sure you want ${pendingDecision.request.userEmail} to be rejected?`
+          }
+          confirmLabel={pendingDecision.action === 'approve' ? 'Accept' : 'Reject'}
+          danger={pendingDecision.action === 'reject'}
+          onConfirm={handleConfirmDecision}
+          onClose={() => setPendingDecision(null)}
+        />
+      )}
     </section>
   );
 }

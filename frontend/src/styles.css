@@ -43,6 +43,8 @@ a { color: inherit; }
 .button-primary { color: #fff; background: var(--brand); box-shadow: 0 8px 18px rgba(23, 107, 99, 0.18); }
 .button-primary:hover { background: var(--brand-dark); }
 .button-secondary { color: var(--ink); background: #edf1f2; }
+.button-danger { color: #fff; background: var(--danger); box-shadow: 0 8px 18px rgba(180, 35, 24, 0.18); }
+.button-danger:hover { background: #8f1b12; }
 .button-full { width: 100%; }
 .button-small { min-height: 36px; padding: 0.5rem 0.8rem; font-size: 0.82rem; }
 
@@ -128,6 +130,7 @@ a { color: inherit; }
 .metric-value { font-size: 3rem; letter-spacing: -0.05em; line-height: 1; margin: 0.7rem 0 auto; }
 .metric-card > span:last-child { color: var(--brand); font-size: 0.78rem; font-weight: 750; }
 .content-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; }
+.content-card + .content-card { margin-top: 1.25rem; }
 .card-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 1rem; }
 .card-heading h2 { margin: 0; }
 .card-heading a { color: var(--brand); font-size: 0.8rem; font-weight: 800; }
@@ -138,8 +141,11 @@ a { color: inherit; }
 .loading-state { align-items: center; color: var(--muted); display: flex; gap: 0.75rem; justify-content: center; min-height: 240px; }
 .spinner { animation: spin 700ms linear infinite; border: 2px solid #cedbde; border-radius: 50%; border-top-color: var(--brand); height: 20px; width: 20px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.notice { border-radius: 10px; margin-bottom: 1rem; padding: 0.8rem 1rem; }
+.notice { align-items: center; border-radius: 10px; display: flex; gap: 0.75rem; justify-content: space-between; margin-bottom: 1rem; padding: 0.8rem 1rem; }
 .notice-error { background: #fff1f0; color: var(--danger); }
+.notice-success { background: #e1f2e8; color: #1d6942; }
+.notice-dismiss { background: none; border: 0; color: inherit; cursor: pointer; font-size: 1.1rem; line-height: 1; opacity: 0.7; padding: 0; }
+.notice-dismiss:hover { opacity: 1; }
 .record-list { display: flex; flex-direction: column; }
 .record-row { align-items: center; border-top: 1px solid var(--line); display: flex; justify-content: space-between; padding: 1rem 0; }
 .record-row:first-child { border-top: 0; }

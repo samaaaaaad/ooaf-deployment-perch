@@ -39,4 +39,9 @@ public class OrganiserRequestController {
         organiserRequestService.acknowledge(requestId, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{requestId}/cancel")
+    public ResponseEntity<UserDTO> cancel(@PathVariable UUID userId, @PathVariable UUID requestId) {
+        return ResponseEntity.ok(organiserRequestService.cancel(userId, requestId));
+    }
 }
