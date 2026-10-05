@@ -72,6 +72,11 @@ public class EventSeat {
     @Column(name = "hold_expires_at")
     private Instant holdExpiresAt;
 
+    /** The booking this seat belongs to. Only meaningful while status is BOOKED. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
+
     public EventSeat() {}
 
     public EventSeat(Event event, String label, SeatTier tier, BigDecimal price, int x, int y) {
@@ -121,5 +126,16 @@ public class EventSeat {
         this.status = SeatStatus.HELD;
         this.heldBy = customer;
         this.holdExpiresAt = expiresAt;
+    }
+
+    public Booking getBooking() { return booking; }
+    public void setBooking(Booking booking) { this.booking = booking; }
+
+    /** Marks the seat as sold under {@code booking} and clears any hold. */
+    public void book(Booking booking) {
+        this.status = SeatStatus.BOOKED;
+        this.booking = booking;
+        this.heldBy = null;
+        this.holdExpiresAt = null;
     }
 }

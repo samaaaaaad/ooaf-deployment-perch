@@ -101,6 +101,7 @@ export default function AppShell({ children }) {
 
         <nav className="primary-nav" aria-label="Primary navigation">
           <NavLink to="/browse">Browse</NavLink>
+          {!isAdmin && <NavLink to="/tickets">My Tickets</NavLink>}
           {isAdmin && <NavLink to="/admin">Dashboard</NavLink>}
           {canViewOrganiserPages && <NavLink to="/events">My Events</NavLink>}
           {canViewOrganiserPages && <NavLink to="/floorplans">Floor Plans</NavLink>}
