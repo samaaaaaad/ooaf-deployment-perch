@@ -91,3 +91,20 @@ export function releaseSeatHold(eventId, seatId, customerId) {
 export function getMyHolds(eventId, customerId) {
   return request(`/api/events/${encodeURIComponent(eventId)}/seats/mine?customerId=${encodeURIComponent(customerId)}`);
 }
+
+/** US 8/9: confirms a booking for seats the customer already holds. */
+export function createBooking(eventId, customerId, seatIds) {
+  return request(`/api/events/${encodeURIComponent(eventId)}/bookings`, {
+    method: 'POST',
+    body: JSON.stringify({ customerId, seatIds }),
+  });
+}
+
+/** The customer's bookings (My Tickets). */
+export function getMyBookings(customerId) {
+  return request(`/api/customers/${encodeURIComponent(customerId)}/bookings`);
+}
+
+export function getBooking(bookingId) {
+  return request(`/api/bookings/${encodeURIComponent(bookingId)}`);
+}

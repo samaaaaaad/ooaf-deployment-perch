@@ -9,6 +9,7 @@ import EventsPage from './pages/EventsPage';
 import FloorPlanEditorPage from './pages/FloorPlanEditorPage';
 import FloorplansPage from './pages/FloorplansPage';
 import LandingPage from './pages/LandingPage';
+import MyTicketsPage from './pages/MyTicketsPage';
 import VenuesPage from './pages/VenuesPage';
 import { Redirect, useRouter } from './utils/router';
 
@@ -47,6 +48,7 @@ export default function App() {
   const pages = {
     '/browse': <BrowseEventsPage />,
     '/checkout': <CheckoutPage />,
+    '/tickets': <MyTicketsPage />,
     '/events': <EventsPage />,
     '/venues': <VenuesPage />,
     '/floorplan': <FloorPlanEditorPage />,

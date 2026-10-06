@@ -22,6 +22,7 @@ public interface EventSeatRepository extends JpaRepository<EventSeat, UUID> {
     List<EventSeat> findAllByEventEventIdOrderByYAscXAsc(UUID eventId);
     void deleteAllByEventEventId(UUID eventId);
     Optional<EventSeat> findByEventSeatIdAndEventEventId(UUID eventSeatId, UUID eventId);
+    List<EventSeat> findAllByBookingBookingIdOrderByYAscXAsc(UUID bookingId);
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             update EventSeat s

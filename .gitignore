@@ -39,6 +39,9 @@ out/
 ### Local H2 database ###
 /data/
 
+### Local secrets (Stripe keys, mail creds) - never commit ###
+src/main/resources/application-local.properties
+
 ### Local browser QA state ###
 /.playwright-cli/
 /output/playwright/

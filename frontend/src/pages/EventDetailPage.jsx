@@ -269,8 +269,9 @@ export default function EventDetailPage({ eventId }) {
 
   function checkout() {
     const order = {
+      eventId, isLive: isLiveEvent,
       title: event.title, venue: event.venue, city: event.city, date: event.date, time: event.time,
-      seats: selectedSeats.map((s) => ({ label: s.label, tier: s.tier, price: s.price })), total,
+      seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: s.price })), total,
     };
     sessionStorage.setItem('pendingOrder', JSON.stringify(order));
     navigate('/checkout');
