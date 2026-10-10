@@ -1,6 +1,7 @@
 package com.example.event_ticketing.dto;
 
 import com.example.event_ticketing.model.UserRole;
+import com.example.event_ticketing.util.StudentEligibility;
 import java.util.UUID;
 
 /**
@@ -13,6 +14,8 @@ public class UserDTO {
     public String email;
     public UserRole role;
     public Boolean isActive;
+    /** US 12: whether this user qualifies for student discounts. */
+    public boolean studentEligible;
 
     public UserDTO() {}
 
@@ -22,5 +25,6 @@ public class UserDTO {
         this.email = email;
         this.role = role;
         this.isActive = isActive;
+        this.studentEligible = StudentEligibility.isEligible(email);
     }
 }

@@ -14,6 +14,7 @@ import com.example.event_ticketing.payment.PaymentResult;
 import com.example.event_ticketing.repository.BookingRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
+import com.example.event_ticketing.util.StudentEligibility;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -90,12 +91,18 @@ public class BookingService {
             seats.add(seat);
         }
 
-        BigDecimal total = seats.stream()
-                .map(EventSeat::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         Event event = seats.get(0).getEvent();
         String code = generateConfirmationCode();
+
+        // US 12: the discount is decided here, never trusted from the client.
+        Booking booking = new Booking(customer, event, BigDecimal.ZERO, code);
+        if (event.hasStudentDiscount() && StudentEligibility.isEligible(customer.getEmail())) {
+            booking.setStudentDiscountPercent(event.getStudentDiscountPercent());
+        }
+        BigDecimal total = seats.stream()
+                .map(booking::pricePaidFor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        booking.setTotalAmount(total);
 
         String paymentReference = null;
         if (total.compareTo(BigDecimal.ZERO) > 0) {
@@ -106,7 +113,6 @@ public class BookingService {
             paymentReference = result.transactionReference();
         }
 
-        Booking booking = new Booking(customer, event, total, code);
         booking.setPaymentReference(paymentReference);
         bookingRepository.save(booking);
 
@@ -157,9 +163,10 @@ public class BookingService {
         dto.totalAmount = booking.getTotalAmount();
         dto.status = booking.getStatus().name();
         dto.paymentReference = booking.getPaymentReference();
+        dto.studentDiscountPercent = booking.getStudentDiscountPercent();
         dto.createdAt = booking.getCreatedAt();
         dto.seats = seats.stream()
-                .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), s.getPrice()))
+                .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), booking.pricePaidFor(s)))
                 .toList();
         return dto;
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getFloorplans, getFloorplanSeats, updateEventPricing } from '../api/eventApi';
 import { decorFromLayoutJson } from '../utils/floorPlanDecor';
+import { discounted } from '../utils/studentPricing';
 import { useRouter } from '../utils/router';
 
 // Reusable SVG Stage Layout generator with Premium (rows A-B) and Standard (rows C-F) seats
@@ -105,6 +106,10 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
   const [premiumPrice, setPremiumPrice] = useState(
     event.premiumPrice !== null && event.premiumPrice !== undefined ? String(event.premiumPrice) : '35.00'
   );
+  const [universitySpecific, setUniversitySpecific] = useState(Boolean(event.universitySpecific));
+  const [discountPercent, setDiscountPercent] = useState(
+    event.studentDiscountPercent ? String(event.studentDiscountPercent) : ''
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -160,6 +165,11 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
       setError('Please enter a valid non-negative premium ticket price');
       return;
     }
+    const numDiscount = discountPercent.trim() === '' ? 0 : Number(discountPercent);
+    if (!Number.isInteger(numDiscount) || numDiscount < 0 || numDiscount > 100) {
+      setError('Student discount must be a whole number between 0 and 100');
+      return;
+    }
 
     setSaving(true);
     setError('');
@@ -168,6 +178,8 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
         floorPlanId: selectedPlanId || null,
         standardPrice: numStandard,
         premiumPrice: numPremium,
+        universitySpecific,
+        studentDiscountPercent: numDiscount,
       });
       onSaved(updated);
       onClose();
@@ -266,6 +278,42 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
                 disabled={saving}
               />
               <small>Premium-tier seats.</small>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'start' }}>
+            <div className="field">
+              <label htmlFor="student-discount">Student Discount (%)</label>
+              <input
+                id="student-discount"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(e.target.value)}
+                placeholder="0"
+                disabled={saving}
+              />
+              <small>
+                {Number(discountPercent) > 0 && !isNaN(parseFloat(standardPrice))
+                  ? `Students pay $${discounted(standardPrice, Number(discountPercent)).toFixed(2)} standard / $${discounted(premiumPrice, Number(discountPercent)).toFixed(2)} premium.`
+                  : 'Leave blank or 0 for no discount.'}
+              </small>
+            </div>
+
+            <div className="field">
+              <label htmlFor="university-specific" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', marginTop: '1.9rem' }}>
+                <input
+                  id="university-specific"
+                  type="checkbox"
+                  checked={universitySpecific}
+                  onChange={(e) => setUniversitySpecific(e.target.checked)}
+                  disabled={saving}
+                  style={{ width: 'auto', minHeight: 0 }}
+                />
+                University-specific event
+              </label>
             </div>
           </div>
 

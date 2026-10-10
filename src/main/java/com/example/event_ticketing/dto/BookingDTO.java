@@ -13,6 +13,8 @@ public class BookingDTO {
     public BigDecimal totalAmount;
     public String status;
     public String paymentReference;
+    /** US 12: student discount (%) applied, or null. Seat prices below are already discounted. */
+    public Integer studentDiscountPercent;
     public Instant createdAt;
     public List<Seat> seats;
 

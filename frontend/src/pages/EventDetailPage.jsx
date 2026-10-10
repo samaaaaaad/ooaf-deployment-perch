@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
 import { useRouter } from '../utils/router';
+import { discounted, isStudent, money } from '../utils/studentPricing';
 import { generateLayout } from './seatLayout';
 import './EventDetailPage.css';
 
@@ -214,7 +215,12 @@ export default function EventDetailPage({ eventId }) {
   const remainingMs = (seatId) => (holds[seatId] ? holds[seatId].expiresAtMs - (now + clockOffset) : 0);
   const selectedIds = isLiveEvent ? Object.keys(holds) : selected;
   const selectedSeats = selectedIds.map((id) => seatById[id]).filter(Boolean);
-  const total = selectedSeats.reduce((sum, s) => sum + s.price, 0);
+  // US 12: student prices are shown to everyone; they only apply at checkout to eligible students.
+  const discountPercent = isLiveEvent ? (event.studentDiscountPercent || 0) : 0;
+  const studentPriceApplies = discountPercent > 0 && isStudent(user);
+  const pricePaid = (seat) => (studentPriceApplies ? discounted(seat.price, discountPercent) : seat.price);
+  const fullTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
+  const total = Math.round(selectedSeats.reduce((sum, s) => sum + pricePaid(s), 0) * 100) / 100;
   const soonestMs = selectedSeats.length > 0 ? Math.min(...selectedSeats.map((s) => remainingMs(s.id))) : null;
 
   function toggleMock(seat) {
@@ -271,7 +277,10 @@ export default function EventDetailPage({ eventId }) {
     const order = {
       eventId, isLive: isLiveEvent,
       title: event.title, venue: event.venue, city: event.city, date: event.date, time: event.time,
-      seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: s.price })), total,
+      seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: pricePaid(s), fullPrice: s.price })),
+      total,
+      fullTotal,
+      studentDiscountPercent: studentPriceApplies ? discountPercent : null,
     };
     sessionStorage.setItem('pendingOrder', JSON.stringify(order));
     navigate('/checkout');
@@ -298,6 +307,19 @@ export default function EventDetailPage({ eventId }) {
           <span className="ed-cat">{labelFor[event.cat]}</span>
           <h1>{event.title}</h1>
           <p className="ed-meta">{event.venue}, {event.city} · {event.date} · {event.time}</p>
+          {(event.universitySpecific || discountPercent > 0) && (
+              <div className="ed-student">
+                {event.universitySpecific && <span className="ed-student-tag">🎓 University event</span>}
+                {discountPercent > 0 && (
+                    <span>
+                      Students save <strong>{discountPercent}%</strong>
+                      {studentPriceApplies
+                          ? ' · your university email qualifies, so student prices apply.'
+                          : ' · sign in with a university email (.edu.au or .edu) to get student prices.'}
+                    </span>
+                )}
+              </div>
+          )}
         </header>
 
         {loadError && <p className="ed-missing" role="alert">{loadError}</p>}
@@ -354,9 +376,12 @@ export default function EventDetailPage({ eventId }) {
               )}
             </div>
             <div className="ed-legend">
-              {tiers.vip !== undefined && <span><i className="sw tier-vip" />VIP ${tiers.vip}</span>}
-              {tiers.premium !== undefined && <span><i className="sw tier-premium" />Premium ${tiers.premium}</span>}
-              {tiers.standard !== undefined && <span><i className="sw tier-standard" />Standard ${tiers.standard}</span>}
+              {['vip', 'premium', 'standard'].filter((t) => tiers[t] !== undefined).map((t) => (
+                  <span key={t}>
+                    <i className={`sw tier-${t}`} />{tierName[t]} ${tiers[t]}
+                    {discountPercent > 0 && <em className="ed-legend-student">(students {money(discounted(tiers[t], discountPercent))})</em>}
+                  </span>
+              ))}
               <span><i className="sw is-selected" />{isLiveEvent ? 'Held for you' : 'Selected'}</span>
               <span><i className="sw is-held" />{isLiveEvent ? 'Held by someone else' : 'Held'}</span>
               <span><i className="sw is-booked" />Booked</span>
@@ -385,13 +410,20 @@ export default function EventDetailPage({ eventId }) {
                       {formatCountdown(remainingMs(s.id))}
                     </span>
                         )}
-                        <span className="ed-li-price">${s.price}</span>
+                        <span className="ed-li-price">
+                          {studentPriceApplies ? (
+                              <><s className="ed-was">${s.price}</s> {money(pricePaid(s))}</>
+                          ) : `$${s.price}`}
+                        </span>
                         <button type="button" className="ed-remove" aria-label={`Remove seat ${s.label}`} onClick={() => toggle(s)}>×</button>
                       </li>
                   ))}
                 </ul>
             )}
-            <div className="ed-total"><span>Total</span><strong>${total}</strong></div>
+            {studentPriceApplies && selectedSeats.length > 0 && (
+                <div className="ed-discount"><span>Student discount ({discountPercent}%)</span><span>−{money(Math.round((fullTotal - total) * 100) / 100)}</span></div>
+            )}
+            <div className="ed-total"><span>Total</span><strong>{money(total)}</strong></div>
             <button type="button" className="ed-next" disabled={selectedSeats.length === 0} onClick={checkout}>
               Continue to payment →
             </button>
