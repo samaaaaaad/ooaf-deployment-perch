@@ -217,7 +217,10 @@ export default function EventDetailPage({ eventId }) {
   const selectedSeats = selectedIds.map((id) => seatById[id]).filter(Boolean);
   // US 12: student prices are shown to everyone; they only apply at checkout to eligible students.
   const discountPercent = isLiveEvent ? (event.studentDiscountPercent || 0) : 0;
-  const studentPriceApplies = discountPercent > 0 && isStudent(user);
+  const student = isStudent(user);
+  const studentPriceApplies = discountPercent > 0 && student;
+  // University-specific events are students-only; the server refuses holds from anyone else too.
+  const studentsOnlyBlocked = isLiveEvent && Boolean(event.universitySpecific) && Boolean(user) && !student;
   const pricePaid = (seat) => (studentPriceApplies ? discounted(seat.price, discountPercent) : seat.price);
   const fullTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
   const total = Math.round(selectedSeats.reduce((sum, s) => sum + pricePaid(s), 0) * 100) / 100;
@@ -235,6 +238,10 @@ export default function EventDetailPage({ eventId }) {
     if (!isMine && seat.status !== 'AVAILABLE') return;
     if (!customerId) {
       setNotice('Please sign in to select seats.');
+      return;
+    }
+    if (studentsOnlyBlocked && !isMine) {
+      setNotice('This event is for verified university students only. Verify your student status from your account menu to book.');
       return;
     }
 
@@ -309,13 +316,18 @@ export default function EventDetailPage({ eventId }) {
           <p className="ed-meta">{event.venue}, {event.city} · {event.date} · {event.time}</p>
           {(event.universitySpecific || discountPercent > 0) && (
               <div className="ed-student">
-                {event.universitySpecific && <span className="ed-student-tag">🎓 University event</span>}
+                {event.universitySpecific && (
+                    <span className="ed-student-tag">
+                      🎓 University students only
+                      {studentsOnlyBlocked && ' · you need to be a verified student to book, so you can’t book this event yet. Verify your student status from your account menu.'}
+                    </span>
+                )}
                 {discountPercent > 0 && (
                     <span>
                       Students save <strong>{discountPercent}%</strong>
                       {studentPriceApplies
-                          ? ' · your university email qualifies, so student prices apply.'
-                          : ' · sign in with a university email (.edu.au or .edu) to get student prices.'}
+                          ? ' · you’re a verified student, so student prices apply.'
+                          : ' · verify your student status from your account menu to get student prices.'}
                     </span>
                 )}
               </div>
@@ -424,7 +436,7 @@ export default function EventDetailPage({ eventId }) {
                 <div className="ed-discount"><span>Student discount ({discountPercent}%)</span><span>−{money(Math.round((fullTotal - total) * 100) / 100)}</span></div>
             )}
             <div className="ed-total"><span>Total</span><strong>{money(total)}</strong></div>
-            <button type="button" className="ed-next" disabled={selectedSeats.length === 0} onClick={checkout}>
+            <button type="button" className="ed-next" disabled={selectedSeats.length === 0 || studentsOnlyBlocked} onClick={checkout}>
               Continue to payment →
             </button>
             <p className="ed-cart-note">

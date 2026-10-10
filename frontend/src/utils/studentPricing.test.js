@@ -1,18 +1,20 @@
 import { describe, expect, test } from 'vitest';
 
-import { discounted, isStudent, money } from './studentPricing';
+import { discounted, hasUniversityEmail, isStudent, money } from './studentPricing';
 
 describe('studentPricing', () => {
-  test('trusts the server flag when present', () => {
+  test('only an admin-verified user counts as a student', () => {
+    expect(isStudent({ email: 'a@uni.edu.au', studentEligible: true })).toBe(true);
     expect(isStudent({ email: 'a@uni.edu.au', studentEligible: false })).toBe(false);
-    expect(isStudent({ email: 'a@gmail.com', studentEligible: true })).toBe(true);
+    expect(isStudent({ email: 'a@uni.edu.au' })).toBe(false);
+    expect(isStudent(null)).toBe(false);
   });
 
-  test('falls back to the university email rule for older stored sessions', () => {
-    expect(isStudent({ email: 'sam@student.unsw.edu.au' })).toBe(true);
-    expect(isStudent({ email: 'sam@mit.edu' })).toBe(true);
-    expect(isStudent({ email: 'sam@gmail.com' })).toBe(false);
-    expect(isStudent(null)).toBe(false);
+  test('detects a university email so the user can apply', () => {
+    expect(hasUniversityEmail({ email: 'sam@student.unsw.edu.au' })).toBe(true);
+    expect(hasUniversityEmail({ email: 'sam@mit.edu' })).toBe(true);
+    expect(hasUniversityEmail({ email: 'sam@gmail.com' })).toBe(false);
+    expect(hasUniversityEmail({ email: 'sam@gmail.com', universityEmail: true })).toBe(true);
   });
 
   test('discounts to the cent', () => {

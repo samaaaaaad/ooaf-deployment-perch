@@ -63,6 +63,6 @@ describe('BrowseEventsPage student filters (US 12)', () => {
     expect(within(card).getByText('From $25')).toBeInTheDocument();
     expect(within(card).getByText(/\$20 students/)).toBeInTheDocument();
     expect(within(card).getByText(/your price/)).toBeInTheDocument();
-    expect(within(card).getByText('🎓 Uni')).toBeInTheDocument();
+    expect(within(card).getByText('🎓 Students only')).toBeInTheDocument();
   });
 });

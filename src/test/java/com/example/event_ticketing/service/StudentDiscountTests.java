@@ -30,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -62,6 +63,7 @@ class StudentDiscountTests {
 
     private EventService eventService;
     private BookingService bookingService;
+    private SeatHoldService seatHoldService;
     private User organiser;
 
     @BeforeEach
@@ -69,18 +71,39 @@ class StudentDiscountTests {
         eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository, seatRepository);
         bookingService = new BookingService(eventSeatRepository, bookingRepository, userRepository,
                 paymentProvider, emailService, Clock.fixed(NOW, ZoneOffset.UTC));
+        seatHoldService = new SeatHoldService(eventSeatRepository, userRepository,
+                Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(5));
         organiser = new User("Owner", "owner@example.com", "hash", UserRole.ORGANISER);
         organiser.setUserId(UUID.randomUUID());
     }
 
     @Test
     void recognisesUniversityEmailDomains() {
-        assertThat(StudentEligibility.isEligible("alex@uni.sydney.edu.au")).isTrue();
-        assertThat(StudentEligibility.isEligible("ALEX@MIT.EDU")).isTrue();
-        assertThat(StudentEligibility.isEligible("alex@gmail.com")).isFalse();
-        assertThat(StudentEligibility.isEligible("edu.au@gmail.com")).isFalse();
-        assertThat(StudentEligibility.isEligible(null)).isFalse();
-        assertThat(new UserDTO(UUID.randomUUID(), "A", "a@student.unsw.edu.au", UserRole.CUSTOMER, true).studentEligible).isTrue();
+        assertThat(StudentEligibility.hasUniversityEmail("alex@uni.sydney.edu.au")).isTrue();
+        assertThat(StudentEligibility.hasUniversityEmail("ALEX@MIT.EDU")).isTrue();
+        assertThat(StudentEligibility.hasUniversityEmail("alex@gmail.com")).isFalse();
+        assertThat(StudentEligibility.hasUniversityEmail("edu.au@gmail.com")).isFalse();
+        assertThat(StudentEligibility.hasUniversityEmail(null)).isFalse();
+    }
+
+    @Test
+    void aUniversityEmailAloneDoesNotMakeSomeoneAStudent() {
+        User unverified = unverifiedStudent();
+        User verified = student();
+
+        assertThat(StudentEligibility.isEligible(unverified)).isFalse();
+        assertThat(StudentEligibility.isEligible(verified)).isTrue();
+        assertThat(UserDTO.from(unverified).studentEligible).isFalse();
+        assertThat(UserDTO.from(unverified).universityEmail).isTrue();
+        assertThat(UserDTO.from(verified).studentEligible).isTrue();
+    }
+
+    @Test
+    void unverifiedUniversityEmailPaysTheStandardTotal() {
+        BookingDTO booking = checkout(unverifiedStudent(), 20);
+
+        assertThat(booking.studentDiscountPercent).isNull();
+        assertThat(booking.totalAmount).isEqualByComparingTo("65.00");
     }
 
     @Test
@@ -154,7 +177,7 @@ class StudentDiscountTests {
 
     @Test
     void eligibleStudentPaysTheDiscountedTotal() {
-        User student = customer("sam@student.uts.edu.au");
+        User student = student();
         BookingDTO booking = checkout(student, 20);
 
         assertThat(booking.studentDiscountPercent).isEqualTo(20);
@@ -165,15 +188,59 @@ class StudentDiscountTests {
 
     @Test
     void nonStudentPaysTheStandardTotal() {
-        User regular = customer("sam@gmail.com");
+        User regular = regular();
         BookingDTO booking = checkout(regular, 20);
 
         assertThat(booking.studentDiscountPercent).isNull();
         assertThat(booking.totalAmount).isEqualByComparingTo("65.00");
     }
 
+    @Test
+    void nonStudentCannotHoldASeatAtAStudentsOnlyEvent() {
+        User regular = regular();
+        EventSeat seat = new EventSeat(publishedEvent("O-Week", true, null), "S1", SeatTier.STANDARD, new BigDecimal("25.00"), 0, 0);
+        seat.setEventSeatId(UUID.randomUUID());
+        when(userRepository.findById(regular.getUserId())).thenReturn(Optional.of(regular));
+        when(eventSeatRepository.findByEventSeatIdAndEventEventId(seat.getEventSeatId(), seat.getEvent().getEventId()))
+                .thenReturn(Optional.of(seat));
+
+        assertThatThrownBy(() -> seatHoldService.holdSeat(seat.getEvent().getEventId(), seat.getEventSeatId(), regular.getUserId()))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage(StudentEligibility.STUDENTS_ONLY_MESSAGE);
+        verify(eventSeatRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void studentCanHoldASeatAtAStudentsOnlyEvent() {
+        User student = student();
+        EventSeat seat = new EventSeat(publishedEvent("O-Week", true, null), "S1", SeatTier.STANDARD, new BigDecimal("25.00"), 0, 0);
+        seat.setEventSeatId(UUID.randomUUID());
+        when(userRepository.findById(student.getUserId())).thenReturn(Optional.of(student));
+        when(eventSeatRepository.findByEventSeatIdAndEventEventId(seat.getEventSeatId(), seat.getEvent().getEventId()))
+                .thenReturn(Optional.of(seat));
+
+        seatHoldService.holdSeat(seat.getEvent().getEventId(), seat.getEventSeatId(), student.getUserId());
+
+        assertThat(seat.getHeldBy()).isEqualTo(student);
+    }
+
+    @Test
+    void nonStudentCannotCheckOutAStudentsOnlyEvent() {
+        User regular = regular();
+
+        assertThatThrownBy(() -> checkout(regular, null, true))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage(StudentEligibility.STUDENTS_ONLY_MESSAGE);
+        verify(paymentProvider, never()).charge(any(), anyString(), anyString(), anyString());
+        verify(bookingRepository, never()).save(any());
+    }
+
     private BookingDTO checkout(User customer, Integer discountPercent) {
-        Event event = publishedEvent("Gig", false, discountPercent);
+        return checkout(customer, discountPercent, false);
+    }
+
+    private BookingDTO checkout(User customer, Integer discountPercent, boolean studentsOnly) {
+        Event event = publishedEvent("Gig", studentsOnly, discountPercent);
         EventSeat standard = heldSeat(event, "S1", SeatTier.STANDARD, "25.00", customer);
         EventSeat premium = heldSeat(event, "S2", SeatTier.PREMIUM, "40.00", customer);
         when(userRepository.findById(customer.getUserId())).thenReturn(Optional.of(customer));
@@ -181,8 +248,10 @@ class StudentDiscountTests {
                 .thenReturn(Optional.of(standard));
         when(eventSeatRepository.findByEventSeatIdAndEventEventId(premium.getEventSeatId(), event.getEventId()))
                 .thenReturn(Optional.of(premium));
-        when(paymentProvider.charge(any(), anyString(), anyString(), anyString()))
-                .thenReturn(PaymentResult.approved("txn_1"));
+        if (!studentsOnly || StudentEligibility.isEligible(customer)) {
+            when(paymentProvider.charge(any(), anyString(), anyString(), anyString()))
+                    .thenReturn(PaymentResult.approved("txn_1"));
+        }
 
         CheckoutRequest request = new CheckoutRequest();
         request.customerId = customer.getUserId();
@@ -205,6 +274,20 @@ class StudentDiscountTests {
         event.setUniversitySpecific(universitySpecific);
         event.setStudentDiscountPercent(discountPercent);
         return event;
+    }
+
+    private User student() {
+        User user = customer("sam@student.uts.edu.au");
+        user.setStudentVerified(true);
+        return user;
+    }
+
+    private User unverifiedStudent() {
+        return customer("sam@student.uts.edu.au");
+    }
+
+    private User regular() {
+        return customer("sam@gmail.com");
     }
 
     private User customer(String email) {

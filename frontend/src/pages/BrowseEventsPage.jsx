@@ -162,7 +162,7 @@ export default function BrowseEventsPage() {
                   <div className="be-cover-top">
                     <span className="be-pills">
                       <span className="be-pill">{labelFor[e.cat] || 'Event'}</span>
-                      {e.universitySpecific && <span className="be-pill be-pill-uni">🎓 Uni</span>}
+                      {e.universitySpecific && <span className="be-pill be-pill-uni">🎓 Students only</span>}
                     </span>
                     <span className="be-date">{e.date} · {e.time}</span>
                   </div>

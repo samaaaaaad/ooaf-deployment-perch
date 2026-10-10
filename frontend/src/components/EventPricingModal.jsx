@@ -312,7 +312,7 @@ export default function EventPricingModal({ organiserId, event, onClose, onSaved
                   disabled={saving}
                   style={{ width: 'auto', minHeight: 0 }}
                 />
-                University-specific event
+                University students only
               </label>
             </div>
           </div>

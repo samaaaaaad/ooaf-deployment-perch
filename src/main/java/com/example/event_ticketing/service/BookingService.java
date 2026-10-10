@@ -92,11 +92,12 @@ public class BookingService {
         }
 
         Event event = seats.get(0).getEvent();
+        StudentEligibility.requireAllowedToBook(event, customer);
         String code = generateConfirmationCode();
 
         // US 12: the discount is decided here, never trusted from the client.
         Booking booking = new Booking(customer, event, BigDecimal.ZERO, code);
-        if (event.hasStudentDiscount() && StudentEligibility.isEligible(customer.getEmail())) {
+        if (event.hasStudentDiscount() && StudentEligibility.isEligible(customer)) {
             booking.setStudentDiscountPercent(event.getStudentDiscountPercent());
         }
         BigDecimal total = seats.stream()

@@ -98,9 +98,9 @@ function CreateEventForm({ organiserId, onCreated }) {
                   onChange={(event) => setUniversitySpecific(event.target.checked)}
                   style={{ width: 'auto', minHeight: 0 }}
               />
-              University-specific event
+              University students only
             </label>
-            <small>Shows a Uni badge and lets students find it with the University events filter.</small>
+            <small>Only students verified by an admin can book. Students can find it with the University events filter.</small>
           </div>
 
           {formError && <div className="form-message form-message-error" role="alert">{formError}</div>}
@@ -247,7 +247,7 @@ export default function EventsPage() {
                     <tr key={event.eventId}>
                       <td>
                         <strong>{event.title}</strong>
-                        {event.universitySpecific && <small style={{ color: 'var(--brand)', fontWeight: 700 }}>🎓 University event</small>}
+                        {event.universitySpecific && <small style={{ color: 'var(--brand)', fontWeight: 700 }}>🎓 Students only</small>}
                         <small>{event.description || 'No description'}</small>
                       </td>
                       <td>

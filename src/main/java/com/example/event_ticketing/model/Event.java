@@ -59,7 +59,7 @@ public class Event {
     @Column(name = "premium_price", precision = 12, scale = 2)
     private java.math.BigDecimal premiumPrice;
 
-    /** US 12: event is aimed at university students. Nullable so existing rows migrate; null = false. */
+    /** US 12: university students only (enforced at seat hold and checkout). Nullable so existing rows migrate; null = false. */
     @Column(name = "university_specific")
     private Boolean universitySpecific;
 

@@ -28,6 +28,10 @@ public class User {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    /** US 12: set when an admin approves a student verification request. Nullable so existing rows migrate; null = false. */
+    @Column(name = "student_verified")
+    private Boolean studentVerified;
+
     public User() {}
 
     public User(String fullName, String email, String passwordHash, UserRole role) {
@@ -55,6 +59,9 @@ public class User {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public boolean isStudentVerified() { return Boolean.TRUE.equals(studentVerified); }
+    public void setStudentVerified(Boolean studentVerified) { this.studentVerified = studentVerified; }
 
     @Override
     public String toString() {
