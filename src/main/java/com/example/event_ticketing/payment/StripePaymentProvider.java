@@ -10,51 +10,56 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 /**
- * Stripe (test mode) payment provider. Creates and confirms a PaymentIntent
- * server-side using Stripe's test card ("pm_card_visa"), so the charge really
- * goes through Stripe without the frontend collecting card details. Enabled by
- * setting {@code payment.provider=stripe}; the secret key is read from
- * {@code stripe.secret-key} (kept in a gitignored local properties file).
+ * Stripe (test/live) PaymentIntent creator. Does not confirm or attach a card —
+ * the client confirms with Stripe.js, then the webhook marks the booking paid (US 8.1).
+ * Enabled by {@code payment.provider=stripe}; secret key from {@code stripe.secret-key}.
  */
 @Component
 @ConditionalOnProperty(name = "payment.provider", havingValue = "stripe")
 public class StripePaymentProvider implements PaymentProvider {
 
     private final StripeClient client;
-    private final String testPaymentMethod;
 
-    public StripePaymentProvider(
-            @Value("${stripe.secret-key}") String secretKey,
-            @Value("${stripe.test-payment-method:pm_card_visa}") String testPaymentMethod
-    ) {
+    public StripePaymentProvider(@Value("${stripe.secret-key}") String secretKey) {
         this.client = new StripeClient(secretKey);
-        this.testPaymentMethod = testPaymentMethod;
     }
 
     @Override
-    public PaymentResult charge(BigDecimal amount, String currency, String description, String idempotencyKey) {
+    public PaymentIntentResult createPaymentIntent(
+            BigDecimal amount,
+            String currency,
+            String description,
+            String idempotencyKey,
+            Map<String, String> metadata
+    ) {
         long amountInCents = amount.movePointRight(2).longValueExact();
         try {
-            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+            PaymentIntentCreateParams.Builder builder = PaymentIntentCreateParams.builder()
                     .setAmount(amountInCents)
                     .setCurrency(currency.toLowerCase())
-                    .setConfirm(true)
-                    .setPaymentMethod(testPaymentMethod)
-                    .addPaymentMethodType("card")
                     .setDescription(description)
-                    .build();
+                    .setAutomaticPaymentMethods(
+                            PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+                                    .setEnabled(true)
+                                    .build()
+                    );
+            if (metadata != null) {
+                for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                    if (entry.getKey() != null && entry.getValue() != null) {
+                        builder.putMetadata(entry.getKey(), entry.getValue());
+                    }
+                }
+            }
             RequestOptions options = RequestOptions.builder()
                     .setIdempotencyKey(idempotencyKey)
                     .build();
-            PaymentIntent intent = client.paymentIntents().create(params, options);
-            if ("succeeded".equals(intent.getStatus())) {
-                return PaymentResult.approved(intent.getId());
-            }
-            return PaymentResult.declined("Stripe payment status: " + intent.getStatus());
+            PaymentIntent intent = client.paymentIntents().create(builder.build(), options);
+            return new PaymentIntentResult(intent.getId(), intent.getClientSecret(), false);
         } catch (StripeException e) {
-            return PaymentResult.declined(e.getMessage());
+            throw new IllegalStateException("Could not create Stripe PaymentIntent: " + e.getMessage(), e);
         }
     }
 }
