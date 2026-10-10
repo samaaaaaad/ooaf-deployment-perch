@@ -139,8 +139,8 @@ describe('EventDetailPage live seats', () => {
     const seat = await screen.findByRole('button', { name: /Seat S1, Standard, \$20/i });
     expect(seat).toHaveAttribute('cx', '140');
     expect(seat).toHaveAttribute('cy', '220');
-    expect(screen.getByText('STAGE')).toBeInTheDocument();
-    expect(screen.queryByText('Stage')).not.toBeInTheDocument();
+    expect(screen.getByText('Stage')).toBeInTheDocument();
+    expect(screen.queryByText('STAGE')).not.toBeInTheDocument();
   });
 });
 
