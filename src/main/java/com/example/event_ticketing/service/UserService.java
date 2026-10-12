@@ -84,6 +84,6 @@ public class UserService {
     }
 
     private UserDTO toDTO(User user) {
-        return new UserDTO(user.getUserId(), user.getFullName(), user.getEmail(), user.getRole(), user.getIsActive());
+        return UserDTO.from(user);
     }
 }

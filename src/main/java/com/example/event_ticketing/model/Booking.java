@@ -16,6 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
+import com.example.event_ticketing.util.StudentEligibility;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -66,6 +68,9 @@ public class Booking {
     @Column(name = "payment_reference", length = 120)
     private String paymentReference;
 
+    /** US 12: student discount (%) applied to this booking. Null when none was applied. */
+    @Column(name = "student_discount_percent")
+    private Integer studentDiscountPercent;
     /** Seat ids selected at checkout; used to book seats after payment is verified. */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "booking_seat_ids", joinColumns = @JoinColumn(name = "booking_id"))
@@ -112,9 +117,16 @@ public class Booking {
     public void setConfirmationCode(String confirmationCode) { this.confirmationCode = confirmationCode; }
     public String getPaymentReference() { return paymentReference; }
     public void setPaymentReference(String paymentReference) { this.paymentReference = paymentReference; }
+    public Integer getStudentDiscountPercent() { return studentDiscountPercent; }
+    public void setStudentDiscountPercent(Integer studentDiscountPercent) { this.studentDiscountPercent = studentDiscountPercent; }
     public List<UUID> getSeatIds() { return seatIds; }
     public void setSeatIds(List<UUID> seatIds) {
         this.seatIds = seatIds != null ? new ArrayList<>(seatIds) : new ArrayList<>();
     }
     public Instant getCreatedAt() { return createdAt; }
+
+    /** What the customer actually paid for one seat, after any student discount. */
+    public BigDecimal pricePaidFor(EventSeat seat) {
+        return StudentEligibility.applyDiscount(seat.getPrice(), studentDiscountPercent);
+    }
 }

@@ -15,6 +15,7 @@ import com.example.event_ticketing.payment.PaymentProvider;
 import com.example.event_ticketing.repository.BookingRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
+import com.example.event_ticketing.util.StudentEligibility;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,14 +89,31 @@ public class BookingService {
         Instant now = clock.instant();
         List<EventSeat> seats = requireActiveHolds(eventId, customer, request.seatIds, now);
 
-        BigDecimal total = seats.stream()
-                .map(EventSeat::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         Event event = seats.get(0).getEvent();
+        StudentEligibility.requireAllowedToBook(event, customer);
         String code = generateConfirmationCode();
         List<UUID> seatIds = seats.stream().map(EventSeat::getEventSeatId).toList();
 
+        // US 12: the discount is decided here, never trusted from the client.
+        Booking booking = new Booking(customer, event, BigDecimal.ZERO, code);
+        if (event.hasStudentDiscount() && StudentEligibility.isEligible(customer)) {
+            booking.setStudentDiscountPercent(event.getStudentDiscountPercent());
+        }
+        BigDecimal total = seats.stream()
+                .map(booking::pricePaidFor)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        booking.setTotalAmount(total);
+
+        String paymentReference = null;
+        if (total.compareTo(BigDecimal.ZERO) > 0) {
+            PaymentResult result = paymentProvider.charge(total, "AUD", "Perch booking " + code, code);
+            if (!result.success()) {
+                throw new ValidationException("Payment was declined: " + result.message());
+            }
+            paymentReference = result.transactionReference();
+        }
+
+        booking.setPaymentReference(paymentReference);
         if (total.compareTo(BigDecimal.ZERO) == 0) {
             Booking booking = new Booking(customer, event, total, code, BookingStatus.CONFIRMED);
             booking.setSeatIds(seatIds);
@@ -282,10 +300,11 @@ public class BookingService {
         dto.totalAmount = booking.getTotalAmount();
         dto.status = booking.getStatus().name();
         dto.paymentReference = booking.getPaymentReference();
+        dto.studentDiscountPercent = booking.getStudentDiscountPercent();
         dto.clientSecret = clientSecret;
         dto.createdAt = booking.getCreatedAt();
         dto.seats = seats.stream()
-                .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), s.getPrice()))
+                .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), booking.pricePaidFor(s)))
                 .toList();
         return dto;
     }
