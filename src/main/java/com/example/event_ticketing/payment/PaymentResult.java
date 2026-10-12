@@ -1,8 +1,8 @@
 package com.example.event_ticketing.payment;
 
 /**
- * Outcome of a charge. {@code transactionReference} is the provider's id for the
- * payment and is the only payment data Perch persists (NFR-3).
+ * Legacy charge outcome retained for any callers that still need a simple
+ * approved/declined shape. New checkout uses {@link PaymentIntentResult}.
  */
 public record PaymentResult(boolean success, String transactionReference, String message) {
 

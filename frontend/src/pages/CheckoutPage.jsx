@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react';
+import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
 
-import { createBooking } from '../api/eventApi';
+import {
+  createBooking,
+  getPaymentConfig,
+  waitForBookingConfirmation,
+} from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
 import './CheckoutPage.css';
@@ -33,6 +39,7 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [booking, setBooking] = useState(null);
+  const [stripeState, setStripeState] = useState(null); // { stripePromise, clientSecret, bookingId }
 
   const total = order?.total ?? 0;
   const isFree = Number(total) === 0;
@@ -45,11 +52,45 @@ export default function CheckoutPage() {
     setError('');
     try {
       const result = await createBooking(order.eventId, user.userId, seatIds);
-      setBooking(result);
-      setStatus('done');
-      sessionStorage.removeItem('pendingOrder');
+
+      if (result.status === 'CONFIRMED') {
+        setBooking(result);
+        setStatus('done');
+        sessionStorage.removeItem('pendingOrder');
+        return;
+      }
+
+      if (result.status === 'PENDING_PAYMENT' && result.clientSecret) {
+        const config = await getPaymentConfig();
+        if (config.provider !== 'stripe' || !config.publishableKey) {
+          throw new Error('Stripe is not configured on the server.');
+        }
+        setStripeState({
+          stripePromise: loadStripe(config.publishableKey),
+          clientSecret: result.clientSecret,
+          bookingId: result.bookingId,
+        });
+        setStatus('stripe');
+        return;
+      }
+
+      throw new Error('Unexpected booking response. Please try again.');
     } catch (err) {
       setError(err.message || 'We could not complete your booking.');
+      setStatus('error');
+    }
+  }
+
+  async function onStripeConfirmed() {
+    try {
+      setStatus('paying');
+      const confirmed = await waitForBookingConfirmation(stripeState.bookingId);
+      setBooking(confirmed);
+      setStatus('done');
+      setStripeState(null);
+      sessionStorage.removeItem('pendingOrder');
+    } catch (err) {
+      setError(err.message || 'Payment succeeded but confirmation is delayed.');
       setStatus('error');
     }
   }
@@ -76,7 +117,9 @@ export default function CheckoutPage() {
       <div className="cop-steps">
         <span className="cop-step is-done"><span className="cop-num">✓</span>Seats</span>
         <span className="cop-step-line" />
-        <span className="cop-step is-active"><span className="cop-num">2</span>Payment</span>
+        <span className={`cop-step ${(status === 'stripe' || status === 'paying') ? 'is-active' : status === 'done' ? 'is-done' : 'is-active'}`}>
+          <span className="cop-num">2</span>Payment
+        </span>
         <span className="cop-step-line" />
         <span className="cop-step"><span className="cop-num">3</span>Confirmation</span>
       </div>
@@ -109,6 +152,16 @@ export default function CheckoutPage() {
 
           {!canBook ? (
             <p className="cop-note">This is a sample catalogue event, so it can’t be booked. Pick a live published event to complete a real booking.</p>
+          ) : status === 'stripe' && stripeState ? (
+            <Elements
+              stripe={stripeState.stripePromise}
+              options={{ clientSecret: stripeState.clientSecret, appearance: { theme: 'stripe' } }}
+            >
+              <StripePayForm
+                onConfirmed={onStripeConfirmed}
+                onError={(message) => { setError(message); setStatus('stripe'); }}
+              />
+            </Elements>
           ) : isFree ? (
             <p className="cop-note">This event is free, so there’s nothing to pay. Just confirm your reservation and your tickets are yours.</p>
           ) : (
@@ -118,33 +171,71 @@ export default function CheckoutPage() {
                 <span className="cop-brand">MASTERCARD</span>
                 <span className="cop-brand">AMEX</span>
               </div>
-              <div className="cop-field">
+              <p className="cop-note">
+                Card details are collected securely by Stripe after you click Pay.
+                With the mock provider (default), payment confirms instantly with no card entry.
+              </p>
+              <div className="cop-field" aria-hidden="true">
                 <label>Card number</label>
                 <div className="cop-input-wrap">
                   {CardIcon}
-                  <input type="text" inputMode="numeric" placeholder="4242 4242 4242 4242" autoComplete="off" />
+                  <input type="text" inputMode="numeric" placeholder="4242 4242 4242 4242" autoComplete="off" disabled />
                 </div>
-              </div>
-              <div className="cop-two">
-                <div className="cop-field"><label>Expiry</label><input type="text" placeholder="12 / 34" /></div>
-                <div className="cop-field"><label>CVC</label><input type="text" inputMode="numeric" placeholder="123" /></div>
               </div>
             </>
           )}
 
           {error && <div className="notice notice-error" role="alert" style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>{error}</div>}
 
-          <button type="button" className="cop-pay-btn" disabled={!canBook || status === 'paying'} onClick={handlePay}>
-            {status === 'paying'
-              ? 'Confirming…'
-              : isFree
-                ? 'Reserve for free'
-                : <>{LockIcon} Pay ${total}</>}
-          </button>
+          {status !== 'stripe' && (
+            <button type="button" className="cop-pay-btn" disabled={!canBook || status === 'paying'} onClick={handlePay}>
+              {status === 'paying'
+                ? 'Confirming…'
+                : isFree
+                  ? 'Reserve for free'
+                  : <>{LockIcon} Pay ${total}</>}
+            </button>
+          )}
           <button type="button" className="cop-ghost" onClick={() => navigate('/browse')}>Keep browsing</button>
         </aside>
       </div>
     </div>
+  );
+}
+
+function StripePayForm({ onConfirmed, onError }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+    setSubmitting(true);
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
+    if (error) {
+      onError(error.message || 'Payment was declined.');
+      setSubmitting(false);
+      return;
+    }
+    if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+      await onConfirmed();
+      return;
+    }
+    onError('Payment was not completed. Please try again.');
+    setSubmitting(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <PaymentElement options={{ layout: 'tabs' }} />
+      <button type="submit" className="cop-pay-btn" style={{ marginTop: '1rem' }} disabled={!stripe || submitting}>
+        {submitting ? 'Confirming…' : <>{LockIcon} Pay securely</>}
+      </button>
+    </form>
   );
 }
 

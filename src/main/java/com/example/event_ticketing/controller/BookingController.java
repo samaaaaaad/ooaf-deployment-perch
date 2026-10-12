@@ -25,16 +25,20 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-    /** Confirms a booking for seats the customer already holds. */
+    /**
+     * Starts checkout for seats the customer already holds (US 8.1).
+     * Paid mock checkouts return CONFIRMED immediately; Stripe returns
+     * PENDING_PAYMENT + clientSecret until the webhook confirms.
+     */
     @PostMapping("/events/{eventId}/bookings")
     public ResponseEntity<BookingDTO> checkout(
             @PathVariable UUID eventId,
             @RequestBody CheckoutRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.checkout(eventId, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.startCheckout(eventId, request));
     }
 
-    /** The customer's bookings (My Tickets). */
+    /** The customer's confirmed bookings (My Tickets). */
     @GetMapping("/customers/{customerId}/bookings")
     public ResponseEntity<List<BookingDTO>> myBookings(@PathVariable UUID customerId) {
         return ResponseEntity.ok(bookingService.getBookingsForCustomer(customerId));

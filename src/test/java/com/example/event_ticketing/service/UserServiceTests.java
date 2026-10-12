@@ -5,6 +5,7 @@ import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
+import com.example.event_ticketing.repository.OrganiserRequestRepository;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.util.PasswordUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,11 +31,14 @@ class UserServiceTests {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private OrganiserRequestRepository organiserRequestRepository;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, organiserRequestRepository);
     }
 
     @Test

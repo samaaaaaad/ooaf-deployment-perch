@@ -13,6 +13,8 @@ public class BookingDTO {
     public BigDecimal totalAmount;
     public String status;
     public String paymentReference;
+    /** Present while status is PENDING_PAYMENT so the client can confirm with Stripe. */
+    public String clientSecret;
     public Instant createdAt;
     public List<Seat> seats;
 
