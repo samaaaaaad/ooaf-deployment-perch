@@ -19,6 +19,10 @@ public class EventDTO {
     public BigDecimal standardPrice;
     public BigDecimal premiumPrice;
     public String imageUrl;
+    public boolean universitySpecific;
+    public Integer studentDiscountPercent;
+    public BigDecimal studentStandardPrice;
+    public BigDecimal studentPremiumPrice;
     public Instant publishedAt;
     public Instant createdAt;
     public Instant updatedAt;

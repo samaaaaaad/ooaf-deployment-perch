@@ -15,6 +15,8 @@ public class BookingDTO {
     public String paymentReference;
     /** Present while status is PENDING_PAYMENT so the client can confirm with Stripe. */
     public String clientSecret;
+    /** US 12: student discount (%) applied, or null. Seat prices below are already discounted. */
+    public Integer studentDiscountPercent;
     public Instant createdAt;
     public List<Seat> seats;
 

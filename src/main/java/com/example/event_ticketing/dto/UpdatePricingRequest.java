@@ -7,6 +7,10 @@ public class UpdatePricingRequest {
     public UUID floorPlanId;
     public BigDecimal standardPrice;
     public BigDecimal premiumPrice;
+    /** US 12: optional; null leaves the current value unchanged. */
+    public Boolean universitySpecific;
+    /** US 12: optional; null leaves the current value unchanged, 0 removes the discount. */
+    public Integer studentDiscountPercent;
 
     public UpdatePricingRequest() {}
 

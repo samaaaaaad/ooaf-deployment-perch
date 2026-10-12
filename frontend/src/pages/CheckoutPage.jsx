@@ -135,10 +135,16 @@ export default function CheckoutPage() {
             {order.seats.map((s) => (
               <li key={s.label}>
                 <span className="cop-seat-label"><strong>Seat {s.label}</strong><small>{tierName[s.tier] || s.tier}</small></span>
-                <span className="cop-seat-price">{Number(s.price) === 0 ? 'Free' : `$${s.price}`}</span>
+                <span className="cop-seat-price">
+                  {s.fullPrice !== undefined && Number(s.fullPrice) !== Number(s.price) && <s className="cop-was">${s.fullPrice}</s>}
+                  {Number(s.price) === 0 ? 'Free' : `$${s.price}`}
+                </span>
               </li>
             ))}
           </ul>
+          {order.studentDiscountPercent > 0 && (
+            <p className="cop-discount">Student discount ({order.studentDiscountPercent}%) applied · you save ${(order.fullTotal - total).toFixed(2)}</p>
+          )}
           <div className="cop-total"><span>Total</span><strong>{isFree ? 'Free' : `$${total}`}</strong></div>
         </div>
 
