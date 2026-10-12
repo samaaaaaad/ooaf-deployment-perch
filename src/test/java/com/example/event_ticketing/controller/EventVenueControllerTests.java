@@ -150,27 +150,4 @@ class EventVenueControllerTests {
         mockMvc.perform(get("/api/events/{eventId}/seats", eventId))
                 .andExpect(status().isNotFound());
     }
-
-    @Test
-    void passesStudentFiltersToThePublishedFeed() throws Exception {
-        EventDTO event = new EventDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "O-Week", null, EventStatus.PUBLISHED, null, null, null
-        );
-        event.universitySpecific = true;
-        event.studentDiscountPercent = 20;
-        when(eventService.getPublishedEvents(true, true)).thenReturn(List.of(event));
-        when(eventService.getPublishedEvents(false, false)).thenReturn(List.of());
-
-        mockMvc.perform(get("/api/events/published")
-                        .param("universityOnly", "true")
-                        .param("studentDiscount", "true"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("O-Week"))
-                .andExpect(jsonPath("$[0].universitySpecific").value(true))
-                .andExpect(jsonPath("$[0].studentDiscountPercent").value(20));
-
-        mockMvc.perform(get("/api/events/published"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
-    }
 }

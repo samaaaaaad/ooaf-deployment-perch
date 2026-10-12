@@ -59,13 +59,8 @@ export function deleteEvent(organiserId, eventId) {
   });
 }
 
-/** US 12: pass { universityOnly, studentDiscount } to narrow the feed on the server. */
-export function getPublishedEvents({ universityOnly = false, studentDiscount = false } = {}) {
-  const params = new URLSearchParams();
-  if (universityOnly) params.set('universityOnly', 'true');
-  if (studentDiscount) params.set('studentDiscount', 'true');
-  const query = params.toString();
-  return request(`/api/events/published${query ? `?${query}` : ''}`);
+export function getPublishedEvents() {
+  return request('/api/events/published');
 }
 
 export function getPublishedEvent(eventId) {

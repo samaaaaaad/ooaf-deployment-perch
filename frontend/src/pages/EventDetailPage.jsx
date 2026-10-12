@@ -6,7 +6,6 @@ import { useAuth } from '../auth/AuthContext';
 import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
 import { useRouter } from '../utils/router';
-import { discounted, isStudent, money } from '../utils/studentPricing';
 import { generateLayout } from './seatLayout';
 import './EventDetailPage.css';
 
@@ -215,15 +214,7 @@ export default function EventDetailPage({ eventId }) {
   const remainingMs = (seatId) => (holds[seatId] ? holds[seatId].expiresAtMs - (now + clockOffset) : 0);
   const selectedIds = isLiveEvent ? Object.keys(holds) : selected;
   const selectedSeats = selectedIds.map((id) => seatById[id]).filter(Boolean);
-  // US 12: student prices are shown to everyone; they only apply at checkout to eligible students.
-  const discountPercent = isLiveEvent ? (event.studentDiscountPercent || 0) : 0;
-  const student = isStudent(user);
-  const studentPriceApplies = discountPercent > 0 && student;
-  // University-specific events are students-only; the server refuses holds from anyone else too.
-  const studentsOnlyBlocked = isLiveEvent && Boolean(event.universitySpecific) && Boolean(user) && !student;
-  const pricePaid = (seat) => (studentPriceApplies ? discounted(seat.price, discountPercent) : seat.price);
-  const fullTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
-  const total = Math.round(selectedSeats.reduce((sum, s) => sum + pricePaid(s), 0) * 100) / 100;
+  const total = selectedSeats.reduce((sum, s) => sum + s.price, 0);
   const soonestMs = selectedSeats.length > 0 ? Math.min(...selectedSeats.map((s) => remainingMs(s.id))) : null;
 
   function toggleMock(seat) {
@@ -238,10 +229,6 @@ export default function EventDetailPage({ eventId }) {
     if (!isMine && seat.status !== 'AVAILABLE') return;
     if (!customerId) {
       setNotice('Please sign in to select seats.');
-      return;
-    }
-    if (studentsOnlyBlocked && !isMine) {
-      setNotice('This event is for verified university students only. Verify your student status from your account menu to book.');
       return;
     }
 
@@ -284,10 +271,7 @@ export default function EventDetailPage({ eventId }) {
     const order = {
       eventId, isLive: isLiveEvent,
       title: event.title, venue: event.venue, city: event.city, date: event.date, time: event.time,
-      seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: pricePaid(s), fullPrice: s.price })),
-      total,
-      fullTotal,
-      studentDiscountPercent: studentPriceApplies ? discountPercent : null,
+      seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: s.price })), total,
     };
     sessionStorage.setItem('pendingOrder', JSON.stringify(order));
     navigate('/checkout');
@@ -314,24 +298,6 @@ export default function EventDetailPage({ eventId }) {
           <span className="ed-cat">{labelFor[event.cat]}</span>
           <h1>{event.title}</h1>
           <p className="ed-meta">{event.venue}, {event.city} · {event.date} · {event.time}</p>
-          {(event.universitySpecific || discountPercent > 0) && (
-              <div className="ed-student">
-                {event.universitySpecific && (
-                    <span className="ed-student-tag">
-                      🎓 University students only
-                      {studentsOnlyBlocked && ' · you need to be a verified student to book, so you can’t book this event yet. Verify your student status from your account menu.'}
-                    </span>
-                )}
-                {discountPercent > 0 && (
-                    <span>
-                      Students save <strong>{discountPercent}%</strong>
-                      {studentPriceApplies
-                          ? ' · you’re a verified student, so student prices apply.'
-                          : ' · verify your student status from your account menu to get student prices.'}
-                    </span>
-                )}
-              </div>
-          )}
         </header>
 
         {loadError && <p className="ed-missing" role="alert">{loadError}</p>}
@@ -388,12 +354,9 @@ export default function EventDetailPage({ eventId }) {
               )}
             </div>
             <div className="ed-legend">
-              {['vip', 'premium', 'standard'].filter((t) => tiers[t] !== undefined).map((t) => (
-                  <span key={t}>
-                    <i className={`sw tier-${t}`} />{tierName[t]} ${tiers[t]}
-                    {discountPercent > 0 && <em className="ed-legend-student">(students {money(discounted(tiers[t], discountPercent))})</em>}
-                  </span>
-              ))}
+              {tiers.vip !== undefined && <span><i className="sw tier-vip" />VIP ${tiers.vip}</span>}
+              {tiers.premium !== undefined && <span><i className="sw tier-premium" />Premium ${tiers.premium}</span>}
+              {tiers.standard !== undefined && <span><i className="sw tier-standard" />Standard ${tiers.standard}</span>}
               <span><i className="sw is-selected" />{isLiveEvent ? 'Held for you' : 'Selected'}</span>
               <span><i className="sw is-held" />{isLiveEvent ? 'Held by someone else' : 'Held'}</span>
               <span><i className="sw is-booked" />Booked</span>
@@ -422,21 +385,14 @@ export default function EventDetailPage({ eventId }) {
                       {formatCountdown(remainingMs(s.id))}
                     </span>
                         )}
-                        <span className="ed-li-price">
-                          {studentPriceApplies ? (
-                              <><s className="ed-was">${s.price}</s> {money(pricePaid(s))}</>
-                          ) : `$${s.price}`}
-                        </span>
+                        <span className="ed-li-price">${s.price}</span>
                         <button type="button" className="ed-remove" aria-label={`Remove seat ${s.label}`} onClick={() => toggle(s)}>×</button>
                       </li>
                   ))}
                 </ul>
             )}
-            {studentPriceApplies && selectedSeats.length > 0 && (
-                <div className="ed-discount"><span>Student discount ({discountPercent}%)</span><span>−{money(Math.round((fullTotal - total) * 100) / 100)}</span></div>
-            )}
-            <div className="ed-total"><span>Total</span><strong>{money(total)}</strong></div>
-            <button type="button" className="ed-next" disabled={selectedSeats.length === 0 || studentsOnlyBlocked} onClick={checkout}>
+            <div className="ed-total"><span>Total</span><strong>${total}</strong></div>
+            <button type="button" className="ed-next" disabled={selectedSeats.length === 0} onClick={checkout}>
               Continue to payment →
             </button>
             <p className="ed-cart-note">

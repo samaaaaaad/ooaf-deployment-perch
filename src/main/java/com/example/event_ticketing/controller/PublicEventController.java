@@ -6,7 +6,6 @@ import com.example.event_ticketing.service.EventService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -23,11 +22,8 @@ public class PublicEventController {
     }
 
     @GetMapping("/published")
-    public ResponseEntity<List<EventDTO>> getPublishedEvents(
-            @RequestParam(defaultValue = "false") boolean universityOnly,
-            @RequestParam(defaultValue = "false") boolean studentDiscount
-    ) {
-        return ResponseEntity.ok(eventService.getPublishedEvents(universityOnly, studentDiscount));
+    public ResponseEntity<List<EventDTO>> getPublishedEvents() {
+        return ResponseEntity.ok(eventService.getPublishedEvents());
     }
 
     @GetMapping("/{eventId}")

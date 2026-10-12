@@ -23,7 +23,6 @@ function validateTitle(title) {
 function CreateEventForm({ organiserId, onCreated }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [universitySpecific, setUniversitySpecific] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -42,12 +41,10 @@ function CreateEventForm({ organiserId, onCreated }) {
       const created = await createEvent(organiserId, {
         title: title.trim(),
         description: description.trim() || null,
-        universitySpecific,
       });
       onCreated(created);
       setTitle('');
       setDescription('');
-      setUniversitySpecific(false);
     } catch (requestError) {
       setFormError(requestError.message || 'Unable to create event');
     } finally {
@@ -87,20 +84,6 @@ function CreateEventForm({ organiserId, onCreated }) {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Optional details customers will see once this is published"
             />
-          </div>
-
-          <div className="field">
-            <label htmlFor="event-university" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-              <input
-                  id="event-university"
-                  type="checkbox"
-                  checked={universitySpecific}
-                  onChange={(event) => setUniversitySpecific(event.target.checked)}
-                  style={{ width: 'auto', minHeight: 0 }}
-              />
-              University students only
-            </label>
-            <small>Only students verified by an admin can book. Students can find it with the University events filter.</small>
           </div>
 
           {formError && <div className="form-message form-message-error" role="alert">{formError}</div>}
@@ -247,7 +230,6 @@ export default function EventsPage() {
                     <tr key={event.eventId}>
                       <td>
                         <strong>{event.title}</strong>
-                        {event.universitySpecific && <small style={{ color: 'var(--brand)', fontWeight: 700 }}>🎓 Students only</small>}
                         <small>{event.description || 'No description'}</small>
                       </td>
                       <td>
@@ -263,9 +245,6 @@ export default function EventsPage() {
                             <span><strong>Std:</strong> ${Number(event.standardPrice).toFixed(2)}</span>
                             {event.premiumPrice && (
                               <span style={{ color: '#7c3aed' }}><strong>Prem:</strong> ${Number(event.premiumPrice).toFixed(2)}</span>
-                            )}
-                            {event.studentDiscountPercent > 0 && (
-                              <span style={{ color: 'var(--brand)' }}><strong>Student:</strong> −{event.studentDiscountPercent}%</span>
                             )}
                           </div>
                         ) : (

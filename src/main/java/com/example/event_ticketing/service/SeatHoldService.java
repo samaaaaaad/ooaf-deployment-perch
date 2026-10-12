@@ -10,7 +10,6 @@ import com.example.event_ticketing.model.SeatStatus;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
-import com.example.event_ticketing.util.StudentEligibility;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Service;
@@ -66,7 +65,6 @@ public class SeatHoldService {
         EventSeat seat = eventSeatRepository.findByEventSeatIdAndEventEventId(seatId, eventId)
                 .filter(candidate -> candidate.getEvent().getStatus() == EventStatus.PUBLISHED)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat not found"));
-        StudentEligibility.requireAllowedToBook(seat.getEvent(), customer);
 
         Instant now = clock.instant();
 

@@ -51,7 +51,6 @@ describe('EventsPage', () => {
                 expect(eventApi.createEvent).toHaveBeenCalledWith('owner-1', {
                     title: 'Circus',
                     description: 'Big top show',
-                    universitySpecific: false,
                 });
             });
 
