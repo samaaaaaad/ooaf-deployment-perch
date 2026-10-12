@@ -24,6 +24,7 @@ import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.FloorPlanRepository;
 import com.example.event_ticketing.repository.SeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
+import com.example.event_ticketing.util.StudentEligibility;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,8 +95,18 @@ public class EventService {
      * Public feed of published events for customer browsing.
      */
     public List<EventDTO> getPublishedEvents() {
+        return getPublishedEvents(false, false);
+    }
+
+    /**
+     * US 12: published events, optionally narrowed to university-specific and/or
+     * student-discounted ones. Both flags set means an event must match both.
+     */
+    public List<EventDTO> getPublishedEvents(boolean universityOnly, boolean studentDiscountOnly) {
         return eventRepository.findAllByStatusOrderByCreatedAtDesc(EventStatus.PUBLISHED)
                 .stream()
+                .filter(event -> !universityOnly || event.isUniversitySpecific())
+                .filter(event -> !studentDiscountOnly || event.hasStudentDiscount())
                 .map(this::toDTO)
                 .toList();
     }
@@ -287,6 +298,10 @@ public class EventService {
         if (request.premiumPrice != null && request.premiumPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new ValidationException("Premium price must be 0 or greater");
         }
+        if (request.studentDiscountPercent != null
+                && (request.studentDiscountPercent < 0 || request.studentDiscountPercent > 100)) {
+            throw new ValidationException("Student discount must be between 0 and 100 percent");
+        }
 
         Event event = eventRepository.findByEventIdAndOrganiserUserId(eventId, organiserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -299,6 +314,12 @@ public class EventService {
 
         event.setStandardPrice(request.standardPrice);
         event.setPremiumPrice(request.premiumPrice != null ? request.premiumPrice : request.standardPrice);
+        if (request.universitySpecific != null) {
+            event.setUniversitySpecific(request.universitySpecific);
+        }
+        if (request.studentDiscountPercent != null) {
+            event.setStudentDiscountPercent(request.studentDiscountPercent);
+        }
         Event saved = eventRepository.save(event);
         return toDTO(saved);
     }
@@ -568,7 +589,9 @@ public class EventService {
                 ? null
                 : request.description.trim();
 
-        Event saved = eventRepository.save(new Event(organiser, title, description));
+        Event event = new Event(organiser, title, description);
+        event.setUniversitySpecific(Boolean.TRUE.equals(request.universitySpecific));
+        Event saved = eventRepository.save(event);
         return toDTO(saved);
     }
 
@@ -591,6 +614,12 @@ public class EventService {
                 event.getUpdatedAt()
         );
         dto.layoutJson = fp != null ? fp.getLayoutJson() : null;
+        dto.universitySpecific = event.isUniversitySpecific();
+        if (event.hasStudentDiscount()) {
+            dto.studentDiscountPercent = event.getStudentDiscountPercent();
+            dto.studentStandardPrice = StudentEligibility.applyDiscount(event.getStandardPrice(), event.getStudentDiscountPercent());
+            dto.studentPremiumPrice = StudentEligibility.applyDiscount(event.getPremiumPrice(), event.getStudentDiscountPercent());
+        }
         return dto;
     }
 }

@@ -15,3 +15,15 @@ export function approveOrganiserRequest(requestId) {
 export function rejectOrganiserRequest(requestId) {
   return request(`/api/admin/organiser-requests/${requestId}/reject`, { method: 'POST' });
 }
+
+export function getPendingStudentVerifications() {
+  return request('/api/admin/student-verifications');
+}
+
+export function approveStudentVerification(requestId) {
+  return request(`/api/admin/student-verifications/${requestId}/approve`, { method: 'POST' });
+}
+
+export function rejectStudentVerification(requestId) {
+  return request(`/api/admin/student-verifications/${requestId}/reject`, { method: 'POST' });
+}

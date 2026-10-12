@@ -139,8 +139,8 @@ describe('EventDetailPage live seats', () => {
     const seat = await screen.findByRole('button', { name: /Seat S1, Standard, \$20/i });
     expect(seat).toHaveAttribute('cx', '140');
     expect(seat).toHaveAttribute('cy', '220');
-    expect(screen.getByText('STAGE')).toBeInTheDocument();
-    expect(screen.queryByText('Stage')).not.toBeInTheDocument();
+    expect(screen.getByText('Stage')).toBeInTheDocument();
+    expect(screen.queryByText('STAGE')).not.toBeInTheDocument();
   });
 });
 
@@ -167,5 +167,38 @@ describe('EventDetailPage hold expiry', () => {
 
     const timer = await screen.findByRole('timer');
     expect(timer).toHaveClass('is-urgent');
+  });
+});
+describe('EventDetailPage students-only events (US 12)', () => {
+  beforeEach(() => {
+    eventApi.getPublishedEvent.mockResolvedValue({
+      eventId, title: 'O-Week Social', layoutType: 'STAGE', standardPrice: 25, premiumPrice: 40,
+      universitySpecific: true, studentDiscountPercent: 20,
+    });
+  });
+
+  test('a non-student sees the restriction and cannot hold a seat', async () => {
+    renderPage();
+
+    expect(await screen.findByText(/University students only/)).toHaveTextContent(/can’t book this event/);
+    fireEvent.click(screen.getByRole('button', { name: /Seat C1, Standard, \$25/i }));
+
+    expect(await screen.findByText(/for verified university students only/)).toBeInTheDocument();
+    expect(eventApi.holdSeat).not.toHaveBeenCalled();
+  });
+
+  test('a student can hold a seat and sees the student price', async () => {
+    localStorage.setItem('currentUser', JSON.stringify({
+      userId: customerId, fullName: 'Sam', email: 'sam@student.uts.edu.au', role: 'CUSTOMER', studentEligible: true,
+    }));
+    eventApi.holdSeat.mockResolvedValue(holdResponse('seat-c1', 'C1', 300));
+    renderPage();
+
+    fireEvent.click(await screen.findByRole('button', { name: /Seat C1, Standard, \$25/i }));
+
+    expect(await screen.findByText('Seat C1')).toBeInTheDocument();
+    expect(eventApi.holdSeat).toHaveBeenCalledWith(eventId, 'seat-c1', customerId);
+    expect(screen.getByText(/Student discount \(20%\)/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue to payment/ })).toBeEnabled();
   });
 });

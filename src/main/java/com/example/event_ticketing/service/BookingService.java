@@ -15,6 +15,7 @@ import com.example.event_ticketing.payment.PaymentProvider;
 import com.example.event_ticketing.repository.BookingRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
+import com.example.event_ticketing.util.StudentEligibility;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,17 +89,22 @@ public class BookingService {
         Instant now = clock.instant();
         List<EventSeat> seats = requireActiveHolds(eventId, customer, request.seatIds, now);
 
-        BigDecimal total = seats.stream()
-                .map(EventSeat::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         Event event = seats.get(0).getEvent();
+        StudentEligibility.requireAllowedToBook(event, customer);
         String code = generateConfirmationCode();
         List<UUID> seatIds = seats.stream().map(EventSeat::getEventSeatId).toList();
 
+        // US 12: discount is decided server-side, never trusted from the client.
+        final Integer studentDiscountPercent =
+                event.hasStudentDiscount() && StudentEligibility.isEligible(customer)
+                        ? event.getStudentDiscountPercent()
+                        : null;
+        BigDecimal total = seats.stream()
+                .map(seat -> StudentEligibility.applyDiscount(seat.getPrice(), studentDiscountPercent))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         if (total.compareTo(BigDecimal.ZERO) == 0) {
-            Booking booking = new Booking(customer, event, total, code, BookingStatus.CONFIRMED);
-            booking.setSeatIds(seatIds);
+            Booking booking = newBooking(customer, event, total, code, BookingStatus.CONFIRMED, seatIds, studentDiscountPercent);
             bookingRepository.save(booking);
             bookSeats(seats, booking);
             emailService.sendBookingConfirmation(booking, seats);
@@ -108,8 +114,7 @@ public class BookingService {
         // Mock auto-confirms without persisting PENDING_PAYMENT (avoids old H2 ENUM schemas).
         if (paymentProvider.autoConfirms()) {
             PaymentIntentResult intent = createIntent(total, code, Map.of("confirmationCode", code));
-            Booking booking = new Booking(customer, event, total, code, BookingStatus.CONFIRMED);
-            booking.setSeatIds(seatIds);
+            Booking booking = newBooking(customer, event, total, code, BookingStatus.CONFIRMED, seatIds, studentDiscountPercent);
             booking.setPaymentReference(intent.paymentIntentId());
             bookingRepository.save(booking);
             bookSeats(seats, booking);
@@ -117,8 +122,7 @@ public class BookingService {
             return toDTO(booking, seats, null);
         }
 
-        Booking booking = new Booking(customer, event, total, code, BookingStatus.PENDING_PAYMENT);
-        booking.setSeatIds(seatIds);
+        Booking booking = newBooking(customer, event, total, code, BookingStatus.PENDING_PAYMENT, seatIds, studentDiscountPercent);
         bookingRepository.saveAndFlush(booking);
 
         Map<String, String> metadata = new HashMap<>();
@@ -130,6 +134,21 @@ public class BookingService {
         bookingRepository.save(booking);
 
         return toDTO(booking, seats, intent.clientSecret());
+    }
+
+    private static Booking newBooking(
+            User customer,
+            Event event,
+            BigDecimal total,
+            String code,
+            BookingStatus status,
+            List<UUID> seatIds,
+            Integer studentDiscountPercent
+    ) {
+        Booking booking = new Booking(customer, event, total, code, status);
+        booking.setSeatIds(seatIds);
+        booking.setStudentDiscountPercent(studentDiscountPercent);
+        return booking;
     }
 
     private PaymentIntentResult createIntent(BigDecimal total, String code, Map<String, String> metadata) {
@@ -283,9 +302,13 @@ public class BookingService {
         dto.status = booking.getStatus().name();
         dto.paymentReference = booking.getPaymentReference();
         dto.clientSecret = clientSecret;
+        dto.studentDiscountPercent = booking.getStudentDiscountPercent();
         dto.createdAt = booking.getCreatedAt();
         dto.seats = seats.stream()
-                .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), s.getPrice()))
+                .map(s -> new BookingDTO.Seat(
+                        s.getLabel(),
+                        s.getTier().name().toLowerCase(),
+                        booking.pricePaidFor(s)))
                 .toList();
         return dto;
     }

@@ -113,3 +113,12 @@
 .ed-li-timer { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; font-weight: 700; }
 .ed-li-timer.is-urgent { color: var(--danger); }
 .ed-seat.is-pending { cursor: progress; opacity: 0.6; }
+/* US 12: student / university pricing */
+.ed-student {
+  align-items: center; background: #e3efed; border-radius: 10px; color: var(--brand-dark); display: flex;
+  flex-wrap: wrap; font-size: 0.86rem; gap: 0.6rem; margin-top: 0.8rem; padding: 0.55rem 0.85rem;
+}
+.ed-student-tag { font-weight: 800; }
+.ed-legend-student { color: var(--brand); font-style: normal; font-weight: 700; }
+.ed-was { color: var(--muted); font-weight: 500; margin-right: 0.15rem; }
+.ed-discount { color: var(--brand); display: flex; font-size: 0.86rem; font-weight: 700; justify-content: space-between; margin-bottom: 0.4rem; }

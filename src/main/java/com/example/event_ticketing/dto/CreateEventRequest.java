@@ -10,4 +10,6 @@ package com.example.event_ticketing.dto;
 public class CreateEventRequest {
     public String title;
     public String description;
+    /** US 12: optional, defaults to false. */
+    public Boolean universitySpecific;
 }

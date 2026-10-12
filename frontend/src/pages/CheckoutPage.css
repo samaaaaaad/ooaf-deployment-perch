@@ -248,3 +248,7 @@
   .cop-grid { grid-template-columns: 1fr; }
   .cop-pay { position: static; }
 }
+
+/* US 12: student discount */
+.cop-was { color: var(--muted, #667681); font-weight: 500; margin-right: 0.35rem; }
+.cop-discount { color: var(--brand, #176b63); font-size: 0.88rem; font-weight: 700; margin: 0.75rem 0 0; }
