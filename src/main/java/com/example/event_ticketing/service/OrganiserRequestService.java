@@ -148,6 +148,6 @@ public class OrganiserRequestService {
     }
 
     private UserDTO toUserDTO(User user) {
-        return UserDTO.from(user);
+        return new UserDTO(user.getUserId(), user.getFullName(), user.getEmail(), user.getRole(), user.getIsActive());
     }
 }

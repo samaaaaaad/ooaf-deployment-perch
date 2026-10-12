@@ -59,14 +59,6 @@ public class Event {
     @Column(name = "premium_price", precision = 12, scale = 2)
     private java.math.BigDecimal premiumPrice;
 
-    /** US 12: university students only (enforced at seat hold and checkout). Nullable so existing rows migrate; null = false. */
-    @Column(name = "university_specific")
-    private Boolean universitySpecific;
-
-    /** US 12: student discount as a percentage (1-100). Null or 0 = no discount. */
-    @Column(name = "student_discount_percent")
-    private Integer studentDiscountPercent;
-
     @Lob
     @Column(name = "image_url")
     private String imageUrl;
@@ -127,14 +119,6 @@ public class Event {
 
     public java.math.BigDecimal getPremiumPrice() { return premiumPrice; }
     public void setPremiumPrice(java.math.BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
-
-    public boolean isUniversitySpecific() { return Boolean.TRUE.equals(universitySpecific); }
-    public void setUniversitySpecific(Boolean universitySpecific) { this.universitySpecific = universitySpecific; }
-
-    public Integer getStudentDiscountPercent() { return studentDiscountPercent; }
-    public void setStudentDiscountPercent(Integer studentDiscountPercent) { this.studentDiscountPercent = studentDiscountPercent; }
-
-    public boolean hasStudentDiscount() { return studentDiscountPercent != null && studentDiscountPercent > 0; }
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }

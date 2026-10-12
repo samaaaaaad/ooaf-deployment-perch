@@ -62,9 +62,6 @@ export default function MyTicketsPage() {
                   </li>
                 ))}
               </ul>
-              {b.studentDiscountPercent > 0 && (
-                <p className="ed-discount" style={{ margin: '0.5rem 0 0' }}>🎓 {b.studentDiscountPercent}% student discount applied</p>
-              )}
               <div className="ed-total"><span>Total</span><strong>{Number(b.totalAmount) === 0 ? 'Free' : `$${b.totalAmount}`}</strong></div>
             </div>
           ))}

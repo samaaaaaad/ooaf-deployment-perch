@@ -2,10 +2,8 @@ package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.AdminStatsDTO;
 import com.example.event_ticketing.dto.OrganiserRequestDTO;
-import com.example.event_ticketing.dto.StudentVerificationDTO;
 import com.example.event_ticketing.service.AdminService;
 import com.example.event_ticketing.service.OrganiserRequestService;
-import com.example.event_ticketing.service.StudentVerificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,16 +22,10 @@ public class AdminController {
 
     private final AdminService adminService;
     private final OrganiserRequestService organiserRequestService;
-    private final StudentVerificationService studentVerificationService;
 
-    public AdminController(
-            AdminService adminService,
-            OrganiserRequestService organiserRequestService,
-            StudentVerificationService studentVerificationService
-    ) {
+    public AdminController(AdminService adminService, OrganiserRequestService organiserRequestService) {
         this.adminService = adminService;
         this.organiserRequestService = organiserRequestService;
-        this.studentVerificationService = studentVerificationService;
     }
 
     @GetMapping("/stats")
@@ -54,20 +46,5 @@ public class AdminController {
     @PostMapping("/organiser-requests/{requestId}/reject")
     public ResponseEntity<OrganiserRequestDTO> rejectOrganiserRequest(@PathVariable UUID requestId) {
         return ResponseEntity.ok(organiserRequestService.reject(requestId));
-    }
-
-    @GetMapping("/student-verifications")
-    public ResponseEntity<List<StudentVerificationDTO>> getPendingStudentVerifications() {
-        return ResponseEntity.ok(studentVerificationService.listPending());
-    }
-
-    @PostMapping("/student-verifications/{requestId}/approve")
-    public ResponseEntity<StudentVerificationDTO> approveStudentVerification(@PathVariable UUID requestId) {
-        return ResponseEntity.ok(studentVerificationService.approve(requestId));
-    }
-
-    @PostMapping("/student-verifications/{requestId}/reject")
-    public ResponseEntity<StudentVerificationDTO> rejectStudentVerification(@PathVariable UUID requestId) {
-        return ResponseEntity.ok(studentVerificationService.reject(requestId));
     }
 }

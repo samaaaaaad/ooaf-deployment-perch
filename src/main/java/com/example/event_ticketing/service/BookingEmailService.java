@@ -45,7 +45,7 @@ public class BookingEmailService {
         }
         try {
             String seatList = seats.stream()
-                    .map(s -> s.getLabel() + " (" + s.getTier() + ") $" + booking.pricePaidFor(s))
+                    .map(s -> s.getLabel() + " (" + s.getTier() + ") $" + s.getPrice())
                     .collect(Collectors.joining("\n  "));
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);
@@ -56,10 +56,7 @@ public class BookingEmailService {
                             + "Your booking for \"" + booking.getEvent().getTitle() + "\" is confirmed.\n\n"
                             + "Confirmation code: " + booking.getConfirmationCode() + "\n"
                             + "Seats:\n  " + seatList + "\n\n"
-                            + "Total paid: $" + booking.getTotalAmount()
-                            + (booking.getStudentDiscountPercent() != null
-                                    ? " (includes " + booking.getStudentDiscountPercent() + "% student discount)" : "")
-                            + "\n\n"
+                            + "Total paid: $" + booking.getTotalAmount() + "\n\n"
                             + "See you there,\nThe Perch team"
             );
             mailSender.send(message);

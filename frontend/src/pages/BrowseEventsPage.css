@@ -36,8 +36,6 @@
 .be-chip.is-active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 8px 18px rgba(23, 107, 99, 0.22); }
 .be-chip:focus-visible { outline: 3px solid rgba(23, 107, 99, 0.30); outline-offset: 2px; }
 
-.be-filters-student { margin-top: -0.5rem; }
-
 .be-count { color: var(--muted); font-size: 0.85rem; font-weight: 600; margin: 0 0 1.25rem; text-align: center; }
 
 .be-grid { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fill, minmax(258px, 1fr)); }
@@ -80,12 +78,6 @@
 .be-mi svg { height: 16px; width: 16px; }
 .be-foot { align-items: baseline; display: flex; justify-content: space-between; margin-top: auto; }
 .be-price { color: var(--ink); font-size: 1.02rem; font-weight: 800; }
-.be-price-split { display: flex; flex-direction: column; gap: 0.1rem; line-height: 1.2; }
-.be-price-was { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
-.be-price-student { color: var(--brand); }
-.be-price-you { font-size: 0.75rem; font-weight: 700; }
-.be-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.be-pill-uni { color: var(--brand-dark, #0f4f49); }
 .be-view { color: var(--brand); font-size: 0.8rem; font-weight: 700; }
 
 .be-empty {
