@@ -97,7 +97,7 @@ export function getMyHolds(eventId, customerId) {
   return request(`/api/events/${encodeURIComponent(eventId)}/seats/mine?customerId=${encodeURIComponent(customerId)}`);
 }
 
-/** US 8/9: confirms a booking for seats the customer already holds. */
+/** US 8/9 / 8.1: starts checkout for seats the customer already holds. */
 export function createBooking(eventId, customerId, seatIds) {
   return request(`/api/events/${encodeURIComponent(eventId)}/bookings`, {
     method: 'POST',
@@ -112,4 +112,22 @@ export function getMyBookings(customerId) {
 
 export function getBooking(bookingId) {
   return request(`/api/bookings/${encodeURIComponent(bookingId)}`);
+}
+
+/** Public payment config (provider + Stripe publishable key). */
+export function getPaymentConfig() {
+  return request('/api/payments/config');
+}
+
+/** Poll until the booking is CONFIRMED (webhook may lag after Stripe confirms). */
+export async function waitForBookingConfirmation(bookingId, { attempts = 20, delayMs = 500 } = {}) {
+  for (let i = 0; i < attempts; i += 1) {
+    const booking = await getBooking(bookingId);
+    if (booking.status === 'CONFIRMED') return booking;
+    if (booking.status === 'CANCELLED') {
+      throw new Error('Payment failed. Please try again with a different card.');
+    }
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+  throw new Error('Payment is still processing. Check My Tickets in a moment.');
 }

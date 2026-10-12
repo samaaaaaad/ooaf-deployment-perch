@@ -1,15 +1,6 @@
-# Copy this file to application-local.properties (same folder) and fill in your
-# own test values. application-local.properties is gitignored, so your secret
-# never gets committed. Run the app with: --spring.profiles.active=local
-
-# Turn on real Stripe payments (test mode)
+# Copy to application-local.properties (gitignored) and fill in Stripe test keys.
 payment.provider=stripe
-stripe.secret-key=sk_test_YOUR_TEST_SECRET_KEY_HERE
-
-# Optional: send real confirmation emails (e.g. Mailtrap test inbox)
-#spring.mail.host=sandbox.smtp.mailtrap.io
-#spring.mail.port=2525
-#spring.mail.username=YOUR_MAILTRAP_USERNAME
-#spring.mail.password=YOUR_MAILTRAP_PASSWORD
-#spring.mail.properties.mail.smtp.auth=true
-#spring.mail.properties.mail.smtp.starttls.enable=true
+stripe.secret-key=sk_test_...
+stripe.publishable-key=pk_test_...
+# From: stripe listen --forward-to localhost:8080/api/payments/stripe/webhook
+stripe.webhook-secret=whsec_...

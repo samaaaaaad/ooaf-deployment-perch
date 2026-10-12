@@ -6,11 +6,12 @@ import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.SeatUnavailableException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.Booking;
+import com.example.event_ticketing.model.BookingStatus;
 import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.User;
+import com.example.event_ticketing.payment.PaymentIntentResult;
 import com.example.event_ticketing.payment.PaymentProvider;
-import com.example.event_ticketing.payment.PaymentResult;
 import com.example.event_ticketing.repository.BookingRepository;
 import com.example.event_ticketing.repository.EventSeatRepository;
 import com.example.event_ticketing.repository.UserRepository;
@@ -24,15 +25,17 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * US 8/9 - turns a customer's held seats into a confirmed, paid booking.
+ * US 8/9 / 8.1 — turns held seats into a booking.
  *
- * Order of operations: verify the seats are still held by this customer, charge
- * (unless the total is $0 for a free event), then flip HELD -> BOOKED under the
- * seat's @Version so a concurrent expiry/booking can't double-sell.
+ * Paid flow: create {@link BookingStatus#PENDING_PAYMENT} + PaymentIntent, return
+ * {@code clientSecret}; a verified Stripe webhook calls {@link #confirmPaidBooking}
+ * to flip seats HELD → BOOKED. The mock provider auto-confirms in-process.
  */
 @Service
 public class BookingService {
@@ -63,8 +66,13 @@ public class BookingService {
         this.clock = clock;
     }
 
+    /**
+     * Starts checkout for seats the customer already holds. Free events confirm
+     * immediately; paid events return PENDING_PAYMENT + clientSecret (Stripe)
+     * or auto-confirm when using the mock provider.
+     */
     @Transactional
-    public BookingDTO checkout(UUID eventId, CheckoutRequest request) {
+    public BookingDTO startCheckout(UUID eventId, CheckoutRequest request) {
         if (request == null || request.customerId == null) {
             throw new ValidationException("Customer id is required");
         }
@@ -79,21 +87,12 @@ public class BookingService {
         }
 
         Instant now = clock.instant();
-        List<EventSeat> seats = new ArrayList<>();
-        for (UUID seatId : request.seatIds) {
-            EventSeat seat = eventSeatRepository.findByEventSeatIdAndEventEventId(seatId, eventId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Seat not found"));
-            if (!seat.isHoldActiveAt(now) || seat.getHeldBy() == null
-                    || !customer.getUserId().equals(seat.getHeldBy().getUserId())) {
-                throw new SeatUnavailableException(
-                        "Seat " + seat.getLabel() + " is no longer held by you. Please reselect your seats.");
-            }
-            seats.add(seat);
-        }
+        List<EventSeat> seats = requireActiveHolds(eventId, customer, request.seatIds, now);
 
         Event event = seats.get(0).getEvent();
         StudentEligibility.requireAllowedToBook(event, customer);
         String code = generateConfirmationCode();
+        List<UUID> seatIds = seats.stream().map(EventSeat::getEventSeatId).toList();
 
         // US 12: the discount is decided here, never trusted from the client.
         Booking booking = new Booking(customer, event, BigDecimal.ZERO, code);
@@ -115,8 +114,154 @@ public class BookingService {
         }
 
         booking.setPaymentReference(paymentReference);
+        if (total.compareTo(BigDecimal.ZERO) == 0) {
+            Booking booking = new Booking(customer, event, total, code, BookingStatus.CONFIRMED);
+            booking.setSeatIds(seatIds);
+            bookingRepository.save(booking);
+            bookSeats(seats, booking);
+            emailService.sendBookingConfirmation(booking, seats);
+            return toDTO(booking, seats, null);
+        }
+
+        // Mock auto-confirms without persisting PENDING_PAYMENT (avoids old H2 ENUM schemas).
+        if (paymentProvider.autoConfirms()) {
+            PaymentIntentResult intent = createIntent(total, code, Map.of("confirmationCode", code));
+            Booking booking = new Booking(customer, event, total, code, BookingStatus.CONFIRMED);
+            booking.setSeatIds(seatIds);
+            booking.setPaymentReference(intent.paymentIntentId());
+            bookingRepository.save(booking);
+            bookSeats(seats, booking);
+            emailService.sendBookingConfirmation(booking, seats);
+            return toDTO(booking, seats, null);
+        }
+
+        Booking booking = new Booking(customer, event, total, code, BookingStatus.PENDING_PAYMENT);
+        booking.setSeatIds(seatIds);
+        bookingRepository.saveAndFlush(booking);
+
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("bookingId", booking.getBookingId().toString());
+        metadata.put("confirmationCode", code);
+
+        PaymentIntentResult intent = createIntent(total, code, metadata);
+        booking.setPaymentReference(intent.paymentIntentId());
         bookingRepository.save(booking);
 
+        return toDTO(booking, seats, intent.clientSecret());
+    }
+
+    private PaymentIntentResult createIntent(BigDecimal total, String code, Map<String, String> metadata) {
+        try {
+            PaymentIntentResult intent = paymentProvider.createPaymentIntent(
+                    total, "AUD", "Perch booking " + code, code, metadata);
+            if (intent == null || intent.paymentIntentId() == null || intent.paymentIntentId().isBlank()) {
+                throw new ValidationException("Payment provider did not return a PaymentIntent id");
+            }
+            return intent;
+        } catch (IllegalStateException e) {
+            throw new ValidationException(e.getMessage());
+        }
+    }
+
+    /** Backward-compatible alias used by the existing checkout endpoint. */
+    @Transactional
+    public BookingDTO checkout(UUID eventId, CheckoutRequest request) {
+        return startCheckout(eventId, request);
+    }
+
+    /**
+     * Finalises a paid booking after a verified {@code payment_intent.succeeded}
+     * webhook (or mock auto-confirm). Idempotent if already CONFIRMED.
+     */
+    @Transactional
+    public BookingDTO confirmPaidBooking(String paymentIntentId) {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            throw new ValidationException("PaymentIntent id is required");
+        }
+
+        Booking booking = bookingRepository.findByPaymentReference(paymentIntentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found for payment " + paymentIntentId));
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            return toDTO(booking, loadSeats(booking), null);
+        }
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new ValidationException("Booking " + booking.getConfirmationCode() + " was cancelled");
+        }
+
+        Instant now = clock.instant();
+        List<EventSeat> seats = requireActiveHolds(
+                booking.getEvent().getEventId(),
+                booking.getCustomer(),
+                booking.getSeatIds(),
+                now
+        );
+
+        return finalizeConfirmedBooking(booking, seats);
+    }
+
+    private BookingDTO finalizeConfirmedBooking(Booking booking, List<EventSeat> seats) {
+        booking.setStatus(BookingStatus.CONFIRMED);
+        bookingRepository.save(booking);
+        bookSeats(seats, booking);
+        emailService.sendBookingConfirmation(booking, seats);
+        return toDTO(booking, seats, null);
+    }
+
+    /** Marks a pending booking cancelled after a failed payment (seats stay held until expiry). */
+    @Transactional
+    public void markPaymentFailed(String paymentIntentId) {
+        if (paymentIntentId == null || paymentIntentId.isBlank()) {
+            return;
+        }
+        bookingRepository.findByPaymentReference(paymentIntentId).ifPresent(booking -> {
+            if (booking.getStatus() == BookingStatus.PENDING_PAYMENT) {
+                booking.setStatus(BookingStatus.CANCELLED);
+                bookingRepository.save(booking);
+            }
+        });
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingDTO> getBookingsForCustomer(UUID customerId) {
+        if (customerId == null) {
+            throw new ValidationException("Customer id is required");
+        }
+        return bookingRepository
+                .findAllByCustomerUserIdAndStatusOrderByCreatedAtDesc(customerId, BookingStatus.CONFIRMED)
+                .stream()
+                .map(b -> toDTO(b, loadSeats(b), null))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public BookingDTO getBooking(UUID bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+        return toDTO(booking, loadSeats(booking), null);
+    }
+
+    private List<EventSeat> requireActiveHolds(
+            UUID eventId,
+            User customer,
+            List<UUID> seatIds,
+            Instant now
+    ) {
+        List<EventSeat> seats = new ArrayList<>();
+        for (UUID seatId : seatIds) {
+            EventSeat seat = eventSeatRepository.findByEventSeatIdAndEventEventId(seatId, eventId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Seat not found"));
+            if (!seat.isHoldActiveAt(now) || seat.getHeldBy() == null
+                    || !customer.getUserId().equals(seat.getHeldBy().getUserId())) {
+                throw new SeatUnavailableException(
+                        "Seat " + seat.getLabel() + " is no longer held by you. Please reselect your seats.");
+            }
+            seats.add(seat);
+        }
+        return seats;
+    }
+
+    private void bookSeats(List<EventSeat> seats, Booking booking) {
         try {
             for (EventSeat seat : seats) {
                 seat.book(booking);
@@ -125,26 +270,17 @@ public class BookingService {
         } catch (ConcurrencyFailureException lostRace) {
             throw new SeatUnavailableException("One of your seats was just taken. Please reselect and try again.");
         }
-
-        emailService.sendBookingConfirmation(booking, seats);
-        return toDTO(booking, seats);
     }
 
-    @Transactional(readOnly = true)
-    public List<BookingDTO> getBookingsForCustomer(UUID customerId) {
-        if (customerId == null) {
-            throw new ValidationException("Customer id is required");
+    private List<EventSeat> loadSeats(Booking booking) {
+        List<EventSeat> linked = eventSeatRepository.findAllByBookingBookingIdOrderByYAscXAsc(booking.getBookingId());
+        if (!linked.isEmpty()) {
+            return linked;
         }
-        return bookingRepository.findAllByCustomerUserIdOrderByCreatedAtDesc(customerId).stream()
-                .map(b -> toDTO(b, eventSeatRepository.findAllByBookingBookingIdOrderByYAscXAsc(b.getBookingId())))
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public BookingDTO getBooking(UUID bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
-        return toDTO(booking, eventSeatRepository.findAllByBookingBookingIdOrderByYAscXAsc(bookingId));
+        if (booking.getSeatIds() == null || booking.getSeatIds().isEmpty()) {
+            return List.of();
+        }
+        return eventSeatRepository.findAllById(booking.getSeatIds());
     }
 
     private String generateConfirmationCode() {
@@ -155,7 +291,7 @@ public class BookingService {
         return sb.toString();
     }
 
-    private BookingDTO toDTO(Booking booking, List<EventSeat> seats) {
+    private BookingDTO toDTO(Booking booking, List<EventSeat> seats, String clientSecret) {
         BookingDTO dto = new BookingDTO();
         dto.bookingId = booking.getBookingId();
         dto.confirmationCode = booking.getConfirmationCode();
@@ -165,6 +301,7 @@ public class BookingService {
         dto.status = booking.getStatus().name();
         dto.paymentReference = booking.getPaymentReference();
         dto.studentDiscountPercent = booking.getStudentDiscountPercent();
+        dto.clientSecret = clientSecret;
         dto.createdAt = booking.getCreatedAt();
         dto.seats = seats.stream()
                 .map(s -> new BookingDTO.Seat(s.getLabel(), s.getTier().name().toLowerCase(), booking.pricePaidFor(s)))
