@@ -1,6 +1,18 @@
-# Copy to application-local.properties (gitignored) and fill in Stripe test keys.
-payment.provider=stripe
-stripe.secret-key=sk_test_...
-stripe.publishable-key=pk_test_...
+# Copy to application-local.properties (gitignored) and fill in what you need.
+
+# --- Optional: Stripe (US 8.1) ---
+#payment.provider=stripe
+#stripe.secret-key=sk_test_...
+#stripe.publishable-key=pk_test_...
 # From: stripe listen --forward-to localhost:8080/api/payments/stripe/webhook
-stripe.webhook-secret=whsec_...
+#stripe.webhook-secret=whsec_...
+
+# --- Optional: Mailtrap e-ticket email (US 10) ---
+#payment.provider=mock
+#spring.mail.host=sandbox.smtp.mailtrap.io
+#spring.mail.port=2525
+#spring.mail.username=YOUR_MAILTRAP_USERNAME
+#spring.mail.password=YOUR_MAILTRAP_PASSWORD
+#spring.mail.properties.mail.smtp.auth=true
+#spring.mail.properties.mail.smtp.starttls.enable=true
+#perch.mail.from=no-reply@perch.local
