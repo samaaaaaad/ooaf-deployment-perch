@@ -36,6 +36,20 @@
   background: #fff;
 }
 
+.fp-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* US 13.0 / 13.3 */
+.fp-shared-note {
+  margin: -0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted, #667681);
+}
+
 .fp-head-actions {
   display: flex;
   gap: 0.6rem;
