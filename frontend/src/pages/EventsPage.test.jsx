@@ -52,10 +52,31 @@ describe('EventsPage', () => {
                     title: 'Circus',
                     description: 'Big top show',
                     universitySpecific: false,
+                    startsAt: null,
                 });
             });
 
             expect(await screen.findByText('Circus')).toBeInTheDocument();
+        });
+
+        test('sends the chosen date and time as an ISO instant', async () => {
+            eventApi.getEvents.mockResolvedValue([]);
+            eventApi.createEvent.mockResolvedValue({
+                eventId: 'e2', title: 'Dated', description: null, status: 'DRAFT', createdAt: '2026-01-01T00:00:00Z',
+            });
+
+            renderPage();
+            await screen.findByText('No events yet');
+
+            fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Dated' } });
+            fireEvent.change(screen.getByLabelText('Date and time'), { target: { value: '2027-06-15T19:30' } });
+            fireEvent.click(screen.getByRole('button', { name: 'Create event' }));
+
+            await waitFor(() => {
+                const payload = eventApi.createEvent.mock.calls[0][1];
+                expect(payload.startsAt).toMatch(/T.*Z$/);
+                expect(Number.isNaN(Date.parse(payload.startsAt))).toBe(false);
+            });
         });
 
         test('shows a validation message instead of calling the API for a blank title', async () => {

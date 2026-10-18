@@ -103,10 +103,13 @@ public class EventService {
      * student-discounted ones. Both flags set means an event must match both.
      */
     public List<EventDTO> getPublishedEvents(boolean universityOnly, boolean studentDiscountOnly) {
+        Instant now = Instant.now();
         return eventRepository.findAllByStatusOrderByCreatedAtDesc(EventStatus.PUBLISHED)
                 .stream()
                 .filter(event -> !universityOnly || event.isUniversitySpecific())
                 .filter(event -> !studentDiscountOnly || event.hasStudentDiscount())
+                // Hide events whose scheduled start has passed. Undated events (no startsAt) still show.
+                .filter(event -> event.getStartsAt() == null || !event.getStartsAt().isBefore(now))
                 .map(this::toDTO)
                 .toList();
     }
@@ -591,8 +594,21 @@ public class EventService {
 
         Event event = new Event(organiser, title, description);
         event.setUniversitySpecific(Boolean.TRUE.equals(request.universitySpecific));
+        event.setStartsAt(parseStartsAt(request.startsAt));
         Event saved = eventRepository.save(event);
         return toDTO(saved);
+    }
+
+    /** Parses the optional ISO-8601 start instant; a blank value means no scheduled date yet. */
+    private Instant parseStartsAt(String startsAt) {
+        if (startsAt == null || startsAt.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(startsAt.trim());
+        } catch (java.time.format.DateTimeParseException ex) {
+            throw new ValidationException("Event start time must be a valid date and time");
+        }
     }
 
     private EventDTO toDTO(Event event) {
@@ -614,6 +630,7 @@ public class EventService {
                 event.getUpdatedAt()
         );
         dto.layoutJson = fp != null ? fp.getLayoutJson() : null;
+        dto.startsAt = event.getStartsAt();
         dto.universitySpecific = event.isUniversitySpecific();
         if (event.hasStudentDiscount()) {
             dto.studentDiscountPercent = event.getStudentDiscountPercent();

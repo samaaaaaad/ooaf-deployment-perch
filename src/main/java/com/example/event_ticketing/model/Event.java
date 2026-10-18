@@ -71,6 +71,12 @@ public class Event {
     @Column(name = "image_url")
     private String imageUrl;
 
+    // MVP: a single scheduled start for the event. ADR 0002 deferred performance time to a
+    // future EventSession; until that exists we treat one event as one dated performance.
+    // Nullable so existing and still-draft events without a date keep working.
+    @Column(name = "starts_at")
+    private Instant startsAt;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -138,6 +144,9 @@ public class Event {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public Instant getStartsAt() { return startsAt; }
+    public void setStartsAt(Instant startsAt) { this.startsAt = startsAt; }
 
     public Instant getPublishedAt() { return publishedAt; }
     public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }

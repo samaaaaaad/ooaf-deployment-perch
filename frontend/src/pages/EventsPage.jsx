@@ -23,6 +23,7 @@ function validateTitle(title) {
 function CreateEventForm({ organiserId, onCreated }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [startsAt, setStartsAt] = useState('');
   const [universitySpecific, setUniversitySpecific] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -43,10 +44,13 @@ function CreateEventForm({ organiserId, onCreated }) {
         title: title.trim(),
         description: description.trim() || null,
         universitySpecific,
+        // datetime-local gives a local wall-clock value; send it as a proper ISO instant.
+        startsAt: startsAt ? new Date(startsAt).toISOString() : null,
       });
       onCreated(created);
       setTitle('');
       setDescription('');
+      setStartsAt('');
       setUniversitySpecific(false);
     } catch (requestError) {
       setFormError(requestError.message || 'Unable to create event');
@@ -87,6 +91,18 @@ function CreateEventForm({ organiserId, onCreated }) {
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Optional details customers will see once this is published"
             />
+          </div>
+
+          <div className="field">
+            <label htmlFor="event-starts-at">Date and time</label>
+            <input
+                id="event-starts-at"
+                name="startsAt"
+                type="datetime-local"
+                value={startsAt}
+                onChange={(event) => setStartsAt(event.target.value)}
+            />
+            <small>Optional. Once this time passes, the event drops off the Browse page.</small>
           </div>
 
           <div className="field">
