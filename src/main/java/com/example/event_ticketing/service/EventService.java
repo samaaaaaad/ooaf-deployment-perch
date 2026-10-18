@@ -274,14 +274,16 @@ public class EventService {
     }
 
     /**
-     * Seats for a floor plan the organiser can see: their own plans, or a shared
-     * default (unowned) plan such as the built-in Stage layout.
+     * Seats for a floor plan the organiser can see: their own plans, the built-in
+     * unowned default (e.g. the Stage layout), or any plan another organiser has
+     * published to the shared gallery (US 13.0 / 13.4).
      */
     public List<SeatDTO> getFloorPlanSeats(UUID organiserId, UUID floorPlanId) {
         FloorPlan plan = floorPlanRepository.findById(floorPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
-        if (plan.getOrganiser() != null && !plan.getOrganiser().getUserId().equals(organiserId)) {
-            throw new ValidationException("You can only view your own floorplans");
+        boolean ownedByCaller = plan.getOrganiser() == null || plan.getOrganiser().getUserId().equals(organiserId);
+        if (!ownedByCaller && !plan.isShared()) {
+            throw new ValidationException("You can only view your own floorplans or a published one");
         }
         return seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId())
                 .stream()
