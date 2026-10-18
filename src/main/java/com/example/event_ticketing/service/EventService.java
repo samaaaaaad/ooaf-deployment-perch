@@ -258,6 +258,22 @@ public class EventService {
     }
 
     /**
+     * 13.1 — publishes or withdraws one of the organiser's own floor plans from the shared
+     * gallery. Reuses the same ownership check as update/delete, so the built-in default (unowned)
+     * plan can never be published: there is no owner to credit for it.
+     */
+    @Transactional
+    public FloorPlanDTO setFloorPlanShared(UUID organiserId, UUID floorPlanId, boolean shared) {
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
+        if (shared) {
+            plan.publish();
+        } else {
+            plan.unpublish();
+        }
+        return toFloorPlanDTO(floorPlanRepository.save(plan));
+    }
+
+    /**
      * Seats for a floor plan the organiser can see: their own plans, or a shared
      * default (unowned) plan such as the built-in Stage layout.
      */

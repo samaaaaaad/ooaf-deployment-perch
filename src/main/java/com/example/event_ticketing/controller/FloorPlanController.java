@@ -67,4 +67,20 @@ public class FloorPlanController {
     ) {
         return ResponseEntity.ok(eventService.getFloorPlanSeats(organiserId, floorPlanId));
     }
+
+    @PutMapping("/{floorPlanId}/publish")
+    public ResponseEntity<FloorPlanDTO> publish(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID floorPlanId
+    ) {
+        return ResponseEntity.ok(eventService.setFloorPlanShared(organiserId, floorPlanId, true));
+    }
+
+    @DeleteMapping("/{floorPlanId}/publish")
+    public ResponseEntity<FloorPlanDTO> unpublish(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID floorPlanId
+    ) {
+        return ResponseEntity.ok(eventService.setFloorPlanShared(organiserId, floorPlanId, false));
+    }
 }
