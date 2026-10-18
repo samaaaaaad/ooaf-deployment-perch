@@ -296,8 +296,24 @@ public class EventService {
                 p.getName(),
                 p.getLayoutType(),
                 p.getCapacity(),
-                p.getLayoutJson()
+                p.getLayoutJson(),
+                p.isShared(),
+                p.getSharedAt(),
+                p.getOrganiser() != null ? p.getOrganiser().getFullName() : null
         );
+    }
+
+    /**
+     * US 13.0 — the published floor-plan gallery: every shared plan, from every organiser,
+     * newest-published first, each credited to its owner. Separate from getAvailableFloorPlans
+     * (one organiser's own usable plans: their own plus the unowned default); the unowned default
+     * never appears here, since it can never be published (see FloorPlan.publish()).
+     */
+    public List<FloorPlanDTO> getSharedFloorPlans() {
+        return floorPlanRepository.findAllBySharedTrueOrderBySharedAtDesc()
+                .stream()
+                .map(this::toFloorPlanDTO)
+                .toList();
     }
 
     /**
