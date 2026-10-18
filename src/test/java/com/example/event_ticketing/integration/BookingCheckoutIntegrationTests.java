@@ -42,6 +42,9 @@ class BookingCheckoutIntegrationTests {
     private BookingRepository bookingRepository;
 
     @Autowired
+    private com.example.event_ticketing.repository.TicketRepository ticketRepository;
+
+    @Autowired
     private EventSeatRepository eventSeatRepository;
 
     @Autowired
@@ -49,6 +52,9 @@ class BookingCheckoutIntegrationTests {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private org.springframework.transaction.PlatformTransactionManager transactionManager;
 
     private Event event;
     private User customer;
@@ -80,6 +86,13 @@ class BookingCheckoutIntegrationTests {
         assertThat(dto.paymentReference).startsWith("mock_pi_");
         assertThat(dto.totalAmount).isEqualByComparingTo("80.00");
         assertThat(dto.seats).hasSize(2);
+        assertThat(dto.tickets).hasSize(2);
+        assertThat(dto.tickets).extracting(BookingDTO.Ticket::ticketCode).doesNotHaveDuplicates();
+        assertThat(dto.tickets).extracting(BookingDTO.Ticket::seatLabel).containsExactlyInAnyOrder("A1", "A2");
+        for (var ticket : dto.tickets) {
+            assertThat(decodeQr(ticket.qrCodeDataUrl())).isEqualTo(ticket.ticketCode());
+        }
+        assertThat(bookingService.getBooking(dto.bookingId).tickets).isEqualTo(dto.tickets);
 
         assertThat(reload(a1).getStatus()).isEqualTo(SeatStatus.BOOKED);
         assertThat(reload(a2).getStatus()).isEqualTo(SeatStatus.BOOKED);
@@ -99,6 +112,7 @@ class BookingCheckoutIntegrationTests {
         BookingDTO dto = bookingService.startCheckout(event.getEventId(), request);
 
         assertThat(dto.status).isEqualTo("CONFIRMED");
+        assertThat(dto.tickets).hasSize(1);
         assertThat(dto.paymentReference).isNull();
         assertThat(dto.clientSecret).isNull();
         assertThat(reload(free).getStatus()).isEqualTo(SeatStatus.BOOKED);
@@ -116,6 +130,9 @@ class BookingCheckoutIntegrationTests {
         BookingDTO first = bookingService.confirmPaidBooking("pi_test_confirm_1");
         BookingDTO second = bookingService.confirmPaidBooking("pi_test_confirm_1");
 
+        assertThat(first.tickets).hasSize(1);
+        assertThat(second.tickets).isEqualTo(first.tickets);
+        assertThat(ticketRepository.findAllByBookingBookingIdOrderByIssuedAtAscTicketIdAsc(pending.getBookingId())).hasSize(1);
         assertThat(first.status).isEqualTo("CONFIRMED");
         assertThat(second.status).isEqualTo("CONFIRMED");
         assertThat(first.bookingId).isEqualTo(pending.getBookingId());
@@ -147,6 +164,7 @@ class BookingCheckoutIntegrationTests {
         bookingRepository.save(pending);
 
         bookingService.markPaymentFailed("pi_test_fail");
+        assertThat(ticketRepository.findAllByBookingBookingIdOrderByIssuedAtAscTicketIdAsc(pending.getBookingId())).isEmpty();
 
         assertThat(bookingRepository.findByPaymentReference("pi_test_fail")).get()
                 .extracting(Booking::getStatus)
@@ -172,6 +190,87 @@ class BookingCheckoutIntegrationTests {
         List<BookingDTO> tickets = bookingService.getBookingsForCustomer(customer.getUserId());
         assertThat(tickets).extracting(b -> b.bookingId).containsExactly(confirmed.bookingId);
         assertThat(tickets).noneMatch(b -> "PENDING_PAYMENT".equals(b.status));
+    }
+
+    @Test
+    void duplicateSeatSelectionIsRejectedBeforePayment() {
+        EventSeat seat = saveHeld("Z1", "10.00");
+        CheckoutRequest request = new CheckoutRequest();
+        request.customerId = customer.getUserId();
+        request.seatIds = List.of(seat.getEventSeatId(), seat.getEventSeatId());
+        assertThatThrownBy(() -> bookingService.startCheckout(event.getEventId(), request))
+                .hasMessageContaining("Duplicate seat");
+        assertThat(reload(seat).getStatus()).isEqualTo(SeatStatus.HELD);
+    }
+
+    @Test
+    @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+    void concurrentCallbacksIssueOnlyOneTicket() throws Exception {
+        var tx = new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+        String reference = "pi_race_" + UUID.randomUUID();
+        UUID id = tx.execute(status -> {
+            seed();
+            EventSeat seat = saveHeld("R1", "25.00");
+            Booking booking = new Booking(customer, event, new BigDecimal("25.00"), "PERCH-RACE", BookingStatus.PENDING_PAYMENT);
+            booking.setSeatIds(List.of(seat.getEventSeatId()));
+            booking.setPaymentReference(reference);
+            return bookingRepository.saveAndFlush(booking).getBookingId();
+        });
+        var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        java.util.concurrent.Callable<BookingDTO> callback = () -> {
+            start.await();
+            return bookingService.confirmPaidBooking(reference);
+        };
+        try {
+            var first = executor.submit(callback);
+            var second = executor.submit(callback);
+            start.countDown();
+            var a = first.get(20, java.util.concurrent.TimeUnit.SECONDS);
+            var b = second.get(20, java.util.concurrent.TimeUnit.SECONDS);
+            assertThat(a.tickets).hasSize(1).isEqualTo(b.tickets);
+            tx.executeWithoutResult(status -> {
+                assertThat(ticketRepository.findAllByBookingBookingIdOrderByIssuedAtAscTicketIdAsc(id)).hasSize(1);
+                assertThat(eventSeatRepository.findAllByBookingBookingIdOrderByYAscXAsc(id))
+                        .hasSize(1).allMatch(seat -> seat.getStatus() == SeatStatus.BOOKED);
+            });
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void checkoutHttpResponseAndBookingLookupExposeTheSameTicket() throws Exception {
+        EventSeat seat = saveHeld("HTTP1", "12.00");
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
+                .standaloneSetup(new com.example.event_ticketing.controller.BookingController(bookingService)).build();
+        String response = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post("/api/events/" + event.getEventId() + "/bookings")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"customerId\":\"" + customer.getUserId() + "\",\"seatIds\":[\"" + seat.getEventSeatId() + "\"]}"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.status").value("CONFIRMED"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.tickets.length()").value(1))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.tickets[0].seatLabel").value("HTTP1"))
+                .andReturn().getResponse().getContentAsString();
+        var json = new tools.jackson.databind.ObjectMapper().readTree(response);
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .get("/api/bookings/" + json.get("bookingId").asText()))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.tickets[0].ticketCode")
+                        .value(json.get("tickets").get(0).get("ticketCode").asText()));
+    }
+
+    private String decodeQr(String dataUrl) {
+        try {
+            byte[] bytes = java.util.Base64.getDecoder().decode(dataUrl.substring(dataUrl.indexOf(',') + 1));
+            var image = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(bytes));
+            var source = new com.google.zxing.client.j2se.BufferedImageLuminanceSource(image);
+            var bitmap = new com.google.zxing.BinaryBitmap(new com.google.zxing.common.HybridBinarizer(source));
+            return new com.google.zxing.MultiFormatReader().decode(bitmap).getText();
+        } catch (Exception e) {
+            throw new AssertionError("Ticket QR must be readable", e);
+        }
     }
 
     private EventSeat saveHeld(String label, String price) {

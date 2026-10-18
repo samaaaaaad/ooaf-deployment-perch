@@ -60,6 +60,7 @@ class StudentDiscountTests {
     @Mock private BookingRepository bookingRepository;
     @Mock private PaymentProvider paymentProvider;
     @Mock private BookingEmailService emailService;
+    @Mock private TicketService ticketService;
 
     private EventService eventService;
     private BookingService bookingService;
@@ -70,7 +71,7 @@ class StudentDiscountTests {
     void setUp() {
         eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository, seatRepository);
         bookingService = new BookingService(eventSeatRepository, bookingRepository, userRepository,
-                paymentProvider, emailService, Clock.fixed(NOW, ZoneOffset.UTC));
+                paymentProvider, emailService, Clock.fixed(NOW, ZoneOffset.UTC), ticketService);
         seatHoldService = new SeatHoldService(eventSeatRepository, userRepository,
                 Clock.fixed(NOW, ZoneOffset.UTC), Duration.ofMinutes(5));
         organiser = new User("Owner", "owner@example.com", "hash", UserRole.ORGANISER);

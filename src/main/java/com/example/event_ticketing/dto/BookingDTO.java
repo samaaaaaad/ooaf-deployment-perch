@@ -19,6 +19,9 @@ public class BookingDTO {
     public Integer studentDiscountPercent;
     public Instant createdAt;
     public List<Seat> seats;
+    public List<Ticket> tickets;
+
+    public record Ticket(UUID ticketId, String seatLabel, String ticketCode, String qrCodeDataUrl) {}
 
     public BookingDTO() {}
 
