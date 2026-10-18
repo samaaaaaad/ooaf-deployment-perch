@@ -1,3 +1,4 @@
+import BookingTickets from '../components/BookingTickets';
 import { useMemo, useState } from 'react';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
@@ -91,7 +92,7 @@ export default function CheckoutPage() {
       sessionStorage.removeItem('pendingOrder');
     } catch (err) {
       setError(err.message || 'Payment succeeded but confirmation is delayed.');
-      setStatus('error');
+      setStatus('awaiting-confirmation');
     }
   }
 
@@ -194,9 +195,11 @@ export default function CheckoutPage() {
           {error && <div className="notice notice-error" role="alert" style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>{error}</div>}
 
           {status !== 'stripe' && (
-            <button type="button" className="cop-pay-btn" disabled={!canBook || status === 'paying'} onClick={handlePay}>
+            <button type="button" className="cop-pay-btn" disabled={!canBook || status === 'paying'} onClick={status === 'awaiting-confirmation' ? onStripeConfirmed : handlePay}>
               {status === 'paying'
                 ? 'Confirming…'
+                : status === 'awaiting-confirmation'
+                  ? 'Check confirmation'
                 : isFree
                   ? 'Reserve for free'
                   : <>{LockIcon} Pay ${total}</>}
@@ -245,7 +248,7 @@ function StripePayForm({ onConfirmed, onError }) {
   );
 }
 
-function Confirmation({ booking, navigate }) {
+export function Confirmation({ booking, navigate }) {
   return (
     <div className="cop">
       <div className="cop-card cop-done">
@@ -269,8 +272,9 @@ function Confirmation({ booking, navigate }) {
         </ul>
         <div className="cop-total"><span>Total paid</span><strong>{Number(booking.totalAmount) === 0 ? 'Free' : `$${booking.totalAmount}`}</strong></div>
 
-        <p className="cop-note" style={{ marginTop: '1rem' }}>A confirmation email is on its way, and your tickets are saved in My Tickets.</p>
+        <p className="cop-note" style={{ marginTop: '1rem' }}>Your tickets are ready below and saved in My Tickets.</p>
 
+        <BookingTickets tickets={booking.tickets} />
         <div className="cop-done-actions">
           <button type="button" className="cop-pay-btn" style={{ flex: 1 }} onClick={() => navigate('/tickets')}>View My Tickets</button>
           <button type="button" className="cop-ghost" style={{ flex: 1 }} onClick={() => navigate('/browse')}>Keep browsing</button>

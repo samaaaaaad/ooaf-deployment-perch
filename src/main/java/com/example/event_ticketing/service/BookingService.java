@@ -49,6 +49,7 @@ public class BookingService {
     private final PaymentProvider paymentProvider;
     private final BookingEmailService emailService;
     private final Clock clock;
+    private final TicketService ticketService;
 
     public BookingService(
             EventSeatRepository eventSeatRepository,
@@ -56,7 +57,8 @@ public class BookingService {
             UserRepository userRepository,
             PaymentProvider paymentProvider,
             BookingEmailService emailService,
-            Clock clock
+            Clock clock,
+            TicketService ticketService
     ) {
         this.eventSeatRepository = eventSeatRepository;
         this.bookingRepository = bookingRepository;
@@ -64,6 +66,7 @@ public class BookingService {
         this.paymentProvider = paymentProvider;
         this.emailService = emailService;
         this.clock = clock;
+        this.ticketService = ticketService;
     }
 
     /**
@@ -86,6 +89,9 @@ public class BookingService {
             throw new ValidationException("Customer account is not active");
         }
 
+        if (new java.util.HashSet<>(request.seatIds).size() != request.seatIds.size()) {
+            throw new ValidationException("Duplicate seat ids are not allowed");
+        }
         Instant now = clock.instant();
         List<EventSeat> seats = requireActiveHolds(eventId, customer, request.seatIds, now);
 
@@ -107,6 +113,7 @@ public class BookingService {
             Booking booking = newBooking(customer, event, total, code, BookingStatus.CONFIRMED, seatIds, studentDiscountPercent);
             bookingRepository.save(booking);
             bookSeats(seats, booking);
+            ticketService.issue(booking, seats);
             emailService.sendBookingConfirmation(booking, seats);
             return toDTO(booking, seats, null);
         }
@@ -118,6 +125,7 @@ public class BookingService {
             booking.setPaymentReference(intent.paymentIntentId());
             bookingRepository.save(booking);
             bookSeats(seats, booking);
+            ticketService.issue(booking, seats);
             emailService.sendBookingConfirmation(booking, seats);
             return toDTO(booking, seats, null);
         }
@@ -205,6 +213,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.CONFIRMED);
         bookingRepository.save(booking);
         bookSeats(seats, booking);
+        ticketService.issue(booking, seats);
         emailService.sendBookingConfirmation(booking, seats);
         return toDTO(booking, seats, null);
     }
@@ -304,6 +313,7 @@ public class BookingService {
         dto.clientSecret = clientSecret;
         dto.studentDiscountPercent = booking.getStudentDiscountPercent();
         dto.createdAt = booking.getCreatedAt();
+        dto.tickets = ticketService.getTickets(booking.getBookingId());
         dto.seats = seats.stream()
                 .map(s -> new BookingDTO.Seat(
                         s.getLabel(),

@@ -1,3 +1,4 @@
+import BookingTickets from '../components/BookingTickets';
 import { useEffect, useState } from 'react';
 
 import { getMyBookings } from '../api/eventApi';
@@ -62,6 +63,7 @@ export default function MyTicketsPage() {
                   </li>
                 ))}
               </ul>
+              <BookingTickets tickets={b.tickets} />
               {b.studentDiscountPercent > 0 && (
                 <p className="ed-discount" style={{ margin: '0.5rem 0 0' }}>🎓 {b.studentDiscountPercent}% student discount applied</p>
               )}
