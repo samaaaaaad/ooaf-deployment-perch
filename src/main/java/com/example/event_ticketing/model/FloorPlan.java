@@ -51,6 +51,12 @@ public class FloorPlan {
     @Column(name = "layout_json")
     private String layoutJson;
 
+    @Column(name = "shared", nullable = false, columnDefinition = "boolean default false")
+    private boolean shared;
+
+    @Column(name = "shared_at")
+    private Instant sharedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -98,4 +104,29 @@ public class FloorPlan {
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public boolean isShared() { return shared; }
+    public Instant getSharedAt() { return sharedAt; }
+
+    public boolean isOwned() {
+        return organiser != null;
+    }
+
+    /**
+     * Publishes the plan so other organisers can browse and reuse it. Idempotent: republishing an
+     * already-shared plan leaves its original sharedAt untouched, so its position in a gallery
+     * sorted by publish date doesn't change just because the owner toggled it again.
+     */
+    public void publish() {
+        if (!shared) {
+            sharedAt = Instant.now();
+        }
+        shared = true;
+    }
+
+    /** Withdraws the plan from the shared gallery. Idempotent. */
+    public void unpublish() {
+        shared = false;
+        sharedAt = null;
+    }
 }

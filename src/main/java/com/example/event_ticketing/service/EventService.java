@@ -258,14 +258,32 @@ public class EventService {
     }
 
     /**
-     * Seats for a floor plan the organiser can see: their own plans, or a shared
-     * default (unowned) plan such as the built-in Stage layout.
+     * 13.1 — publishes or withdraws one of the organiser's own floor plans from the shared
+     * gallery. Reuses the same ownership check as update/delete, so the built-in default (unowned)
+     * plan can never be published: there is no owner to credit for it.
+     */
+    @Transactional
+    public FloorPlanDTO setFloorPlanShared(UUID organiserId, UUID floorPlanId, boolean shared) {
+        FloorPlan plan = requireOwnedFloorPlan(organiserId, floorPlanId);
+        if (shared) {
+            plan.publish();
+        } else {
+            plan.unpublish();
+        }
+        return toFloorPlanDTO(floorPlanRepository.save(plan));
+    }
+
+    /**
+     * Seats for a floor plan the organiser can see: their own plans, the built-in
+     * unowned default (e.g. the Stage layout), or any plan another organiser has
+     * published to the shared gallery (US 13.0 / 13.4).
      */
     public List<SeatDTO> getFloorPlanSeats(UUID organiserId, UUID floorPlanId) {
         FloorPlan plan = floorPlanRepository.findById(floorPlanId)
                 .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
-        if (plan.getOrganiser() != null && !plan.getOrganiser().getUserId().equals(organiserId)) {
-            throw new ValidationException("You can only view your own floorplans");
+        boolean ownedByCaller = plan.getOrganiser() == null || plan.getOrganiser().getUserId().equals(organiserId);
+        if (!ownedByCaller && !plan.isShared()) {
+            throw new ValidationException("You can only view your own floorplans or a published one");
         }
         return seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId())
                 .stream()
@@ -280,8 +298,24 @@ public class EventService {
                 p.getName(),
                 p.getLayoutType(),
                 p.getCapacity(),
-                p.getLayoutJson()
+                p.getLayoutJson(),
+                p.isShared(),
+                p.getSharedAt(),
+                p.getOrganiser() != null ? p.getOrganiser().getFullName() : null
         );
+    }
+
+    /**
+     * US 13.0 — the published floor-plan gallery: every shared plan, from every organiser,
+     * newest-published first, each credited to its owner. Separate from getAvailableFloorPlans
+     * (one organiser's own usable plans: their own plus the unowned default); the unowned default
+     * never appears here, since it can never be published (see FloorPlan.publish()).
+     */
+    public List<FloorPlanDTO> getSharedFloorPlans() {
+        return floorPlanRepository.findAllBySharedTrueOrderBySharedAtDesc()
+                .stream()
+                .map(this::toFloorPlanDTO)
+                .toList();
     }
 
     /**

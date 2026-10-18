@@ -39,6 +39,24 @@ export function deleteFloorplan(organiserId, floorPlanId) {
   });
 }
 
+// US 13.0 / 13.3: publish or withdraw one of the organiser's own floor plans from the shared gallery.
+export function publishFloorplan(organiserId, floorPlanId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/floorplans/${encodeURIComponent(floorPlanId)}/publish`, {
+    method: 'PUT',
+  });
+}
+
+export function unpublishFloorplan(organiserId, floorPlanId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/floorplans/${encodeURIComponent(floorPlanId)}/publish`, {
+    method: 'DELETE',
+  });
+}
+// US 13.0 / 13.4: the public gallery of floor plans every organiser has published,
+// newest first, each carrying its owner's name for attribution.
+export function getSharedFloorplans() {
+  return request('/api/floorplans/shared');
+}
+
 export function updateEventPricing(organiserId, eventId, data) {
   return request(`/api/organisers/${encodeURIComponent(organiserId)}/events/${encodeURIComponent(eventId)}/pricing`, {
     method: 'PUT',

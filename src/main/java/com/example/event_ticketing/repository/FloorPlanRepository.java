@@ -15,4 +15,6 @@ public interface FloorPlanRepository extends JpaRepository<FloorPlan, UUID> {
     List<FloorPlan> findAvailableForOrganiser(@Param("organiserId") UUID organiserId);
 
     Optional<FloorPlan> findByFloorPlanId(UUID floorPlanId);
+
+    List<FloorPlan> findAllBySharedTrueOrderBySharedAtDesc();
 }

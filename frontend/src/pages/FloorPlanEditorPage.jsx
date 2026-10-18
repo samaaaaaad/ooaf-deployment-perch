@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { createFloorplan, getFloorplans, updateFloorplan } from '../api/eventApi';
+import { createFloorplan, getFloorplans, publishFloorplan, unpublishFloorplan, updateFloorplan } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
 import './FloorPlanEditorPage.css';
@@ -57,6 +57,10 @@ export default function FloorPlanEditorPage() {
   const [note, setNote] = useState('');
   const [noteType, setNoteType] = useState('info');
   const [nameError, setNameError] = useState(false);
+  const [shared, setShared] = useState(false);
+  const [sharedAt, setSharedAt] = useState(null);
+  const [isDefaultPlan, setIsDefaultPlan] = useState(false);
+  const [publishing, setPublishing] = useState(false);
 
   // Load an existing plan when editing.
   useEffect(() => {
@@ -72,6 +76,9 @@ export default function FloorPlanEditorPage() {
           return;
         }
         setName(plan.name || 'Untitled floor plan');
+        setShared(Boolean(plan.shared));
+        setSharedAt(plan.sharedAt || null);
+        setIsDefaultPlan(plan.organiserId == null);
         if (plan.layoutJson) {
           try {
             const parsed = JSON.parse(plan.layoutJson);
@@ -210,6 +217,36 @@ export default function FloorPlanEditorPage() {
       setSaving(false);
     }
   }
+  // US 13.0 / 13.3: toggles this saved plan's visibility to other organisers.
+  async function handleTogglePublish() {
+    if (!editId || isDefaultPlan || publishing) return;
+    setPublishing(true);
+    setNote('');
+    try {
+      const updated = shared
+          ? await unpublishFloorplan(user.userId, editId)
+          : await publishFloorplan(user.userId, editId);
+      setShared(Boolean(updated.shared));
+      setSharedAt(updated.sharedAt || null);
+      setNoteType('info');
+      setNote(updated.shared
+          ? 'Published — other organisers can now find and reuse this floor plan.'
+          : 'Unpublished. Only you can see this floor plan now.');
+    } catch (err) {
+      setNoteType('warning');
+      setNote(err.message || 'Could not update the published state');
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  const publishDisabledReason = !canManage
+      ? 'Your organiser request is still pending approval'
+      : isDefaultPlan
+          ? "Starter templates can't be published"
+          : !editId
+              ? 'Save the floor plan first, then you can publish it'
+              : undefined;
 
   const paletteTypes = ['seat', 'table', 'stage', 'barrier'];
 
@@ -218,35 +255,58 @@ export default function FloorPlanEditorPage() {
       <div className="fp-head">
         <div>
           <p className="eyebrow">Floor Plan builder</p>
-          <input
-            className={`fp-name${nameError ? ' is-invalid' : ''}`}
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              if (nameError && e.target.value.trim()) {
-                setNameError(false);
-                setNote('');
-              }
-            }}
-            aria-label="Floor Plan name"
-            aria-invalid={nameError}
-          />
+          <div className="fp-name-row">
+            <input
+                className={`fp-name${nameError ? ' is-invalid' : ''}`}
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError && e.target.value.trim()) {
+                    setNameError(false);
+                    setNote('');
+                  }
+                }}
+                aria-label="Floor Plan name"
+                aria-invalid={nameError}
+            />
+            {editId && !isDefaultPlan && (
+                <span className={`status-badge ${shared ? 'status-published' : 'status-draft'}`}>
+                {shared ? 'Published' : 'Private'}
+              </span>
+            )}
+          </div>
         </div>
         <div className="fp-head-actions">
           <button type="button" className="button button-secondary" onClick={() => navigate('/floorplans')} disabled={saving}>
             Back
           </button>
+          {!isDefaultPlan && (
+              <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={handleTogglePublish}
+                  disabled={saving || loading || publishing || !editId || !canManage}
+                  title={publishDisabledReason}
+              >
+                {publishing ? 'Updating…' : shared ? 'Unpublish' : 'Publish'}
+              </button>
+          )}
           <button
-            type="button"
-            className="button button-primary"
-            onClick={handleSave}
-            disabled={saving || loading || !canManage}
-            title={canManage ? undefined : 'Your organiser request is still pending approval'}
+              type="button"
+              className="button button-primary"
+              onClick={handleSave}
+              disabled={saving || loading || !canManage}
+              title={canManage ? undefined : 'Your organiser request is still pending approval'}
           >
             {saving ? 'Saving…' : 'Save Floor Plan'}
           </button>
         </div>
       </div>
+      {shared && sharedAt && (
+          <p className="fp-shared-note">
+            Published on {new Date(sharedAt).toLocaleDateString()} — visible to every organiser in the shared gallery.
+          </p>
+      )}
 
       <div className="fp-workspace">
         <div className="fp-board-wrap">
