@@ -36,18 +36,23 @@ public class TicketService {
     public List<BookingDTO.Ticket> getTickets(UUID bookingId) {
         return repository.findAllByBookingBookingIdOrderByIssuedAtAscTicketIdAsc(bookingId).stream()
                 .map(ticket -> new BookingDTO.Ticket(ticket.getTicketId(), ticket.getSeat().getLabel(),
-                        ticket.getTicketCode(), qrImage(ticket.getTicketCode())))
+                        ticket.getTicketCode(), qrDataUrl(ticket.getTicketCode())))
                 .toList();
     }
 
-    private String qrImage(String code) {
+    /** PNG bytes for the same durable ticket code (used by in-app QR and email embeds). */
+    public byte[] qrPng(String ticketCode) {
         try {
-            var matrix = new QRCodeWriter().encode(code, BarcodeFormat.QR_CODE, 240, 240);
+            var matrix = new QRCodeWriter().encode(ticketCode, BarcodeFormat.QR_CODE, 240, 240);
             var output = new ByteArrayOutputStream();
             MatrixToImageWriter.writeToStream(matrix, "PNG", output);
-            return "data:image/png;base64," + Base64.getEncoder().encodeToString(output.toByteArray());
+            return output.toByteArray();
         } catch (Exception e) {
             throw new IllegalStateException("Unable to generate ticket QR code", e);
         }
+    }
+
+    private String qrDataUrl(String code) {
+        return "data:image/png;base64," + Base64.getEncoder().encodeToString(qrPng(code));
     }
 }
