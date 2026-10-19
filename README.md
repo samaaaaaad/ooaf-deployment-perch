@@ -77,6 +77,10 @@ Then start the React development server:
 npm run dev
 ```
 
+Shared demo logins (admin, organiser, student, ticket buyer) are listed in
+[`docs/demo-logins.md`](docs/demo-logins.md). Those accounts are created automatically
+on API startup.
+
 ---
 
 ## 3. Functionalities
