@@ -15,6 +15,10 @@
   padding: 1rem 1.15rem;
 }
 
+.fp-list-card button {
+  white-space: nowrap;
+}
+
 .fp-list-card.is-template {
   background: #f7fafa;
 }
@@ -27,4 +31,20 @@
 .fp-list-card small {
   color: var(--muted, #667681);
   font-size: 0.8rem;
+}
+
+.fp-inline-badge {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.fp-shared-card {
+  border-color: #cbe3e0;
+}
+
+.fp-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted, #667681);
+  line-height: 1.4;
 }

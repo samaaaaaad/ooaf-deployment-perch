@@ -272,6 +272,33 @@ public class EventService {
         }
         return toFloorPlanDTO(floorPlanRepository.save(plan));
     }
+    /**
+     * US 13.0 / 13.5 — copies a floor plan someone else has published into the
+     * caller's own saved floor plans. Only a published plan can be cloned this
+     * way (a private plan guessed by UUID cannot); the copy starts out private
+     * and unpublished, named "<original name> (copy)", and is otherwise a fresh
+     * floor plan owned by the caller — editing or deleting it never touches the
+     * original, and publishing it credits the caller, not the original owner.
+     */
+    @Transactional
+    public FloorPlanDTO cloneSharedFloorPlan(UUID organiserId, UUID floorPlanId) {
+        FloorPlan source = floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new ResourceNotFoundException("Floor plan not found"));
+        if (!source.isShared()) {
+            throw new ValidationException("Only a published floor plan can be added to your own floor plans");
+        }
+        User organiser = userRepository.findById(organiserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organiser not found"));
+        if (organiser.getRole() != UserRole.ORGANISER) {
+            throw new ValidationException("Only organisers can save floor plans");
+        }
+
+        FloorPlan copy = new FloorPlan(organiser, source.getName() + " (copy)", source.getLayoutType(), source.getCapacity());
+        copy.setLayoutJson(source.getLayoutJson());
+        FloorPlan saved = floorPlanRepository.save(copy);
+        replaceSeats(saved);
+        return toFloorPlanDTO(saved);
+    }
 
     /**
      * Seats for a floor plan the organiser can see: their own plans, the built-in
