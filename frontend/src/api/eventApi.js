@@ -57,6 +57,14 @@ export function getSharedFloorplans() {
   return request('/api/floorplans/shared');
 }
 
+// US 13.0 / 13.5: copies a published floor plan from the shared gallery into the
+// caller's own saved floor plans. floorPlanId is the gallery plan being copied.
+export function cloneFloorplan(organiserId, floorPlanId) {
+  return request(`/api/organisers/${encodeURIComponent(organiserId)}/floorplans/${encodeURIComponent(floorPlanId)}/clone`, {
+    method: 'POST',
+  });
+}
+
 export function updateEventPricing(organiserId, eventId, data) {
   return request(`/api/organisers/${encodeURIComponent(organiserId)}/events/${encodeURIComponent(eventId)}/pricing`, {
     method: 'PUT',

@@ -83,4 +83,19 @@ public class FloorPlanController {
     ) {
         return ResponseEntity.ok(eventService.setFloorPlanShared(organiserId, floorPlanId, false));
     }
+
+    /**
+     * US 13.0 / 13.5: copies a floor plan someone else published from the shared
+     * gallery into the caller's own saved floor plans, so they can edit it as
+     * their own from here on. {@code floorPlanId} is the gallery plan being copied,
+     * not one the caller already owns.
+     */
+    @PostMapping("/{floorPlanId}/clone")
+    public ResponseEntity<FloorPlanDTO> clone(
+            @PathVariable UUID organiserId,
+            @PathVariable UUID floorPlanId
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(eventService.cloneSharedFloorPlan(organiserId, floorPlanId));
+    }
 }
