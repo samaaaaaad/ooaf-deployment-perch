@@ -24,3 +24,7 @@ An event can represent a touring production, such as a circus, with multiple per
 - Touring performances preserve their own time and timezone context.
 - Organiser authorisation can be applied directly to Events and Venues.
 - Jira #27 can implement Event and Venue independently, while EventSession and floor-plan snapshots remain later tasks.
+
+## MVP note (2026-10-18)
+
+EventSession has not been built. To let customers see when an event happens and to drop finished events from Browse, the MVP adds a single optional `startsAt` directly on `Event` and treats one event as one dated performance. Published events whose `startsAt` has passed are hidden from Browse; undated events still show. This is a deliberate simplification: the full multi-performance, multi-venue EventSession (with its own time, timezone and copied floor-plan snapshot) is still the intended end state and would supersede the `Event.startsAt` field.

@@ -38,8 +38,8 @@ export default function BrowseEventsPage() {
           description: e.description,
           venue: 'Main Stage Pop-up',
           city: 'Sydney',
-          date: 'Upcoming',
-          time: '7:30pm',
+          date: e.startsAt ? new Date(e.startsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Upcoming',
+          time: e.startsAt ? new Date(e.startsAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : '',
           cat: 'music',
           price: e.standardPrice !== null && e.standardPrice !== undefined ? Number(e.standardPrice) : 25,
           standardPrice: e.standardPrice,
@@ -164,7 +164,7 @@ export default function BrowseEventsPage() {
                       <span className="be-pill">{labelFor[e.cat] || 'Event'}</span>
                       {e.universitySpecific && <span className="be-pill be-pill-uni">🎓 Students only</span>}
                     </span>
-                    <span className="be-date">{e.date} · {e.time}</span>
+                    <span className="be-date">{e.time ? `${e.date} · ${e.time}` : e.date}</span>
                   </div>
                 </div>
                 <div className="be-body">
