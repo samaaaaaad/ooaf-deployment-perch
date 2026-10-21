@@ -1,0 +1,42 @@
+# Local production-parity stack: the app (built from the Dockerfile) plus a managed-style Postgres.
+# Brings the whole thing up on http://localhost:8080 with persistent data.
+#
+#   docker compose up --build
+#
+# This mirrors what a host like Render runs: one app container + one Postgres instance.
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: perch
+      POSTGRES_USER: perch
+      POSTGRES_PASSWORD: change-me-locally
+    volumes:
+      - perch-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U perch -d perch"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/perch
+      SPRING_DATASOURCE_USERNAME: perch
+      SPRING_DATASOURCE_PASSWORD: change-me-locally
+      # Payments default to the in-process mock. To take real test-mode payments, set:
+      # PAYMENT_PROVIDER: stripe
+      # STRIPE_SECRET_KEY: sk_test_...
+      # STRIPE_PUBLISHABLE_KEY: pk_test_...
+      # STRIPE_WEBHOOK_SECRET: whsec_...
+    ports:
+      - "8080:8080"
+
+volumes:
+  perch-db-data:

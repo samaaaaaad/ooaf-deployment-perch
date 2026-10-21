@@ -1,0 +1,16 @@
+# Keep the build context small and reproducible.
+.git
+.gitignore
+build
+.gradle
+data
+*.mv.db
+*.trace.db
+frontend/node_modules
+frontend/dist
+**/application-local.properties
+*.md
+docs
+screenshots
+.idea
+.vscode
