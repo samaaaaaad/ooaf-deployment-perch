@@ -189,7 +189,12 @@ export default function FloorplansPage() {
               ) : (
                   <div className="fp-list">
                     {sharedPlans.map((p) => (
-                        <div key={p.floorPlanId} className="fp-list-card fp-shared-card">
+                        <div
+                            key={p.floorPlanId}
+                            className="fp-list-card fp-shared-card"
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setViewingPlan(p)}
+                        >
                           <div>
                             <strong>{p.name}</strong>
                             <small>
@@ -198,7 +203,7 @@ export default function FloorplansPage() {
                               by {p.ownerName}{p.sharedAt && ` · ${new Date(p.sharedAt).toLocaleDateString()}`}
                             </small>
                           </div>
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }} onClick={(e) => e.stopPropagation()}>
                             <button
                                 type="button"
                                 className="button button-secondary button-small"
