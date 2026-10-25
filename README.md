@@ -25,7 +25,7 @@ Directly addressing the problems above, the platform must support:
 - **Real-time seat selection:** customers view live seat availability and choose a specific seat.
 - **Reusable floorplans:** a layout built once for a venue can be saved and reused across multiple future events at that same pop-up location.
 - **Secure payment processing:** ticket purchases are processed securely, without the platform storing raw card data.
-- **Ticket delivery & check-in:** confirmed bookings generate a scannable e-ticket/printable ticket.
+- **Ticket delivery:** confirmed bookings generate a scannable QR e-ticket.
 ---
 
 ## 2. Used Libraries and Versions
@@ -168,8 +168,8 @@ Every feature below is implemented, persisted through JPA, and covered by tests.
 ### 4.4 Admin
 - **Dashboard** with total revenue and the most popular events by tickets sold, plus queues for organiser requests and student verifications.
 
-### 4.5 Not implemented
-- **FR-7 ticket check-in** (scan a ticket at the door and mark it used) is not built. Tickets are issued, but nothing validates them. This is tracked in issue #80.
+### 4.5 Out of scope
+- **FR-7 ticket check-in** (scanning a ticket at the door) was dropped from the project scope. Tickets carry a unique code and QR image that a future check-in feature could validate.
 
 ---
 
