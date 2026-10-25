@@ -6,6 +6,7 @@ import com.example.event_ticketing.model.EventSeat;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -32,7 +33,7 @@ public class BookingEmailService {
     private final String fromAddress;
 
     public BookingEmailService(
-            @org.springframework.beans.factory.annotation.Autowired(required = false) JavaMailSender mailSender,
+            @Autowired(required = false) JavaMailSender mailSender,
             TicketService ticketService,
             @Value("${perch.mail.from:no-reply@perch.local}") String fromAddress
     ) {

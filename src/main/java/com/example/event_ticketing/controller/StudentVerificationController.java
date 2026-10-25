@@ -4,7 +4,6 @@ import com.example.event_ticketing.dto.StudentVerificationDTO;
 import com.example.event_ticketing.dto.StudentVerificationRequestBody;
 import com.example.event_ticketing.service.StudentVerificationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +15,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users/{userId}/student-verification")
-@CrossOrigin(origins = "http://localhost:3000")
 public class StudentVerificationController {
 
     private final StudentVerificationService studentVerificationService;

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:3000") // unused while testing via login.html (same-origin); ready for React later
 public class UserController {
 
     private final UserService userService;

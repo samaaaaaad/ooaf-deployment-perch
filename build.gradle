@@ -41,10 +41,6 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	// Stripe payments. Only used when payment.provider=stripe.
 	implementation 'com.stripe:stripe-java:33.4.2'
-	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	// implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-
 }
 
 tasks.named('test') {

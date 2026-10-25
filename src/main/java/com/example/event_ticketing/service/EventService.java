@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,14 +57,6 @@ public class EventService {
     private final EventSeatRepository eventSeatRepository;
     private final SeatRepository seatRepository;
 
-    public EventService(
-            EventRepository eventRepository,
-            UserRepository userRepository
-    ) {
-        this(eventRepository, userRepository, null, null, null);
-    }
-
-    @org.springframework.beans.factory.annotation.Autowired
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository,
@@ -667,7 +660,7 @@ public class EventService {
         }
         try {
             return Instant.parse(startsAt.trim());
-        } catch (java.time.format.DateTimeParseException ex) {
+        } catch (DateTimeParseException ex) {
             throw new ValidationException("Event start time must be a valid date and time");
         }
     }

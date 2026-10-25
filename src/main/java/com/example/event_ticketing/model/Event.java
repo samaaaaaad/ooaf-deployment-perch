@@ -16,6 +16,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -54,10 +55,10 @@ public class Event {
     private FloorPlan floorPlan;
 
     @Column(name = "standard_price", precision = 12, scale = 2)
-    private java.math.BigDecimal standardPrice;
+    private BigDecimal standardPrice;
 
     @Column(name = "premium_price", precision = 12, scale = 2)
-    private java.math.BigDecimal premiumPrice;
+    private BigDecimal premiumPrice;
 
     /** US 12: university students only (enforced at seat hold and checkout). Nullable so existing rows migrate; null = false. */
     @Column(name = "university_specific")
@@ -128,11 +129,11 @@ public class Event {
     public FloorPlan getFloorPlan() { return floorPlan; }
     public void setFloorPlan(FloorPlan floorPlan) { this.floorPlan = floorPlan; }
 
-    public java.math.BigDecimal getStandardPrice() { return standardPrice; }
-    public void setStandardPrice(java.math.BigDecimal standardPrice) { this.standardPrice = standardPrice; }
+    public BigDecimal getStandardPrice() { return standardPrice; }
+    public void setStandardPrice(BigDecimal standardPrice) { this.standardPrice = standardPrice; }
 
-    public java.math.BigDecimal getPremiumPrice() { return premiumPrice; }
-    public void setPremiumPrice(java.math.BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
+    public BigDecimal getPremiumPrice() { return premiumPrice; }
+    public void setPremiumPrice(BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
 
     public boolean isUniversitySpecific() { return Boolean.TRUE.equals(universitySpecific); }
     public void setUniversitySpecific(Boolean universitySpecific) { this.universitySpecific = universitySpecific; }
