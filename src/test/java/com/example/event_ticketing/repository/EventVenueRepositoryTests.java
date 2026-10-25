@@ -1,13 +1,16 @@
 package com.example.event_ticketing.repository;
 
 import com.example.event_ticketing.model.Event;
+import com.example.event_ticketing.model.FloorPlan;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.model.Venue;
+import jakarta.persistence.PersistenceUnitUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 
 import java.util.UUID;
 
@@ -24,6 +27,31 @@ class EventVenueRepositoryTests {
 
     @Autowired
     private VenueRepository venueRepository;
+
+    @Autowired
+    private FloorPlanRepository floorPlanRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    @Test
+    void listQueriesLoadEachEventsFloorPlanInTheSameQuery() {
+        User organiser = saveUser("Plan Owner", "plans@example.com");
+        FloorPlan plan = floorPlanRepository.saveAndFlush(new FloorPlan(organiser, "Cabaret", "CUSTOM", 40));
+        Event event = new Event(organiser, "Cabaret Night", null);
+        event.setFloorPlan(plan);
+        event.setStatus(EventStatus.PUBLISHED);
+        eventRepository.saveAndFlush(event);
+        entityManager.clear();
+
+        PersistenceUnitUtil util = entityManager.getEntityManager().getEntityManagerFactory().getPersistenceUnitUtil();
+        Event published = eventRepository.findAllByStatusOrderByCreatedAtDesc(EventStatus.PUBLISHED).get(0);
+        Event owned = eventRepository.findAllByOrganiserUserIdOrderByCreatedAtDesc(organiser.getUserId()).get(0);
+
+        assertThat(util.isLoaded(published, "floorPlan")).isTrue();
+        assertThat(util.isLoaded(published.getFloorPlan(), "name")).isTrue();
+        assertThat(util.isLoaded(owned, "floorPlan")).isTrue();
+    }
 
     @Test
     void supportsCrudWithUuidPrimaryKeysAndOrganiserRelationships() {
