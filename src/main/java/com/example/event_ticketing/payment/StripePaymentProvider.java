@@ -56,7 +56,7 @@ public class StripePaymentProvider implements PaymentProvider {
             RequestOptions options = RequestOptions.builder()
                     .setIdempotencyKey(idempotencyKey)
                     .build();
-            PaymentIntent intent = client.paymentIntents().create(builder.build(), options);
+            PaymentIntent intent = client.v1().paymentIntents().create(builder.build(), options);
             return new PaymentIntentResult(intent.getId(), intent.getClientSecret(), false);
         } catch (StripeException e) {
             throw new IllegalStateException("Could not create Stripe PaymentIntent: " + e.getMessage(), e);

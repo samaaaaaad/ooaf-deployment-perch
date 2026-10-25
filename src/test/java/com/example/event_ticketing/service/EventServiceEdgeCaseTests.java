@@ -290,7 +290,7 @@ class EventServiceEdgeCaseTests {
         when(seatRepository.findAllByFloorPlanFloorPlanIdOrderByYAscXAsc(plan.getFloorPlanId()))
                 .thenReturn(List.of(new Seat(plan, "S1", SeatTier.PREMIUM, 10, 10)));
         EventSeat stale = new EventSeat(event, "S1", SeatTier.STANDARD, new BigDecimal("10.00"), 99, 99);
-        when(eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(event.getEventId())).thenReturn(List.of(stale), List.of());
+        when(eventSeatRepository.findAllByEventEventIdOrderByYAscXAsc(event.getEventId())).thenReturn(List.of(stale)).thenReturn(List.of());
 
         eventService.getPublishedEventSeats(event.getEventId());
 
