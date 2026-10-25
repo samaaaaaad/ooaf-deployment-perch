@@ -26,6 +26,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.springframework.boot:spring-boot-h2console'
+	// Production database driver. Active only under the 'prod' profile (see application-prod.properties).
+	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
