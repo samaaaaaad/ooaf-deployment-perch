@@ -80,3 +80,35 @@ describe('BrowseEventsPage student filters (US 12)', () => {
     expect(screen.queryByText('Campus Comedy')).not.toBeInTheDocument();
   });
 });
+
+describe('BrowseEventsPage loading and errors', () => {
+  beforeEach(() => {
+    localStorage.setItem('currentUser', JSON.stringify({ userId: 'c1', fullName: 'Bea Buyer', email: 'bea@example.com', role: 'CUSTOMER' }));
+  });
+
+  test('shows a loading state, then only the events from the API', async () => {
+    eventApi.getPublishedEvents.mockResolvedValue(published);
+    renderPage();
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading events…');
+    expect(await screen.findByText('3 events')).toBeInTheDocument();
+  });
+
+  test('explains when there are no upcoming events', async () => {
+    eventApi.getPublishedEvents.mockResolvedValue([]);
+    renderPage();
+
+    expect(await screen.findByText('No upcoming events yet')).toBeInTheDocument();
+  });
+
+  test('shows the error and retries when the request fails', async () => {
+    eventApi.getPublishedEvents
+      .mockRejectedValueOnce(new Error('Unable to reach the server. Check your connection and try again.'))
+      .mockResolvedValueOnce(published);
+    renderPage();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to reach the server');
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('Jazz Night')).toBeInTheDocument();
+  });
+});

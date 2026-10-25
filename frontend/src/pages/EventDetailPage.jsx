@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEvent as getMockEvent } from '../data/events';
 import { getEventSeats, getMyHolds, getPublishedEvent, holdSeat, releaseSeatHold } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
 import { labelFor, toDisplayEvent } from '../utils/eventDisplay';
@@ -8,7 +7,6 @@ import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
 import { useRouter } from '../utils/router';
 import { discounted, isStudent, money } from '../utils/studentPricing';
-import { generateLayout } from './seatLayout';
 import './EventDetailPage.css';
 
 const tierName = { vip: 'VIP', premium: 'Premium', standard: 'Standard' };
@@ -66,13 +64,11 @@ export default function EventDetailPage({ eventId }) {
   const { navigate } = useRouter();
   const { user } = useAuth();
   const customerId = user?.userId;
-  const isLiveEvent = uuidPattern.test(eventId);
-  const mockEvent = isLiveEvent ? null : getMockEvent(eventId);
+  const isValidId = uuidPattern.test(eventId);
   const [liveEvent, setLiveEvent] = useState(null);
   const [liveSeats, setLiveSeats] = useState(null);
-  const [loading, setLoading] = useState(isLiveEvent);
+  const [loading, setLoading] = useState(isValidId);
   const [loadError, setLoadError] = useState('');
-  const [selected, setSelected] = useState([]); // mock events only: live events select by holding
   const [hover, setHover] = useState(null);
 
   // US 7: seats the current customer holds, keyed by seat id -> { seatId, expiresAtMs (server time) }.
@@ -113,12 +109,11 @@ export default function EventDetailPage({ eventId }) {
   }, [eventId, customerId, applyMine]);
 
   useEffect(() => {
-    setSelected([]);
     setHover(null);
     setHolds({});
     setPending({});
     setNotice('');
-    if (!isLiveEvent) {
+    if (!isValidId) {
       setLiveEvent(null);
       setLiveSeats(null);
       setLoading(false);
@@ -147,13 +142,13 @@ export default function EventDetailPage({ eventId }) {
           if (active) setLoading(false);
         });
     return () => { active = false; };
-  }, [eventId, isLiveEvent, customerId, applyMine]);
+  }, [eventId, isValidId, customerId, applyMine]);
 
   useEffect(() => {
-    if (!isLiveEvent) return undefined;
+    if (!isValidId) return undefined;
     const timer = setInterval(() => { refreshSeats().catch(() => {}); }, POLL_MS);
     return () => clearInterval(timer);
-  }, [isLiveEvent, refreshSeats]);
+  }, [isValidId, refreshSeats]);
 
   // Tick once a second, but only while there is something to count down.
   const hasHolds = Object.keys(holds).length > 0;
@@ -164,11 +159,11 @@ export default function EventDetailPage({ eventId }) {
     return () => clearInterval(timer);
   }, [hasHolds]);
 
-  const event = isLiveEvent ? liveEvent : mockEvent;
+  const event = liveEvent;
   const layout = useMemo(() => {
-    if (isLiveEvent) return liveSeats === null ? null : liveLayout(liveSeats, liveEvent?.layoutType, liveEvent?.layoutJson);
-    return event ? generateLayout(event) : null;
-  }, [event, isLiveEvent, liveEvent, liveSeats]);
+    if (!liveEvent || liveSeats === null) return null;
+    return liveLayout(liveSeats, liveEvent.layoutType, liveEvent.layoutJson);
+  }, [liveEvent, liveSeats]);
   const seatById = useMemo(
       () => (layout ? Object.fromEntries(layout.seats.map((s) => [s.id, s])) : {}),
       [layout],
@@ -206,26 +201,21 @@ export default function EventDetailPage({ eventId }) {
   }
 
   const remainingMs = (seatId) => (holds[seatId] ? holds[seatId].expiresAtMs - (now + clockOffset) : 0);
-  const selectedIds = isLiveEvent ? Object.keys(holds) : selected;
+  const selectedIds = Object.keys(holds);
   const selectedSeats = selectedIds.map((id) => seatById[id]).filter(Boolean);
   // US 12: student prices are shown to everyone; they only apply at checkout to eligible students.
-  const discountPercent = isLiveEvent ? (event.studentDiscountPercent || 0) : 0;
+  const discountPercent = event.studentDiscountPercent || 0;
   const student = isStudent(user);
   const studentPriceApplies = discountPercent > 0 && student;
   // University-specific events are students-only; the server refuses holds from anyone else too.
-  const studentsOnlyBlocked = isLiveEvent && Boolean(event.universitySpecific) && Boolean(user) && !student;
+  const studentsOnlyBlocked = Boolean(event.universitySpecific) && Boolean(user) && !student;
   const pricePaid = (seat) => (studentPriceApplies ? discounted(seat.price, discountPercent) : seat.price);
   const fullTotal = selectedSeats.reduce((sum, s) => sum + s.price, 0);
   const total = Math.round(selectedSeats.reduce((sum, s) => sum + pricePaid(s), 0) * 100) / 100;
   const soonestMs = selectedSeats.length > 0 ? Math.min(...selectedSeats.map((s) => remainingMs(s.id))) : null;
 
-  function toggleMock(seat) {
-    if (seat.booked || seat.status === 'BOOKED' || seat.status === 'HELD') return;
-    setSelected((prev) => (prev.includes(seat.id) ? prev.filter((id) => id !== seat.id) : [...prev, seat.id]));
-  }
-
   // Selecting a live seat holds it on the server; deselecting releases it.
-  async function toggleLive(seat) {
+  async function toggle(seat) {
     if (pending[seat.id]) return;
     const isMine = Boolean(holds[seat.id]);
     if (!isMine && seat.status !== 'AVAILABLE') return;
@@ -265,20 +255,12 @@ export default function EventDetailPage({ eventId }) {
     }
   }
 
-  function toggle(seat) {
-    if (isLiveEvent) {
-      toggleLive(seat);
-    } else {
-      toggleMock(seat);
-    }
-  }
-
   function checkout() {
     const order = {
-      eventId, isLive: isLiveEvent,
+      eventId,
       title: event.title,
-      location: event.location ?? `${event.venue}, ${event.city}`,
-      when: event.when ?? `${event.date} · ${event.time}`,
+      location: event.location,
+      when: event.when,
       seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: pricePaid(s), fullPrice: s.price })),
       total,
       fullTotal,
@@ -289,16 +271,15 @@ export default function EventDetailPage({ eventId }) {
   }
 
   const hoverSeat = hover ? seatById[hover] : null;
-  const isHeldByMe = (seat) => isLiveEvent && Boolean(holds[seat.id]);
+  const isHeldByMe = (seat) => Boolean(holds[seat.id]);
   const unavailable = (seat) => {
     if (isHeldByMe(seat)) return false;
-    if (seat.status) return seat.status !== 'AVAILABLE';
-    return Boolean(seat.booked);
+    return seat.status !== 'AVAILABLE';
   };
   const statusText = (seat) => {
     if (isHeldByMe(seat)) return ' · Held for you';
-    if (seat.status && seat.status !== 'AVAILABLE') return ` · ${statusName[seat.status] || seat.status}`;
-    return seat.booked ? ' · Already booked' : '';
+    if (seat.status !== 'AVAILABLE') return ` · ${statusName[seat.status] || seat.status}`;
+    return '';
   };
 
   return (
@@ -308,7 +289,7 @@ export default function EventDetailPage({ eventId }) {
         <header className="ed-head">
           {event.cat && <span className="ed-cat">{labelFor[event.cat]}</span>}
           <h1>{event.title}</h1>
-          <p className="ed-meta">{event.location ?? `${event.venue}, ${event.city}`} · {event.when ?? `${event.date} · ${event.time}`}</p>
+          <p className="ed-meta">{event.location} · {event.when}</p>
           {(event.universitySpecific || discountPercent > 0) && (
               <div className="ed-student">
                 {event.universitySpecific && (
@@ -357,7 +338,7 @@ export default function EventDetailPage({ eventId }) {
                     )))}
 
                     {layout.seats.map((s) => {
-                      const isSel = isLiveEvent ? isHeldByMe(s) : selected.includes(s.id);
+                      const isSel = isHeldByMe(s);
                       const isUnavailable = unavailable(s);
                       let cls = `ed-seat tier-${s.tier}`;
                       if (s.status === 'BOOKED' || s.booked) cls = 'ed-seat is-booked';
@@ -389,15 +370,15 @@ export default function EventDetailPage({ eventId }) {
                     {discountPercent > 0 && <em className="ed-legend-student">(students {money(discounted(tiers[t], discountPercent))})</em>}
                   </span>
               ))}
-              <span><i className="sw is-selected" />{isLiveEvent ? 'Held for you' : 'Selected'}</span>
-              <span><i className="sw is-held" />{isLiveEvent ? 'Held by someone else' : 'Held'}</span>
+              <span><i className="sw is-selected" />Held for you</span>
+              <span><i className="sw is-held" />Held by someone else</span>
               <span><i className="sw is-booked" />Booked</span>
             </div>
           </div>
 
           <aside className="ed-cart">
             <h2>Your selection</h2>
-            {isLiveEvent && soonestMs !== null && (
+            {soonestMs !== null && (
                 <p className={`ed-hold-banner${soonestMs <= URGENT_MS ? ' is-urgent' : ''}`} role="timer">
                   Seats held for you · <strong>{formatCountdown(soonestMs)}</strong> left
                 </p>
@@ -409,14 +390,12 @@ export default function EventDetailPage({ eventId }) {
                   {selectedSeats.map((s) => (
                       <li key={s.id}>
                         <span className="ed-li-seat"><strong>Seat {s.label}</strong><small>{tierName[s.tier]}</small></span>
-                        {isLiveEvent && (
-                            <span
-                                className={`ed-li-timer${remainingMs(s.id) <= URGENT_MS ? ' is-urgent' : ''}`}
-                                aria-label={`Seat ${s.label} hold time left`}
-                            >
-                      {formatCountdown(remainingMs(s.id))}
-                    </span>
-                        )}
+                        <span
+                            className={`ed-li-timer${remainingMs(s.id) <= URGENT_MS ? ' is-urgent' : ''}`}
+                            aria-label={`Seat ${s.label} hold time left`}
+                        >
+                          {formatCountdown(remainingMs(s.id))}
+                        </span>
                         <span className="ed-li-price">
                           {studentPriceApplies ? (
                               <><s className="ed-was">${s.price}</s> {money(pricePaid(s))}</>
@@ -436,7 +415,7 @@ export default function EventDetailPage({ eventId }) {
             </button>
             <p className="ed-cart-note">
               {selectedSeats.length} {selectedSeats.length === 1 ? 'seat' : 'seats'} selected
-              {isLiveEvent && selectedSeats.length > 0 ? ' · held until the timer runs out' : ''}
+              {selectedSeats.length > 0 ? ' · held until the timer runs out' : ''}
             </p>
           </aside>
         </div>

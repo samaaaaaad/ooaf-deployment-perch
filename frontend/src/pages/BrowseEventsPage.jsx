@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { getPublishedEvents } from '../api/eventApi';
+import LoadingState from '../components/LoadingState';
 import { useAuth } from '../auth/AuthContext';
-import { events as mockEvents, setDynamicEvents } from '../data/events';
 import { categories, labelFor, toDisplayEvent } from '../utils/eventDisplay';
 import { useRouter } from '../utils/router';
 import { discounted, isStudent, money } from '../utils/studentPricing';
@@ -26,26 +26,27 @@ export default function BrowseEventsPage() {
   const [query, setQuery] = useState('');
   const [universityOnly, setUniversityOnly] = useState(false);
   const [discountOnly, setDiscountOnly] = useState(false);
-  const [liveEvents, setLiveEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let activeReq = true;
+    setLoading(true);
+    setLoadError('');
     getPublishedEvents()
       .then((data) => {
-        if (!activeReq || !data) return;
-        const mapped = data.map((e, idx) => ({ ...toDisplayEvent(e), isLiveH2: true, mockCoverIdx: (idx % 16) + 1 }));
-        setLiveEvents(mapped);
-        setDynamicEvents(mapped);
+        if (activeReq) setAllEvents((data || []).map(toDisplayEvent));
       })
-      .catch(() => {
-        // Fallback gracefully to catalogue
+      .catch((error) => {
+        if (activeReq) setLoadError(error.message || 'Unable to load events');
+      })
+      .finally(() => {
+        if (activeReq) setLoading(false);
       });
     return () => { activeReq = false; };
-  }, []);
-
-  const allEvents = useMemo(() => {
-    return [...liveEvents, ...mockEvents];
-  }, [liveEvents]);
+  }, [reloadKey]);
 
   const firstName = user?.fullName?.split(' ')[0] || 'there';
 
@@ -56,7 +57,7 @@ export default function BrowseEventsPage() {
       if (universityOnly && !e.universitySpecific) return false;
       if (discountOnly && !(e.studentDiscountPercent > 0)) return false;
       if (!q) return true;
-      return `${e.title} ${e.location ?? `${e.venue} ${e.city}`}`.toLowerCase().includes(q);
+      return `${e.title} ${e.location}`.toLowerCase().includes(q);
     });
   }, [allEvents, active, query, universityOnly, discountOnly]);
 
@@ -122,7 +123,20 @@ export default function BrowseEventsPage() {
         {discountOnly && ' · student discounted'}
       </p>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <LoadingState label="Loading events…" />
+      ) : loadError ? (
+        <div className="be-empty" role="alert">
+          <h3>We couldn&apos;t load events</h3>
+          <p>{loadError}</p>
+          <button type="button" className="be-chip" onClick={() => setReloadKey((k) => k + 1)}>Try again</button>
+        </div>
+      ) : allEvents.length === 0 ? (
+        <div className="be-empty">
+          <h3>No upcoming events yet</h3>
+          <p>Check back soon. Organisers publish new pop-up events here.</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="be-empty">
           <h3>No events match your search</h3>
           <p>
@@ -133,10 +147,8 @@ export default function BrowseEventsPage() {
         </div>
       ) : (
         <div className="be-grid">
-          {filtered.map((e) => {
-            const imgSrc = e.imageUrl
-              ? e.imageUrl
-              : e.isLiveH2 ? `/events/event-${e.mockCoverIdx}.jpg` : `/events/event-${e.id}.jpg`;
+          {filtered.map((e, idx) => {
+            const imgSrc = e.imageUrl || `/events/event-${(idx % 16) + 1}.jpg`;
             return (
               <a className={`be-card be-cat-${e.cat}`} key={e.id} href={`/event/${e.id}`} onClick={openEvent(e.id)}>
                 <div className="be-cover">
@@ -147,12 +159,12 @@ export default function BrowseEventsPage() {
                       <span className="be-pill">{labelFor[e.cat] || 'Event'}</span>
                       {e.universitySpecific && <span className="be-pill be-pill-uni">🎓 Students only</span>}
                     </span>
-                    <span className="be-date">{e.when ?? `${e.date} · ${e.time}`}</span>
+                    <span className="be-date">{e.when}</span>
                   </div>
                 </div>
                 <div className="be-body">
                   <h3 className="be-title">{e.title}</h3>
-                  <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.location ?? `${e.venue}, ${e.city}`}</span>
+                  <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.location}</span>
                   <div className="be-foot">
                     {e.price === 0 ? (
                       <span className="be-price">Free</span>

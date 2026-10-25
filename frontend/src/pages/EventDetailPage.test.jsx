@@ -202,3 +202,30 @@ describe('EventDetailPage students-only events (US 12)', () => {
     expect(screen.getByRole('button', { name: /Continue to payment/ })).toBeEnabled();
   });
 });
+
+describe('EventDetailPage event details', () => {
+  test('shows the stored venue, city, category and start time', async () => {
+    eventApi.getPublishedEvent.mockResolvedValue({
+      eventId, title: 'Jazz & Small Plates', layoutType: 'STAGE', standardPrice: 30, premiumPrice: 45,
+      category: 'music', venueName: 'Basement Bar', city: 'Sydney CBD', startsAt: '2027-03-06T09:00:00Z',
+    });
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Jazz & Small Plates' })).toBeInTheDocument();
+    expect(screen.getByText('Music')).toBeInTheDocument();
+    expect(screen.getByText(/Basement Bar, Sydney CBD · .*Mar/)).toBeInTheDocument();
+  });
+
+  test('says the event cannot be found for an id that is not an event', async () => {
+    render(
+        <RouterProvider>
+          <AuthProvider>
+            <EventDetailPage eventId="12" />
+          </AuthProvider>
+        </RouterProvider>,
+    );
+
+    expect(await screen.findByText('Sorry, that event could not be found.')).toBeInTheDocument();
+    expect(eventApi.getPublishedEvent).not.toHaveBeenCalledWith('12');
+  });
+});
