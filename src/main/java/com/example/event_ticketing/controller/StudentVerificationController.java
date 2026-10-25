@@ -3,6 +3,7 @@ package com.example.event_ticketing.controller;
 import com.example.event_ticketing.dto.StudentVerificationDTO;
 import com.example.event_ticketing.dto.StudentVerificationRequestBody;
 import com.example.event_ticketing.service.StudentVerificationService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,7 +27,7 @@ public class StudentVerificationController {
     @PostMapping
     public ResponseEntity<StudentVerificationDTO> submit(
             @PathVariable UUID userId,
-            @RequestBody StudentVerificationRequestBody body
+            @Valid @RequestBody StudentVerificationRequestBody body
     ) {
         return ResponseEntity.ok(studentVerificationService.submit(userId, body));
     }

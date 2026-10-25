@@ -4,7 +4,7 @@ import com.example.event_ticketing.dto.LoginRequest;
 import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
 import com.example.event_ticketing.service.UserService;
-
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +20,12 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserDTO> register(@RequestBody RegisterRequest req) {
+    public ResponseEntity<UserDTO> register(@Valid @RequestBody RegisterRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.register(req));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<UserDTO> login(@Valid @RequestBody LoginRequest req) {
         return ResponseEntity.ok(userService.login(req));
     }
 

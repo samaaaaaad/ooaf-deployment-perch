@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,6 +18,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 /**
  * Turns every exception thrown by a controller into an {@link ApiErrorDTO} with a matching
@@ -34,6 +38,17 @@ public class ApiExceptionHandler {
     @ExceptionHandler({ValidationException.class, IllegalArgumentException.class})
     public ResponseEntity<ApiErrorDTO> handleValidation(RuntimeException ex, HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    /** Bean Validation failures on an {@code @Valid} body: every broken field's message, in field order. */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorDTO> handleInvalidBody(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .sorted(Comparator.comparing(FieldError::getField))
+                .map(FieldError::getDefaultMessage)
+                .distinct()
+                .collect(Collectors.joining("; "));
+        return error(HttpStatus.BAD_REQUEST, message.isEmpty() ? "Request is invalid" : message, request);
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)

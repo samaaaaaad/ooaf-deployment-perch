@@ -5,6 +5,7 @@ import com.example.event_ticketing.dto.EventDTO;
 import com.example.event_ticketing.dto.PublishEventRequest;
 import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,7 +46,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventDTO> createEvent(
             @PathVariable UUID organiserId,
-            @RequestBody CreateEventRequest request
+            @Valid @RequestBody CreateEventRequest request
     ) {
         EventDTO created = eventService.createEvent(organiserId, request);
         URI location = URI.create(
@@ -57,7 +58,7 @@ public class EventController {
     public ResponseEntity<EventDTO> updatePricing(
             @PathVariable UUID organiserId,
             @PathVariable UUID eventId,
-            @RequestBody UpdatePricingRequest request
+            @Valid @RequestBody UpdatePricingRequest request
     ) {
         return ResponseEntity.ok(eventService.updateEventPricing(organiserId, eventId, request));
     }

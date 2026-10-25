@@ -4,6 +4,7 @@ import com.example.event_ticketing.dto.FloorPlanDTO;
 import com.example.event_ticketing.dto.FloorPlanRequest;
 import com.example.event_ticketing.dto.SeatDTO;
 import com.example.event_ticketing.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,7 +37,7 @@ public class FloorPlanController {
     @PostMapping
     public ResponseEntity<FloorPlanDTO> create(
             @PathVariable UUID organiserId,
-            @RequestBody FloorPlanRequest request
+            @Valid @RequestBody FloorPlanRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(eventService.createFloorPlan(organiserId, request));
@@ -46,7 +47,7 @@ public class FloorPlanController {
     public ResponseEntity<FloorPlanDTO> update(
             @PathVariable UUID organiserId,
             @PathVariable UUID floorPlanId,
-            @RequestBody FloorPlanRequest request
+            @Valid @RequestBody FloorPlanRequest request
     ) {
         return ResponseEntity.ok(eventService.updateFloorPlan(organiserId, floorPlanId, request));
     }

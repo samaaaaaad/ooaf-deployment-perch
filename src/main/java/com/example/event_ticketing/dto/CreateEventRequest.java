@@ -1,5 +1,8 @@
 package com.example.event_ticketing.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 /**
  * Body for creating a draft event.
  *
@@ -8,6 +11,8 @@ package com.example.event_ticketing.dto;
  * EventSession remains a future task.
  */
 public class CreateEventRequest {
+    @NotBlank(message = "Event title is required")
+    @Size(max = 150, message = "Event title must be 150 characters or fewer")
     public String title;
     public String description;
     /** US 12: optional, defaults to false. */

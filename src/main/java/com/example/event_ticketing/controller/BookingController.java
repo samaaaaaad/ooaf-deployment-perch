@@ -3,6 +3,7 @@ package com.example.event_ticketing.controller;
 import com.example.event_ticketing.dto.BookingDTO;
 import com.example.event_ticketing.dto.CheckoutRequest;
 import com.example.event_ticketing.service.BookingService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class BookingController {
     @PostMapping("/events/{eventId}/bookings")
     public ResponseEntity<BookingDTO> checkout(
             @PathVariable UUID eventId,
-            @RequestBody CheckoutRequest request
+            @Valid @RequestBody CheckoutRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.startCheckout(eventId, request));
     }
