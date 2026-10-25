@@ -176,7 +176,7 @@ export default function CheckoutPage() {
               </div>
               <p className="cop-note">
                 Card details are collected securely by Stripe after you click Pay.
-                With the mock provider (default), payment confirms instantly with no card entry.
+                In demo mode, payment is confirmed instantly without a card.
               </p>
               <div className="cop-field" aria-hidden="true">
                 <label>Card number</label>

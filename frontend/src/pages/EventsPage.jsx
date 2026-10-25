@@ -282,7 +282,7 @@ export default function EventsPage() {
           <div>
             <p className="eyebrow">Event management</p>
             <h1>Events</h1>
-            <p>Productions are independent from their future dated venue sessions.</p>
+            <p>Create events, attach a floor plan and prices, then publish them to Browse.</p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {isOrganiser && (
