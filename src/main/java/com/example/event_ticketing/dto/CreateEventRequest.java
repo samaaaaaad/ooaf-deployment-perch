@@ -19,4 +19,10 @@ public class CreateEventRequest {
     public Boolean universitySpecific;
     /** MVP: optional ISO-8601 instant (e.g. "2027-06-15T09:30:00Z") for when the event starts. */
     public String startsAt;
+    /** Optional browse category key, one of {@link com.example.event_ticketing.model.EventCategory}. */
+    public String category;
+    @Size(max = 150, message = "Venue name must be 150 characters or fewer")
+    public String venueName;
+    @Size(max = 100, message = "City must be 100 characters or fewer")
+    public String city;
 }

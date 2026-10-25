@@ -11,6 +11,7 @@ import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.Event;
+import com.example.event_ticketing.model.EventCategory;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
@@ -649,8 +650,15 @@ public class EventService {
         Event event = new Event(organiser, title, description);
         event.setUniversitySpecific(Boolean.TRUE.equals(request.universitySpecific));
         event.setStartsAt(parseStartsAt(request.startsAt));
+        event.setCategory(EventCategory.normalise(request.category));
+        event.setVenueName(blankToNull(request.venueName));
+        event.setCity(blankToNull(request.city));
         Event saved = eventRepository.save(event);
         return toDTO(saved);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /** Parses the optional ISO-8601 start instant; a blank value means no scheduled date yet. */
@@ -685,6 +693,9 @@ public class EventService {
         );
         dto.layoutJson = fp != null ? fp.getLayoutJson() : null;
         dto.startsAt = event.getStartsAt();
+        dto.category = event.getCategory();
+        dto.venueName = event.getVenueName();
+        dto.city = event.getCity();
         dto.universitySpecific = event.isUniversitySpecific();
         if (event.hasStudentDiscount()) {
             dto.studentDiscountPercent = event.getStudentDiscountPercent();

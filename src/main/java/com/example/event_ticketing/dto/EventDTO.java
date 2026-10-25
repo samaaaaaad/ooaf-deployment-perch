@@ -20,6 +20,9 @@ public class EventDTO {
     public BigDecimal premiumPrice;
     public String imageUrl;
     public Instant startsAt;
+    public String category;
+    public String venueName;
+    public String city;
     public boolean universitySpecific;
     public Integer studentDiscountPercent;
     public BigDecimal studentStandardPrice;

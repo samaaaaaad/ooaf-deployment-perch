@@ -11,7 +11,7 @@ vi.mock('../api/eventApi');
 const published = [
   { eventId: '11111111-1111-1111-1111-111111111111', title: 'O-Week Social', standardPrice: 25, premiumPrice: 40, universitySpecific: true, studentDiscountPercent: 20 },
   { eventId: '22222222-2222-2222-2222-222222222222', title: 'Campus Comedy', standardPrice: 30, premiumPrice: 30, universitySpecific: true, studentDiscountPercent: null },
-  { eventId: '33333333-3333-3333-3333-333333333333', title: 'Jazz Night', standardPrice: 50, premiumPrice: 60, universitySpecific: false, studentDiscountPercent: 10 },
+  { eventId: '33333333-3333-3333-3333-333333333333', title: 'Jazz Night', category: 'music', venueName: 'Basement Bar', city: 'Sydney CBD', standardPrice: 50, premiumPrice: 60, universitySpecific: false, studentDiscountPercent: 10 },
 ];
 
 function renderPage() {
@@ -64,5 +64,19 @@ describe('BrowseEventsPage student filters (US 12)', () => {
     expect(within(card).getByText(/\$20 students/)).toBeInTheDocument();
     expect(within(card).getByText(/your price/)).toBeInTheDocument();
     expect(within(card).getByText('🎓 Students only')).toBeInTheDocument();
+  });
+
+  test('shows each event\'s stored venue, city and category, and filters by category', async () => {
+    renderPage();
+    const card = (await screen.findByText('Jazz Night')).closest('a');
+
+    expect(within(card).getByText('Basement Bar, Sydney CBD')).toBeInTheDocument();
+    expect(within(card).getByText('Music')).toBeInTheDocument();
+    const undated = (await screen.findByText('Campus Comedy')).closest('a');
+    expect(within(undated).getByText('Location to be announced')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Music' }));
+    expect(screen.getByText('Jazz Night')).toBeInTheDocument();
+    expect(screen.queryByText('Campus Comedy')).not.toBeInTheDocument();
   });
 });

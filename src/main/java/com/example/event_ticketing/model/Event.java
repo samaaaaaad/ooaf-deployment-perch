@@ -78,6 +78,17 @@ public class Event {
     @Column(name = "starts_at")
     private Instant startsAt;
 
+    // Display details for Browse and Event Detail (ADR 0005). The venue name and city are plain
+    // text here; linking an event to a Venue row stays with the future EventSession (ADR 0002).
+    @Column(name = "category", length = 30)
+    private String category;
+
+    @Column(name = "venue_name", length = 150)
+    private String venueName;
+
+    @Column(name = "city", length = 100)
+    private String city;
+
     @Column(name = "published_at")
     private Instant publishedAt;
 
@@ -148,6 +159,15 @@ public class Event {
 
     public Instant getStartsAt() { return startsAt; }
     public void setStartsAt(Instant startsAt) { this.startsAt = startsAt; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getVenueName() { return venueName; }
+    public void setVenueName(String venueName) { this.venueName = venueName; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
     public Instant getPublishedAt() { return publishedAt; }
     public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }

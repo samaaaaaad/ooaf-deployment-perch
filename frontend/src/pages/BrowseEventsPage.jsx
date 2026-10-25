@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { getPublishedEvents } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
-import { categories, events as mockEvents, labelFor, setDynamicEvents } from '../data/events';
+import { events as mockEvents, setDynamicEvents } from '../data/events';
+import { categories, labelFor, toDisplayEvent } from '../utils/eventDisplay';
 import { useRouter } from '../utils/router';
 import { discounted, isStudent, money } from '../utils/studentPricing';
 import './BrowseEventsPage.css';
@@ -32,25 +33,7 @@ export default function BrowseEventsPage() {
     getPublishedEvents()
       .then((data) => {
         if (!activeReq || !data) return;
-        const mapped = data.map((e, idx) => ({
-          id: e.eventId,
-          title: e.title,
-          description: e.description,
-          venue: 'Main Stage Pop-up',
-          city: 'Sydney',
-          date: e.startsAt ? new Date(e.startsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) : 'Upcoming',
-          time: e.startsAt ? new Date(e.startsAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : '',
-          cat: 'music',
-          price: e.standardPrice !== null && e.standardPrice !== undefined ? Number(e.standardPrice) : 25,
-          standardPrice: e.standardPrice,
-          premiumPrice: e.premiumPrice,
-          universitySpecific: Boolean(e.universitySpecific),
-          studentDiscountPercent: e.studentDiscountPercent || 0,
-          layout: (e.layoutType || 'stage').toLowerCase(),
-          isLiveH2: true,
-          imageUrl: e.imageUrl || null,
-          mockCoverIdx: (idx % 16) + 1,
-        }));
+        const mapped = data.map((e, idx) => ({ ...toDisplayEvent(e), isLiveH2: true, mockCoverIdx: (idx % 16) + 1 }));
         setLiveEvents(mapped);
         setDynamicEvents(mapped);
       })
@@ -73,7 +56,7 @@ export default function BrowseEventsPage() {
       if (universityOnly && !e.universitySpecific) return false;
       if (discountOnly && !(e.studentDiscountPercent > 0)) return false;
       if (!q) return true;
-      return `${e.title} ${e.venue} ${e.city}`.toLowerCase().includes(q);
+      return `${e.title} ${e.location ?? `${e.venue} ${e.city}`}`.toLowerCase().includes(q);
     });
   }, [allEvents, active, query, universityOnly, discountOnly]);
 
@@ -164,12 +147,12 @@ export default function BrowseEventsPage() {
                       <span className="be-pill">{labelFor[e.cat] || 'Event'}</span>
                       {e.universitySpecific && <span className="be-pill be-pill-uni">🎓 Students only</span>}
                     </span>
-                    <span className="be-date">{e.time ? `${e.date} · ${e.time}` : e.date}</span>
+                    <span className="be-date">{e.when ?? `${e.date} · ${e.time}`}</span>
                   </div>
                 </div>
                 <div className="be-body">
                   <h3 className="be-title">{e.title}</h3>
-                  <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.venue}, {e.city}</span>
+                  <span className="be-loc"><span className="be-mi" aria-hidden="true">{pinIcon}</span>{e.location ?? `${e.venue}, ${e.city}`}</span>
                   <div className="be-foot">
                     {e.price === 0 ? (
                       <span className="be-price">Free</span>

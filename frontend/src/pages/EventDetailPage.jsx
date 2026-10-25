@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { getEvent as getMockEvent, labelFor } from '../data/events';
+import { getEvent as getMockEvent } from '../data/events';
 import { getEventSeats, getMyHolds, getPublishedEvent, holdSeat, releaseSeatHold } from '../api/eventApi';
 import { useAuth } from '../auth/AuthContext';
+import { labelFor, toDisplayEvent } from '../utils/eventDisplay';
 import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
 import { useRouter } from '../utils/router';
@@ -135,15 +136,7 @@ export default function EventDetailPage({ eventId }) {
     ])
         .then(([event, seats, mine]) => {
           if (!active) return;
-          setLiveEvent({
-            ...event,
-            id: event.eventId,
-            cat: 'music',
-            venue: 'Main Stage Pop-up',
-            city: 'Sydney',
-            date: 'Upcoming',
-            time: '7:30pm',
-          });
+          setLiveEvent(toDisplayEvent(event));
           setLiveSeats(seats || []);
           applyMine(mine);
         })
@@ -283,7 +276,9 @@ export default function EventDetailPage({ eventId }) {
   function checkout() {
     const order = {
       eventId, isLive: isLiveEvent,
-      title: event.title, venue: event.venue, city: event.city, date: event.date, time: event.time,
+      title: event.title,
+      location: event.location ?? `${event.venue}, ${event.city}`,
+      when: event.when ?? `${event.date} · ${event.time}`,
       seats: selectedSeats.map((s) => ({ id: s.id, label: s.label, tier: s.tier, price: pricePaid(s), fullPrice: s.price })),
       total,
       fullTotal,
@@ -311,9 +306,9 @@ export default function EventDetailPage({ eventId }) {
         <a className="ed-back" href="/browse" onClick={(e) => { e.preventDefault(); navigate('/browse'); }}>← Back to events</a>
 
         <header className="ed-head">
-          <span className="ed-cat">{labelFor[event.cat]}</span>
+          {event.cat && <span className="ed-cat">{labelFor[event.cat]}</span>}
           <h1>{event.title}</h1>
-          <p className="ed-meta">{event.venue}, {event.city} · {event.date} · {event.time}</p>
+          <p className="ed-meta">{event.location ?? `${event.venue}, ${event.city}`} · {event.when ?? `${event.date} · ${event.time}`}</p>
           {(event.universitySpecific || discountPercent > 0) && (
               <div className="ed-student">
                 {event.universitySpecific && (

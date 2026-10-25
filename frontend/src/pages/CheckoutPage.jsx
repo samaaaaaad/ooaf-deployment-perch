@@ -131,7 +131,7 @@ export default function CheckoutPage() {
         <div className="cop-card cop-summary">
           <p className="cop-eyebrow">Order summary</p>
           <h2 className="cop-event">{order.title}</h2>
-          <p className="cop-meta">{order.venue}, {order.city} · {order.date} · {order.time}</p>
+          <p className="cop-meta">{order.location} · {order.when}</p>
           <ul className="cop-seats">
             {order.seats.map((s) => (
               <li key={s.label}>

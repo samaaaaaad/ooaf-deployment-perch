@@ -141,6 +141,56 @@ class EventVenueServiceTests {
     }
 
     @Test
+    void storesTheCategoryVenueAndCityShownOnBrowse() {
+        CreateEventRequest request = new CreateEventRequest();
+        request.title = "Jazz & Small Plates";
+        request.category = " Music ";
+        request.venueName = "  Basement Bar ";
+        request.city = "Sydney CBD";
+
+        when(userRepository.findById(organiser.getUserId())).thenReturn(Optional.of(organiser));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EventDTO created = eventService.createEvent(organiser.getUserId(), request);
+
+        assertThat(created.category).isEqualTo("music");
+        assertThat(created.venueName).isEqualTo("Basement Bar");
+        assertThat(created.city).isEqualTo("Sydney CBD");
+    }
+
+    @Test
+    void leavesBlankLocationDetailsUnset() {
+        CreateEventRequest request = new CreateEventRequest();
+        request.title = "Pop-up";
+        request.category = "";
+        request.venueName = "  ";
+
+        when(userRepository.findById(organiser.getUserId())).thenReturn(Optional.of(organiser));
+        when(eventRepository.save(any(Event.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        EventDTO created = eventService.createEvent(organiser.getUserId(), request);
+
+        assertThat(created.category).isNull();
+        assertThat(created.venueName).isNull();
+        assertThat(created.city).isNull();
+    }
+
+    @Test
+    void rejectsAnUnknownCategory() {
+        CreateEventRequest request = new CreateEventRequest();
+        request.title = "Mystery";
+        request.category = "opera";
+
+        when(userRepository.findById(organiser.getUserId())).thenReturn(Optional.of(organiser));
+
+        assertThatThrownBy(() -> eventService.createEvent(organiser.getUserId(), request))
+                .isInstanceOf(ValidationException.class)
+                .hasMessageStartingWith("Category must be one of: music, comedy");
+
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
     void storesABlankDescriptionAsNull() {
         CreateEventRequest request = new CreateEventRequest();
         request.title = "No Description";
