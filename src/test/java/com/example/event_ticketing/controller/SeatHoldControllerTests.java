@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -76,7 +75,7 @@ class SeatHoldControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"customerId\":\"" + customerId + "\"}"))
                 .andExpect(status().isConflict())
-                .andExpect(content().string("Seat is currently held by another customer"));
+                .andExpect(jsonPath("$.message").value("Seat is currently held by another customer"));
     }
 
     @Test
@@ -97,7 +96,7 @@ class SeatHoldControllerTests {
 
         mockMvc.perform(post("/api/events/{eventId}/seats/{seatId}/hold", eventId, seatId))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Customer id is required"));
+                .andExpect(jsonPath("$.message").value("Customer id is required"));
     }
 
     @Test

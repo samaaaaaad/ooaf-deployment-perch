@@ -3,6 +3,7 @@ package com.example.event_ticketing.service;
 import com.example.event_ticketing.dto.LoginRequest;
 import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
+import com.example.event_ticketing.exception.InvalidCredentialsException;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.OrganiserRequestRepository;
@@ -116,5 +117,31 @@ class UserServiceTests {
 
         assertThat(loggedIn.userId).isEqualTo(user.getUserId());
         verify(userRepository).findByEmailIgnoreCase("alex@example.com");
+    }
+
+    @Test
+    void rejectsAWrongPasswordAsInvalidCredentials() {
+        User user = new User("Alex Smith", "alex@example.com", PasswordUtil.hashPassword("Strong1!"), UserRole.CUSTOMER);
+        LoginRequest request = new LoginRequest();
+        request.email = "alex@example.com";
+        request.password = "Wrong1!x";
+
+        when(userRepository.findByEmailIgnoreCase("alex@example.com")).thenReturn(Optional.of(user));
+
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Invalid email or password");
+    }
+
+    @Test
+    void rejectsAnUnknownEmailAsInvalidCredentials() {
+        LoginRequest request = new LoginRequest();
+        request.email = "nobody@example.com";
+        request.password = "Strong1!";
+
+        when(userRepository.findByEmailIgnoreCase("nobody@example.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> userService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 }

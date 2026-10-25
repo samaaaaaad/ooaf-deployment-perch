@@ -3,6 +3,7 @@ package com.example.event_ticketing.service;
 import com.example.event_ticketing.dto.LoginRequest;
 import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
+import com.example.event_ticketing.exception.InvalidCredentialsException;
 import com.example.event_ticketing.model.OrganiserRequest;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
@@ -66,12 +67,12 @@ public class UserService {
 
     public UserDTO login(LoginRequest req) {
         if (req == null || req.password == null) {
-            throw new IllegalArgumentException("Invalid email or password");
+            throw new InvalidCredentialsException("Invalid email or password");
         }
 
         User user = userRepository.findByEmailIgnoreCase(normalizeEmail(req.email))
                 .filter(u -> PasswordUtil.verifyPassword(req.password, u.getPasswordHash()))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
         return toDTO(user);
     }
 

@@ -33,9 +33,4 @@ public class UserController {
     public ResponseEntity<Boolean> exists(@PathVariable String email) {
         return ResponseEntity.ok(userService.existsByEmail(email));
     }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleBadRequest(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
 }
