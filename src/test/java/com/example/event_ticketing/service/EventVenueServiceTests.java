@@ -68,7 +68,7 @@ class EventVenueServiceTests {
     @BeforeEach
     void setUp() {
         eventService = new EventService(eventRepository, userRepository, floorPlanRepository, eventSeatRepository, seatRepository);
-        venueService = new VenueService(venueRepository);
+        venueService = new VenueService(venueRepository, userRepository);
         organiser = new User("Owner", "owner@example.com", "hash", UserRole.ORGANISER);
         organiser.setUserId(UUID.randomUUID());
     }
