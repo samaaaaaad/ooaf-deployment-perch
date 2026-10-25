@@ -2,6 +2,7 @@ package com.example.event_ticketing.service;
 
 import com.example.event_ticketing.dto.StudentVerificationDTO;
 import com.example.event_ticketing.dto.StudentVerificationRequestBody;
+import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.StudentVerificationRequest;
 import com.example.event_ticketing.model.StudentVerificationStatus;
@@ -161,6 +162,73 @@ class StudentVerificationServiceTests {
         when(requestRepository.save(pending)).thenReturn(pending);
         assertThat(service.cancel(applicant.getUserId(), requestId).status).isEqualTo(StudentVerificationStatus.CANCELLED);
         assertThat(pending.getCardImage()).isNull();
+    }
+
+    @Test
+    void refusesAdminsAlreadyVerifiedStudentsAndUnknownUsers() {
+        User admin = new User("Admin", "admin@uni.sydney.edu.au", "hash", UserRole.ADMIN);
+        admin.setUserId(UUID.randomUUID());
+        User verified = new User("Vee", "vee@student.uts.edu.au", "hash", UserRole.CUSTOMER);
+        verified.setUserId(UUID.randomUUID());
+        verified.setStudentVerified(true);
+        UUID unknown = UUID.randomUUID();
+        when(userRepository.findById(admin.getUserId())).thenReturn(Optional.of(admin));
+        when(userRepository.findById(verified.getUserId())).thenReturn(Optional.of(verified));
+        when(userRepository.findById(unknown)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.submit(admin.getUserId(), body("UTS", "12345678", CARD)))
+                .hasMessage("Admin accounts cannot apply for student verification");
+        assertThatThrownBy(() -> service.submit(verified.getUserId(), body("UTS", "12345678", CARD)))
+                .hasMessage("This account is already a verified student");
+        assertThatThrownBy(() -> service.submit(unknown, body("UTS", "12345678", CARD)))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void validatesTheUniversityAndTheCardPhotoSize() {
+        when(userRepository.findById(applicant.getUserId())).thenReturn(Optional.of(applicant));
+
+        assertThatThrownBy(() -> service.submit(applicant.getUserId(), null))
+                .hasMessage("Verification details are required");
+        assertThatThrownBy(() -> service.submit(applicant.getUserId(), body("  ", "12345678", CARD)))
+                .hasMessage("University is required");
+        assertThatThrownBy(() -> service.submit(applicant.getUserId(), body("U".repeat(151), "12345678", CARD)))
+                .hasMessage("University must be 150 characters or fewer");
+        String hugeCard = "data:image/png;base64," + "A".repeat(4_000_001);
+        assertThatThrownBy(() -> service.submit(applicant.getUserId(), body("UTS", "12345678", hugeCard)))
+                .hasMessage("Student card photo is too large. Please upload an image under 3 MB.");
+        verify(requestRepository, never()).save(any());
+    }
+
+    @Test
+    void returnsTheLatestRequestAndRecordsTheAcknowledgement() {
+        StudentVerificationRequest request = new StudentVerificationRequest(applicant, "UTS", "12345678", CARD);
+        UUID requestId = UUID.randomUUID();
+        when(requestRepository.findFirstByUserUserIdOrderByCreatedAtDesc(applicant.getUserId())).thenReturn(Optional.of(request));
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+
+        StudentVerificationDTO latest = service.getLatestForUser(applicant.getUserId());
+        service.acknowledge(applicant.getUserId(), requestId);
+
+        assertThat(latest.status).isEqualTo(StudentVerificationStatus.PENDING);
+        assertThat(latest.cardImage).isNull();
+        assertThat(request.isNotified()).isTrue();
+        verify(requestRepository).save(request);
+    }
+
+    @Test
+    void cannotCancelAResolvedOrMissingRequest() {
+        StudentVerificationRequest request = new StudentVerificationRequest(applicant, "UTS", "12345678", CARD);
+        request.resolve(StudentVerificationStatus.APPROVED, false);
+        UUID requestId = UUID.randomUUID();
+        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
+        UUID missing = UUID.randomUUID();
+        when(requestRepository.findById(missing)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.cancel(applicant.getUserId(), requestId))
+                .hasMessage("This request has already been resolved");
+        assertThatThrownBy(() -> service.cancel(applicant.getUserId(), missing))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     private static StudentVerificationRequestBody body(String university, String studentNumber, String cardImage) {

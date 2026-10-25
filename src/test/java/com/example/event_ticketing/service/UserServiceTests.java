@@ -4,6 +4,7 @@ import com.example.event_ticketing.dto.LoginRequest;
 import com.example.event_ticketing.dto.RegisterRequest;
 import com.example.event_ticketing.dto.UserDTO;
 import com.example.event_ticketing.exception.InvalidCredentialsException;
+import com.example.event_ticketing.model.OrganiserRequest;
 import com.example.event_ticketing.model.User;
 import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.OrganiserRequestRepository;
@@ -143,5 +144,72 @@ class UserServiceTests {
 
         assertThatThrownBy(() -> userService.login(request))
                 .isInstanceOf(InvalidCredentialsException.class);
+    }
+
+    private static RegisterRequest registration(UserRole role) {
+        return new RegisterRequest("Alex Smith", "alex@example.com", "Strong1!", role);
+    }
+
+    @Test
+    void rejectsAMissingRegistrationBody() {
+        assertThatThrownBy(() -> userService.register(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Registration details are required");
+    }
+
+    @Test
+    void rejectsABlankEmail() {
+        RegisterRequest request = registration(null);
+        request.email = "  ";
+
+        assertThatThrownBy(() -> userService.register(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Email is required");
+    }
+
+    @Test
+    void rejectsADuplicateEmail() {
+        when(userRepository.existsByEmailIgnoreCase("alex@example.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> userService.register(registration(null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("An account with this email already exists");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void refusesToSelfRegisterAsAnAdminOrPendingOrganiser() {
+        assertThatThrownBy(() -> userService.register(registration(UserRole.ADMIN)))
+                .hasMessage("Cannot self-register with this role");
+        assertThatThrownBy(() -> userService.register(registration(UserRole.PENDING_ORGANISER)))
+                .hasMessage("Cannot self-register with this role");
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void parksAnOrganiserSignUpAsPendingAndOpensARequest() {
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UserDTO created = userService.register(registration(UserRole.ORGANISER));
+
+        assertThat(created.role).isEqualTo(UserRole.PENDING_ORGANISER);
+        verify(organiserRequestRepository).save(any(OrganiserRequest.class));
+    }
+
+    @Test
+    void rejectsALoginWithNoPassword() {
+        LoginRequest request = new LoginRequest();
+        request.email = "alex@example.com";
+
+        assertThatThrownBy(() -> userService.login(request)).isInstanceOf(InvalidCredentialsException.class);
+        assertThatThrownBy(() -> userService.login(null)).isInstanceOf(InvalidCredentialsException.class);
+    }
+
+    @Test
+    void checksWhetherANormalisedEmailExists() {
+        when(userRepository.existsByEmailIgnoreCase("alex@example.com")).thenReturn(true);
+
+        assertThat(userService.existsByEmail(" Alex@Example.com ")).isTrue();
+        assertThat(userService.existsByEmail(null)).isFalse();
     }
 }
