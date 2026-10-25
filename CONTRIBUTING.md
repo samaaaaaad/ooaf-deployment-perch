@@ -9,6 +9,14 @@ This file records the active conventions contributors should follow. Architectur
 3. Review the ERD and relevant ADRs before changing entities or relationships.
 4. Do not commit generated H2 files from the `data` directory.
 
+## Branches, Commits and Pull Requests
+
+- Never commit directly to `main`. Branch from the latest `main` (for example `feature/us-12-student-discount` or `fix/final-rubric-audit`) and merge through a pull request that a teammate reviews.
+- Commit messages follow Conventional Commits: `type: short imperative summary` (optionally `type(scope): …`), with types `feat`, `fix`, `docs`, `test`, `build`, `refactor`, `perf` and `chore`. Add a body explaining *why* when the change is not obvious, and reference the issue (`Closes #12`).
+- Commit identities are mapped to one name per member in `.mailmap`, so `git shortlog -sne` shows each person's contribution once.
+
+Seven early commits predate this convention and are kept unchanged rather than rewriting shared history: `e2f90e8` (GitHub's generated initial commit), `67cc391`, `8fb7886` and `47820ce` (README edits made in the GitHub web editor), `dbcf057` and `917ad83` (early feature commits without a type prefix), and `4e57f92` (GitHub's generated revert message). Every commit after them follows the convention.
+
 ## Java Naming
 
 - Classes, enums and interfaces use `PascalCase`: `EventService`, `EventStatus`.

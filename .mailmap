@@ -1,0 +1,6 @@
+# Maps each contributor's commit identities to one canonical name and email,
+# so `git shortlog -sne` shows one line per team member.
+Abdul Samad <a.samad@sydney.edu.au> sahm4d <a.samad4651@gmail.com>
+Jose Mosciaro Herrera <jmos0905@uni.sydney.edu.au> jose mosciaro <mosciarobusiness@gmail.com>
+Thomas Huynh <phuy0647@uni.sydney.edu.au> <phuy0647@uni,sydney.edu.au>
+Maria Hamlili <mham0328@uni.sydney.edu.au> <mariahamlili@MacBook-Pro-8.local>
