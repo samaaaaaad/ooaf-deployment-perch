@@ -61,7 +61,7 @@ public class DemoEventSeeder implements CommandLineRunner {
                     Layout.STAGE, "35.00", "55.00", false, 0, 1,
                     "Three local indie acts play an acoustic set as the sun goes down over the city skyline. "
                             + "Premium rows sit closest to the stage. Bar open from 6pm."),
-            new SeedEvent("Thursday Night Laughs", "comedy", "The Comedy Loft", "Newtown", 9, LocalTime.of(20, 0),
+            new SeedEvent("Late Night Laughs", "comedy", "The Comedy Loft", "Newtown", 9, LocalTime.of(20, 0),
                     Layout.CABARET, "22.00", "32.00", false, 15, 2,
                     "A five-comic line-up of Sydney's sharpest up-and-comers, hosted by a festival regular. "
                             + "Cabaret seating at shared tables; front tables are premium."),

@@ -112,3 +112,17 @@ describe('BrowseEventsPage loading and errors', () => {
     expect(await screen.findByText('Jazz Night')).toBeInTheDocument();
   });
 });
+
+test('lists the soonest events first and undated ones last', async () => {
+  localStorage.setItem('currentUser', JSON.stringify({ userId: 'c1', fullName: 'Bea Buyer', email: 'bea@example.com', role: 'CUSTOMER' }));
+  eventApi.getPublishedEvents.mockResolvedValue([
+    { eventId: 'a', title: 'Undated Gig', standardPrice: 10 },
+    { eventId: 'b', title: 'Later Show', standardPrice: 10, startsAt: '2027-05-01T09:00:00Z' },
+    { eventId: 'c', title: 'Sooner Show', standardPrice: 10, startsAt: '2027-02-01T09:00:00Z' },
+  ]);
+  renderPage();
+
+  await screen.findByText('Sooner Show');
+  const titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
+  expect(titles).toEqual(['Sooner Show', 'Later Show', 'Undated Gig']);
+});

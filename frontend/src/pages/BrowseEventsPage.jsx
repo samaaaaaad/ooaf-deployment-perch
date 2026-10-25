@@ -19,6 +19,13 @@ const searchIcon = (
   </svg>
 );
 
+// Soonest first; events without a start time go last.
+function bySoonest(a, b) {
+  const at = a.startsAt ? Date.parse(a.startsAt) : Infinity;
+  const bt = b.startsAt ? Date.parse(b.startsAt) : Infinity;
+  return at - bt;
+}
+
 export default function BrowseEventsPage() {
   const { user } = useAuth();
   const { navigate } = useRouter();
@@ -37,7 +44,7 @@ export default function BrowseEventsPage() {
     setLoadError('');
     getPublishedEvents()
       .then((data) => {
-        if (activeReq) setAllEvents((data || []).map(toDisplayEvent));
+        if (activeReq) setAllEvents((data || []).map(toDisplayEvent).sort(bySoonest));
       })
       .catch((error) => {
         if (activeReq) setLoadError(error.message || 'Unable to load events');

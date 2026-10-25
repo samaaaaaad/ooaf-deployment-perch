@@ -69,6 +69,6 @@ class DemoEventSeederIntegrationTests {
         assertThat(eventService.getPublishedEventSeats(byTitle.get("Jazz & Small Plates").eventId)).hasSize(32);
         assertThat(eventService.getPublishedEventSeats(byTitle.get("Inner West Futsal Cup Final").eventId)).hasSize(96);
         assertThat(byTitle.get("Campus Trivia Night").universitySpecific).isTrue();
-        assertThat(byTitle.get("Thursday Night Laughs").studentDiscountPercent).isEqualTo(15);
+        assertThat(byTitle.get("Late Night Laughs").studentDiscountPercent).isEqualTo(15);
     }
 }
