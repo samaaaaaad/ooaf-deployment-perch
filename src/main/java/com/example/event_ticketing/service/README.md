@@ -8,7 +8,7 @@ The business layer. Every `@Service` owns its rules, transaction boundaries (`@T
 | `OrganiserRequestService` | Submit, cancel, approve and reject organiser access; the latest-request banner |
 | `StudentVerificationService` | Student card applications for university emails; admin approve/reject (the card image is discarded afterwards) |
 | `EventService` | Event create, price, publish and delete; the published feed; floor plan CRUD, sharing and cloning; generating `EventSeat` rows from a floor plan's layout JSON or the built-in 60-seat Stage, and re-syncing them when the plan changes |
-| `VenueService` | Organiser-scoped venue reads |
+| `VenueService` | Organiser-scoped venue create, read, update and delete (only organisers; other organisers get 404) |
 | `SeatHoldService` | Holds and releases a seat for a customer with a time-limited hold. Optimistic locking (`@Version`) stops two customers holding the same seat |
 | `ExpiredSeatHoldReleaseJob` | `@Scheduled` job that frees expired holds every `seat-hold.release-interval` |
 | `BookingService` | Checkout from held seats; mock, free or Stripe payment; webhook confirmation and failure; server-side student discount |

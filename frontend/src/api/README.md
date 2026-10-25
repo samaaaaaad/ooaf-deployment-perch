@@ -9,7 +9,7 @@ The only place the frontend talks to the backend.
 |---|---|
 | `authApi.js` | `/api/users/register`, `/api/users/login` |
 | `eventApi.js` | Organiser events, pricing, publish and delete; floor plans and the shared gallery; published events and seats; seat holds; bookings; payment config; `waitForBookingConfirmation` (polls until a Stripe booking is confirmed) |
-| `venueApi.js` | `/api/organisers/{id}/venues` |
+| `venueApi.js` | `/api/organisers/{id}/venues`: list, create, update, delete |
 | `organiserRequestApi.js` | `/api/users/{id}/organiser-requests…` |
 | `studentVerificationApi.js` | `/api/users/{id}/student-verification…` |
 | `adminApi.js` | `/api/admin/…` |

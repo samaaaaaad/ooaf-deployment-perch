@@ -8,7 +8,7 @@ The HTTP layer. Each controller is a `@RestController` that maps a route to one 
 | `OrganiserRequestController` | `/api/users/{userId}/organiser-requests` | `POST` submit, `GET /latest`, `POST /{id}/ack` (204), `POST /{id}/cancel` |
 | `StudentVerificationController` | `/api/users/{userId}/student-verification` | `POST` submit, `GET /latest`, `POST /{id}/ack` (204), `POST /{id}/cancel` |
 | `EventController` | `/api/organisers/{organiserId}/events` | `GET`, `GET /{id}`, `POST` (201 + `Location`), `PUT /{id}/pricing`, `POST /{id}/publish`, `DELETE /{id}` (204) |
-| `VenueController` | `/api/organisers/{organiserId}/venues` | `GET`, `GET /{id}` |
+| `VenueController` | `/api/organisers/{organiserId}/venues` | `GET`, `GET /{id}`, `POST` (201 + `Location`), `PUT /{id}`, `DELETE /{id}` (204) |
 | `FloorPlanController` | `/api/organisers/{organiserId}/floorplans` | `GET`, `POST` (201), `PUT /{id}`, `DELETE /{id}` (204), `GET /{id}/seats`, `PUT`/`DELETE /{id}/publish`, `POST /{id}/clone` (201) |
 | `PublicFloorPlanController` | `/api/floorplans` | `GET /shared` (Community Made gallery) |
 | `PublicEventController` | `/api/events` | `GET /published?universityOnly&studentDiscount`, `GET /{id}`, `GET /{id}/seats` |

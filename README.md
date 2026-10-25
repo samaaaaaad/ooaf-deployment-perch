@@ -153,7 +153,8 @@ Every feature below is implemented, persisted through JPA, and covered by tests.
 - **Student verification (US 12):** users with a university email (`.edu`/`.edu.au`) upload a student card. An admin approves or rejects it. The card image is discarded after review.
 
 ### 4.2 Events and floor plans (organisers)
-- **Create events** with title, description, category, venue, city, start time and a "students only" flag.
+- **Venues:** save, edit and delete your pop-up locations (name, address, city, state).
+- **Create events** with title, description, category, venue, city, start time and a "students only" flag. Picking a saved venue fills in the venue and city.
 - **Drag-and-drop floor plan builder:** place seats, tables, a stage and barriers; save, edit and delete reusable plans. A plan used by an event cannot be deleted.
 - **Shared floor plans (US 13):** publish a plan to the Community Made gallery, preview others' plans, and copy one into your own plans.
 - **Pricing:** attach a floor plan and set standard and premium (VIP) prices, plus an optional student discount.
