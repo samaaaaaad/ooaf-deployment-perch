@@ -5,7 +5,7 @@ The shapes that cross the HTTP boundary. Controllers accept request DTOs and ret
 - **Requests**, validated with Bean Validation (`@Valid` in the controller):
   - `RegisterRequest`, `LoginRequest`
   - `CreateEventRequest`, `UpdatePricingRequest`, `PublishEventRequest`
-  - `FloorPlanRequest`, `VenueRequest`, `HoldSeatRequest`, `CheckoutRequest`
+  - `FloorPlanRequest`, `HoldSeatRequest`, `CheckoutRequest`
   - `StudentVerificationRequestBody`
 - **Responses:**
   - `UserDTO`, `EventDTO`, `EventSeatDTO`, `VenueDTO`

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
 import { createEvent, deleteEvent, getEvents, publishEvent } from '../api/eventApi';
-import { getVenues } from '../api/venueApi';
 import { categories } from '../utils/eventDisplay';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
@@ -29,26 +28,9 @@ function CreateEventForm({ organiserId, onCreated }) {
   const [category, setCategory] = useState('');
   const [venueName, setVenueName] = useState('');
   const [city, setCity] = useState('');
-  const [savedVenues, setSavedVenues] = useState([]);
   const [universitySpecific, setUniversitySpecific] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  // Saved venues are optional: if they fail to load, the organiser can still type a location.
-  useEffect(() => {
-    let active = true;
-    getVenues(organiserId)
-      .then((data) => { if (active) setSavedVenues(data || []); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, [organiserId]);
-
-  function pickVenue(venueId) {
-    const venue = savedVenues.find((v) => v.venueId === venueId);
-    if (!venue) return;
-    setVenueName(venue.name);
-    setCity(venue.city);
-  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -140,17 +122,6 @@ function CreateEventForm({ organiserId, onCreated }) {
               {categories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
           </div>
-
-          {savedVenues.length > 0 && (
-            <div className="field">
-              <label htmlFor="event-saved-venue">Saved venue</label>
-              <select id="event-saved-venue" value="" onChange={(event) => pickVenue(event.target.value)}>
-                <option value="">Pick one of your venues (optional)</option>
-                {savedVenues.map((v) => <option key={v.venueId} value={v.venueId}>{v.name}, {v.city}</option>)}
-              </select>
-              <small>Fills in the venue and city below. You can still edit them.</small>
-            </div>
-          )}
 
           <div className="field">
             <label htmlFor="event-venue">Venue</label>

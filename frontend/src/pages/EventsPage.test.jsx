@@ -2,17 +2,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import * as eventApi from '../api/eventApi';
-import * as venueApi from '../api/venueApi';
 import { AuthProvider } from '../auth/AuthContext';
 import { RouterProvider } from '../utils/router';
 import EventsPage from './EventsPage';
 
 vi.mock('../api/eventApi');
-vi.mock('../api/venueApi');
-
-beforeEach(() => {
-    venueApi.getVenues.mockResolvedValue([]);
-});
 
 function renderPage() {
     return render(
@@ -66,19 +60,6 @@ describe('EventsPage', () => {
             });
 
             expect(await screen.findByText('Circus')).toBeInTheDocument();
-        });
-
-        test('fills the venue and city from a saved venue', async () => {
-            eventApi.getEvents.mockResolvedValue([]);
-            venueApi.getVenues.mockResolvedValue([
-                { venueId: 'v1', name: 'Basement Bar', address: '7 Macquarie Pl', city: 'Sydney', state: 'NSW' },
-            ]);
-
-            renderPage();
-            fireEvent.change(await screen.findByLabelText('Saved venue'), { target: { value: 'v1' } });
-
-            expect(screen.getByLabelText('Venue')).toHaveValue('Basement Bar');
-            expect(screen.getByLabelText('Suburb or city')).toHaveValue('Sydney');
         });
 
         test('sends the chosen category, venue and city', async () => {

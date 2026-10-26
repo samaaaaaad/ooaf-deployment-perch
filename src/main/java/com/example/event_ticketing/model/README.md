@@ -6,7 +6,7 @@ The persistent domain. Every table uses a UUID primary key, plural `snake_case` 
 |---|---|
 | `User` (`users`) | `role` (`UserRole`: CUSTOMER, PENDING_ORGANISER, ORGANISER, ADMIN), BCrypt `passwordHash`, `studentVerified` |
 | `Event` (`events`) | `organiser` → User; optional `floorPlan` → FloorPlan; `status` (`EventStatus`); prices; student options; `startsAt`; `category` (`EventCategory` key), `venueName` and `city` (ADR 0005) |
-| `Venue` (`venues`) | `organiser` → User; name, address, city and state. Events copy a venue's name and city when created (ADR 0005), so they are not linked by a foreign key |
+| `Venue` (`venues`) | `organiser` → User; name and address. Not linked to events yet (ADR 0002) |
 | `FloorPlan` (`floor_plans`) | Optional `organiser` (null means a built-in default); `layoutJson` from the builder; `shared` and `sharedAt` for the gallery |
 | `Seat` (`seats`) | `floorPlan` → FloorPlan; label, `tier` (`SeatTier`), x/y |
 | `EventSeat` (`event_seats`) | `event` → Event; a per-event copy of each seat with `price`, `status` (`SeatStatus`), `heldBy` and `holdExpiresAt`, `booking`, and `@Version` for optimistic locking |
