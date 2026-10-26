@@ -180,9 +180,9 @@ Every feature below is implemented, persisted through JPA, and covered by tests.
 |---|---|---|
 | **520442472 (Dmitry Khachumov)** | Backend Developer — Events, Data & Payments | Database entities and relationships, event and venue management APIs, seat/section management, pricing logic, JPA repositories, and payment gateway integration |
 | **540938186 (Abdul Samad)** | Full-Stack Developer — Floorplans | Organiser floorplan creation and editing, reusable floorplan functionality, frontend-backend integration for floorplans |
-| **550264462 (Maria Hamlili)** | Full-Stack Developer — Events, Payments & E-tickets | Event create and list API, live seat map with database-backed availability, Stripe PaymentIntent and verified webhooks, e-ticket email delivery with QR codes, and university student verification and discounted pricing |
+| **550264462 (Maria Hamlili)** | Full-Stack Developer — Events, Payments & E-tickets | Event create and list API, live seat map with database-backed availability, Stripe PaymentIntent and verified webhooks, e-ticket email confirmation, and university student verification and discounted pricing |
 | **550358783 (Jose Maria Mosciaro Herrera)** | Backend Developer — Users, Bookings & Tickets | User registration and authentication, role-based access, booking APIs, and per-seat e-ticket issuance when a booking is confirmed |
-| **520494057 (Thomas Huynh)** | Full-Stack Developer — Seat Holds & Shared Floor Plans | Organiser create-event form, seat hold and timed release with concurrency handling, and shared floor-plan publishing, gallery and copy |
+| **520494057 (Thomas Huynh)** | Full-Stack Developer — Seat Holds, QR Codes & Shared Floor Plans | Organiser create-event form, seat hold and timed release with concurrency handling, QR codes on e-tickets, and shared floor-plan publishing, gallery and copy |
 
 ---
 
