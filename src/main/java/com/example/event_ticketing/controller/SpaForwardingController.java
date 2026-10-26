@@ -9,16 +9,16 @@ import org.springframework.web.bind.annotation.GetMapping;
  * no CORS boundary. Deep links and refreshes (e.g. /browse, /event/{id}) must return index.html
  * rather than 404, so the browser-side router can take over.
  *
- * Only forwards no-extension GET paths whose first segment is not api/actuator/h2-console, so real
- * API calls, the health endpoint and static files (which contain a '.') are left untouched. In dev
- * the frontend is served by Vite, so this forwarding is a production concern.
+ * Only forwards no-extension GET paths whose first segment is not api/actuator/h2-console/ws, so real
+ * API calls, the health endpoint, the WebSocket handshake and static files (which contain a '.') are
+ * left untouched. In dev the frontend is served by Vite, so this forwarding is a production concern.
  */
 @Controller
 public class SpaForwardingController {
 
     @GetMapping(value = {
-            "/{path:^(?!api$|actuator$|h2-console$)[^.]*}",
-            "/{path:^(?!api$|actuator$|h2-console$)[^.]*}/{sub:[^.]*}"
+            "/{path:^(?!api$|actuator$|h2-console$|ws$)[^.]*}",
+            "/{path:^(?!api$|actuator$|h2-console$|ws$)[^.]*}/{sub:[^.]*}"
     })
     public String forward() {
         return "forward:/index.html";

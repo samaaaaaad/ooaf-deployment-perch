@@ -3,6 +3,7 @@ package com.example.event_ticketing.controller;
 import com.example.event_ticketing.dto.BookingDTO;
 import com.example.event_ticketing.dto.CheckoutRequest;
 import com.example.event_ticketing.service.BookingService;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,9 +21,11 @@ import java.util.UUID;
 public class BookingController {
 
     private final BookingService bookingService;
+    private final SeatBroadcaster seatBroadcaster;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, SeatBroadcaster seatBroadcaster) {
         this.bookingService = bookingService;
+        this.seatBroadcaster = seatBroadcaster;
     }
 
     /**
@@ -35,7 +38,11 @@ public class BookingController {
             @PathVariable UUID eventId,
             @RequestBody CheckoutRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(bookingService.startCheckout(eventId, request));
+        BookingDTO booking = bookingService.startCheckout(eventId, request);
+        // Mock/free checkouts book the seats immediately; nudge other seat maps to refresh.
+        // (Stripe bookings flip to BOOKED on the webhook; those seats already show HELD meanwhile.)
+        seatBroadcaster.seatsChanged(eventId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(booking);
     }
 
     /** The customer's confirmed bookings (My Tickets). */

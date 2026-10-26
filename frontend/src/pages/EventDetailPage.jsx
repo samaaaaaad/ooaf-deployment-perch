@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getEvent as getMockEvent, labelFor } from '../data/events';
 import { getEventSeats, getMyHolds, getPublishedEvent, holdSeat, releaseSeatHold } from '../api/eventApi';
+import { subscribeSeatChanges } from '../api/seatSocket';
 import { useAuth } from '../auth/AuthContext';
 import { decorFromLayoutJson } from '../utils/floorPlanDecor';
 import { formatCountdown } from '../utils/formatCountdown';
@@ -161,6 +162,15 @@ export default function EventDetailPage({ eventId }) {
     const timer = setInterval(() => { refreshSeats().catch(() => {}); }, POLL_MS);
     return () => clearInterval(timer);
   }, [isLiveEvent, refreshSeats]);
+
+  // Live push: when anyone holds/releases/books a seat for this event, the server nudges us over
+  // WebSocket and we re-fetch immediately instead of waiting for the next poll. The poll above
+  // stays as a fallback if the socket is unavailable or drops.
+  useEffect(() => {
+    if (!isLiveEvent) return undefined;
+    const unsubscribe = subscribeSeatChanges(eventId, () => { refreshSeats().catch(() => {}); });
+    return unsubscribe;
+  }, [isLiveEvent, eventId, refreshSeats]);
 
   // Tick once a second, but only while there is something to count down.
   const hasHolds = Object.keys(holds).length > 0;
