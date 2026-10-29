@@ -2,6 +2,7 @@ package com.example.event_ticketing.repository;
 
 import com.example.event_ticketing.model.Event;
 import com.example.event_ticketing.model.EventStatus;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,8 +12,11 @@ import java.util.UUID;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
+    // List queries map every event's floor plan into its DTO, so fetch it in the same query (no N+1).
+    @EntityGraph(attributePaths = "floorPlan")
     List<Event> findAllByOrganiserUserIdOrderByCreatedAtDesc(UUID organiserId);
     Optional<Event> findByEventIdAndOrganiserUserId(UUID eventId, UUID organiserId);
+    @EntityGraph(attributePaths = "floorPlan")
     List<Event> findAllByStatusOrderByCreatedAtDesc(EventStatus status);
     boolean existsByFloorPlanFloorPlanId(UUID floorPlanId);
 }

@@ -26,6 +26,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,7 +90,7 @@ public class BookingService {
             throw new ValidationException("Customer account is not active");
         }
 
-        if (new java.util.HashSet<>(request.seatIds).size() != request.seatIds.size()) {
+        if (new HashSet<>(request.seatIds).size() != request.seatIds.size()) {
             throw new ValidationException("Duplicate seat ids are not allowed");
         }
         Instant now = clock.instant();

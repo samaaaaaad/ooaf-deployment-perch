@@ -11,6 +11,7 @@ import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.Event;
+import com.example.event_ticketing.model.EventCategory;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.model.EventSeat;
 import com.example.event_ticketing.model.FloorPlan;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,14 +58,6 @@ public class EventService {
     private final EventSeatRepository eventSeatRepository;
     private final SeatRepository seatRepository;
 
-    public EventService(
-            EventRepository eventRepository,
-            UserRepository userRepository
-    ) {
-        this(eventRepository, userRepository, null, null, null);
-    }
-
-    @org.springframework.beans.factory.annotation.Autowired
     public EventService(
             EventRepository eventRepository,
             UserRepository userRepository,
@@ -656,8 +650,15 @@ public class EventService {
         Event event = new Event(organiser, title, description);
         event.setUniversitySpecific(Boolean.TRUE.equals(request.universitySpecific));
         event.setStartsAt(parseStartsAt(request.startsAt));
+        event.setCategory(EventCategory.normalise(request.category));
+        event.setVenueName(blankToNull(request.venueName));
+        event.setCity(blankToNull(request.city));
         Event saved = eventRepository.save(event);
         return toDTO(saved);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     /** Parses the optional ISO-8601 start instant; a blank value means no scheduled date yet. */
@@ -667,7 +668,7 @@ public class EventService {
         }
         try {
             return Instant.parse(startsAt.trim());
-        } catch (java.time.format.DateTimeParseException ex) {
+        } catch (DateTimeParseException ex) {
             throw new ValidationException("Event start time must be a valid date and time");
         }
     }
@@ -692,6 +693,9 @@ public class EventService {
         );
         dto.layoutJson = fp != null ? fp.getLayoutJson() : null;
         dto.startsAt = event.getStartsAt();
+        dto.category = event.getCategory();
+        dto.venueName = event.getVenueName();
+        dto.city = event.getCity();
         dto.universitySpecific = event.isUniversitySpecific();
         if (event.hasStudentDiscount()) {
             dto.studentDiscountPercent = event.getStudentDiscountPercent();

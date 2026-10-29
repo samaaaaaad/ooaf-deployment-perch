@@ -2,12 +2,16 @@ package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.CreateEventRequest;
 import com.example.event_ticketing.dto.EventDTO;
+import com.example.event_ticketing.dto.PublishEventRequest;
+import com.example.event_ticketing.dto.UpdatePricingRequest;
 import com.example.event_ticketing.service.EventService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +46,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventDTO> createEvent(
             @PathVariable UUID organiserId,
-            @RequestBody CreateEventRequest request
+            @Valid @RequestBody CreateEventRequest request
     ) {
         EventDTO created = eventService.createEvent(organiserId, request);
         URI location = URI.create(
@@ -50,11 +54,11 @@ public class EventController {
         return ResponseEntity.created(location).body(created);
     }
 
-    @org.springframework.web.bind.annotation.PutMapping("/{eventId}/pricing")
+    @PutMapping("/{eventId}/pricing")
     public ResponseEntity<EventDTO> updatePricing(
             @PathVariable UUID organiserId,
             @PathVariable UUID eventId,
-            @RequestBody com.example.event_ticketing.dto.UpdatePricingRequest request
+            @Valid @RequestBody UpdatePricingRequest request
     ) {
         return ResponseEntity.ok(eventService.updateEventPricing(organiserId, eventId, request));
     }
@@ -63,7 +67,7 @@ public class EventController {
     public ResponseEntity<EventDTO> publishEvent(
             @PathVariable UUID organiserId,
             @PathVariable UUID eventId,
-            @RequestBody(required = false) com.example.event_ticketing.dto.PublishEventRequest request
+            @RequestBody(required = false) PublishEventRequest request
     ) {
         return ResponseEntity.ok(eventService.publishEvent(organiserId, eventId, request));
     }

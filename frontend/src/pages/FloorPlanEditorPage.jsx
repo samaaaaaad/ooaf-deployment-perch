@@ -28,7 +28,6 @@ const nextId = () => {
 };
 
 const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
-const isRect = (type) => SHAPES[type].kind === 'rect';
 
 function clampItem(type, x, y) {
   const s = SHAPES[type];
@@ -106,7 +105,7 @@ export default function FloorPlanEditorPage() {
 
   const addItem = useCallback((type, cx, cy) => {
     const s = SHAPES[type];
-    if (s.single && hasSingle(type)) {
+    if (s.single && items.some((it) => it.type === type)) {
       setNote(`Only one ${s.label.toLowerCase()} is supported.`);
       return;
     }

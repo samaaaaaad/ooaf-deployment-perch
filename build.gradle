@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id 'jacoco'
 	id 'org.springframework.boot' version '4.1.0'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -23,30 +24,59 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	compileOnly 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	runtimeOnly 'com.h2database:h2'
 	runtimeOnly 'org.springframework.boot:spring-boot-h2console'
 	// Production database driver. Active only under the 'prod' profile (see application-prod.properties).
 	runtimeOnly 'org.postgresql:postgresql'
-	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	testCompileOnly 'org.projectlombok:lombok'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-	testAnnotationProcessor 'org.projectlombok:lombok'
 
 	implementation 'org.springframework.security:spring-security-crypto'
 	// Email confirmations (JavaMailSender). Only active once spring.mail.* is set.
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 	// Stripe payments. Only used when payment.provider=stripe.
 	implementation 'com.stripe:stripe-java:33.4.2'
-	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	// implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+jacoco {
+	toolVersion = '0.8.13'
+}
+
+// Every test run also writes the coverage report:
+// build/reports/jacoco/test/html/index.html (and jacocoTestReport.xml for tooling).
+tasks.named('test') {
+	finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+	dependsOn tasks.named('test')
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+// 'gradlew check' (and so 'build') fails if service or controller line coverage drops below 85%.
+tasks.named('jacocoTestCoverageVerification') {
+	violationRules {
+		rule {
+			element = 'PACKAGE'
+			includes = ['com.example.event_ticketing.service', 'com.example.event_ticketing.controller']
+			limit {
+				counter = 'LINE'
+				minimum = 0.85
+			}
+		}
+	}
+}
+
+tasks.named('check') {
+	dependsOn tasks.named('jacocoTestCoverageVerification')
 }

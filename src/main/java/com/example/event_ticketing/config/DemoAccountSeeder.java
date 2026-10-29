@@ -5,6 +5,7 @@ import com.example.event_ticketing.model.UserRole;
 import com.example.event_ticketing.repository.UserRepository;
 import com.example.event_ticketing.util.PasswordUtil;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
  * Credentials are documented in {@code docs/demo-logins.md}. Idempotent per email.
  */
 @Component
+@Order(1)
 public class DemoAccountSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;

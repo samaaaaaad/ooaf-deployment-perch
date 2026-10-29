@@ -102,7 +102,7 @@ describe('FloorplansPage Community Made section (US 13.0 / 13.4-13.6)', () => {
         eventApi.cloneFloorplan.mockRejectedValue(new Error('Only a published floor plan can be added to your own floor plans'));
 
         renderPage();
-        fireEvent.click(await screen.findByRole('button', { name: 'Add ' }));
+        fireEvent.click(await screen.findByRole('button', { name: 'Add' }));
 
         expect(await screen.findByRole('alert')).toHaveTextContent('Only a published floor plan can be added to your own floor plans');
         expect(screen.getByText('Theatre B')).toBeInTheDocument();

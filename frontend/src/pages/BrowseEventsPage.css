@@ -60,7 +60,7 @@
   inset: 0; position: absolute;
 }
 .be-cover-top {
-  align-items: flex-start; display: flex; gap: 0.5rem; justify-content: space-between;
+  align-items: flex-start; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: space-between;
   padding: 0.9rem; position: relative; z-index: 1;
 }
 .be-pill {
@@ -70,7 +70,7 @@
 }
 .be-date {
   background: rgba(10, 30, 27, 0.34); border-radius: 999px; color: #fff; font-size: 0.72rem;
-  font-weight: 700; padding: 0.32rem 0.62rem; white-space: nowrap;
+  font-weight: 700; margin-left: auto; padding: 0.32rem 0.62rem; white-space: nowrap;
 }
 
 .be-body { display: flex; flex: 1; flex-direction: column; padding: 1.15rem 1.25rem 1.3rem; }
@@ -84,7 +84,7 @@
 .be-price-was { color: var(--muted); font-size: 0.8rem; font-weight: 600; }
 .be-price-student { color: var(--brand); }
 .be-price-you { font-size: 0.75rem; font-weight: 700; }
-.be-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.be-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; min-width: 0; }
 .be-pill-uni { color: var(--brand-dark, #0f4f49); }
 .be-view { color: var(--brand); font-size: 0.8rem; font-weight: 700; }
 

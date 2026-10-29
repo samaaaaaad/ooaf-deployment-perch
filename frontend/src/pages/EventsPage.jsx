@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { createEvent, deleteEvent, getEvents, publishEvent } from '../api/eventApi';
+import { categories } from '../utils/eventDisplay';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
 import EmptyState from '../components/EmptyState';
@@ -24,6 +25,9 @@ function CreateEventForm({ organiserId, onCreated }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startsAt, setStartsAt] = useState('');
+  const [category, setCategory] = useState('');
+  const [venueName, setVenueName] = useState('');
+  const [city, setCity] = useState('');
   const [universitySpecific, setUniversitySpecific] = useState(false);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -46,11 +50,17 @@ function CreateEventForm({ organiserId, onCreated }) {
         universitySpecific,
         // datetime-local gives a local wall-clock value; send it as a proper ISO instant.
         startsAt: startsAt ? new Date(startsAt).toISOString() : null,
+        category: category || null,
+        venueName: venueName.trim() || null,
+        city: city.trim() || null,
       });
       onCreated(created);
       setTitle('');
       setDescription('');
       setStartsAt('');
+      setCategory('');
+      setVenueName('');
+      setCity('');
       setUniversitySpecific(false);
     } catch (requestError) {
       setFormError(requestError.message || 'Unable to create event');
@@ -103,6 +113,40 @@ function CreateEventForm({ organiserId, onCreated }) {
                 onChange={(event) => setStartsAt(event.target.value)}
             />
             <small>Optional. Once this time passes, the event drops off the Browse page.</small>
+          </div>
+
+          <div className="field">
+            <label htmlFor="event-category">Category</label>
+            <select id="event-category" name="category" value={category} onChange={(event) => setCategory(event.target.value)}>
+              <option value="">Choose a category (optional)</option>
+              {categories.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+            </select>
+          </div>
+
+          <div className="field">
+            <label htmlFor="event-venue">Venue</label>
+            <input
+                id="event-venue"
+                name="venueName"
+                type="text"
+                value={venueName}
+                onChange={(event) => setVenueName(event.target.value)}
+                placeholder="e.g. Basement Bar"
+                maxLength={150}
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="event-city">Suburb or city</label>
+            <input
+                id="event-city"
+                name="city"
+                type="text"
+                value={city}
+                onChange={(event) => setCity(event.target.value)}
+                placeholder="e.g. Sydney CBD"
+                maxLength={100}
+            />
           </div>
 
           <div className="field">
@@ -209,7 +253,7 @@ export default function EventsPage() {
           <div>
             <p className="eyebrow">Event management</p>
             <h1>Events</h1>
-            <p>Productions are independent from their future dated venue sessions.</p>
+            <p>Create events, attach a floor plan and prices, then publish them to Browse.</p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             {isOrganiser && (

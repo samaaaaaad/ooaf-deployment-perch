@@ -16,6 +16,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -54,10 +55,10 @@ public class Event {
     private FloorPlan floorPlan;
 
     @Column(name = "standard_price", precision = 12, scale = 2)
-    private java.math.BigDecimal standardPrice;
+    private BigDecimal standardPrice;
 
     @Column(name = "premium_price", precision = 12, scale = 2)
-    private java.math.BigDecimal premiumPrice;
+    private BigDecimal premiumPrice;
 
     /** US 12: university students only (enforced at seat hold and checkout). Nullable so existing rows migrate; null = false. */
     @Column(name = "university_specific")
@@ -76,6 +77,17 @@ public class Event {
     // Nullable so existing and still-draft events without a date keep working.
     @Column(name = "starts_at")
     private Instant startsAt;
+
+    // Display details for Browse and Event Detail (ADR 0005). The venue name and city are plain
+    // text here; linking an event to a Venue row stays with the future EventSession (ADR 0002).
+    @Column(name = "category", length = 30)
+    private String category;
+
+    @Column(name = "venue_name", length = 150)
+    private String venueName;
+
+    @Column(name = "city", length = 100)
+    private String city;
 
     @Column(name = "published_at")
     private Instant publishedAt;
@@ -128,11 +140,11 @@ public class Event {
     public FloorPlan getFloorPlan() { return floorPlan; }
     public void setFloorPlan(FloorPlan floorPlan) { this.floorPlan = floorPlan; }
 
-    public java.math.BigDecimal getStandardPrice() { return standardPrice; }
-    public void setStandardPrice(java.math.BigDecimal standardPrice) { this.standardPrice = standardPrice; }
+    public BigDecimal getStandardPrice() { return standardPrice; }
+    public void setStandardPrice(BigDecimal standardPrice) { this.standardPrice = standardPrice; }
 
-    public java.math.BigDecimal getPremiumPrice() { return premiumPrice; }
-    public void setPremiumPrice(java.math.BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
+    public BigDecimal getPremiumPrice() { return premiumPrice; }
+    public void setPremiumPrice(BigDecimal premiumPrice) { this.premiumPrice = premiumPrice; }
 
     public boolean isUniversitySpecific() { return Boolean.TRUE.equals(universitySpecific); }
     public void setUniversitySpecific(Boolean universitySpecific) { this.universitySpecific = universitySpecific; }
@@ -147,6 +159,15 @@ public class Event {
 
     public Instant getStartsAt() { return startsAt; }
     public void setStartsAt(Instant startsAt) { this.startsAt = startsAt; }
+
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
+
+    public String getVenueName() { return venueName; }
+    public void setVenueName(String venueName) { this.venueName = venueName; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
     public Instant getPublishedAt() { return publishedAt; }
     public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }

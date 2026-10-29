@@ -53,10 +53,34 @@ describe('EventsPage', () => {
                     description: 'Big top show',
                     universitySpecific: false,
                     startsAt: null,
+                    category: null,
+                    venueName: null,
+                    city: null,
                 });
             });
 
             expect(await screen.findByText('Circus')).toBeInTheDocument();
+        });
+
+        test('sends the chosen category, venue and city', async () => {
+            eventApi.getEvents.mockResolvedValue([]);
+            eventApi.createEvent.mockResolvedValue({
+                eventId: 'event-9', organiserId: 'owner-1', title: 'Jazz', status: 'DRAFT',
+            });
+
+            renderPage();
+            await screen.findByText('No events yet');
+
+            fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Jazz' } });
+            fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'music' } });
+            fireEvent.change(screen.getByLabelText('Venue'), { target: { value: ' Basement Bar ' } });
+            fireEvent.change(screen.getByLabelText('Suburb or city'), { target: { value: 'Sydney CBD' } });
+            fireEvent.click(screen.getByRole('button', { name: 'Create event' }));
+
+            await waitFor(() => expect(eventApi.createEvent).toHaveBeenCalled());
+            expect(eventApi.createEvent.mock.calls[0][1]).toMatchObject({
+                category: 'music', venueName: 'Basement Bar', city: 'Sydney CBD',
+            });
         });
 
         test('sends the chosen date and time as an ISO instant', async () => {

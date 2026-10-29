@@ -50,7 +50,7 @@ const features = [
   { key: 'cursor', title: 'Real-time seat selection', body: 'Customers pick an exact seat and watch availability update live. Temporary holds stop two people grabbing the same spot.' },
   { key: 'copy', title: 'Reusable floor plans', body: 'Build a layout once, save it to your venue and clone it into every future event at that location.' },
   { key: 'shield', title: 'Secure payments', body: 'Tokenised checkout keeps purchases secure. Raw card details are never stored on the platform.' },
-  { key: 'qr', title: 'QR e-tickets & check-in', body: 'Confirmed bookings issue scannable e-tickets. Validate entry at the door and block duplicate scans.' },
+  { key: 'qr', title: 'QR e-tickets', body: 'Every confirmed seat gets its own e-ticket with a unique code and QR image, emailed and saved in My Tickets.' },
 ];
 
 const steps = [

@@ -109,8 +109,6 @@ export default function CheckoutPage() {
     );
   }
 
-  const canBook = order.isLive;
-
   return (
     <div className="cop">
       <a className="cop-back" href="/browse" onClick={(e) => { e.preventDefault(); navigate('/browse'); }}>← Back to events</a>
@@ -131,7 +129,7 @@ export default function CheckoutPage() {
         <div className="cop-card cop-summary">
           <p className="cop-eyebrow">Order summary</p>
           <h2 className="cop-event">{order.title}</h2>
-          <p className="cop-meta">{order.venue}, {order.city} · {order.date} · {order.time}</p>
+          <p className="cop-meta">{order.location} · {order.when}</p>
           <ul className="cop-seats">
             {order.seats.map((s) => (
               <li key={s.label}>
@@ -152,14 +150,12 @@ export default function CheckoutPage() {
         <aside className="cop-card cop-pay">
           <div className="cop-pay-head">
             <h2 className="cop-pay-title">{isFree ? 'Reservation' : 'Payment'}</h2>
-            {!isFree && canBook && (
+            {!isFree && (
               <span className="cop-secure">{LockIcon} Secure checkout</span>
             )}
           </div>
 
-          {!canBook ? (
-            <p className="cop-note">This is a sample catalogue event, so it can’t be booked. Pick a live published event to complete a real booking.</p>
-          ) : status === 'stripe' && stripeState ? (
+          {status === 'stripe' && stripeState ? (
             <Elements
               stripe={stripeState.stripePromise}
               options={{ clientSecret: stripeState.clientSecret, appearance: { theme: 'stripe' } }}
@@ -180,7 +176,7 @@ export default function CheckoutPage() {
               </div>
               <p className="cop-note">
                 Card details are collected securely by Stripe after you click Pay.
-                With the mock provider (default), payment confirms instantly with no card entry.
+                In demo mode, payment is confirmed instantly without a card.
               </p>
               <div className="cop-field" aria-hidden="true">
                 <label>Card number</label>
@@ -195,7 +191,7 @@ export default function CheckoutPage() {
           {error && <div className="notice notice-error" role="alert" style={{ marginTop: '0.5rem', marginBottom: '0.75rem' }}>{error}</div>}
 
           {status !== 'stripe' && (
-            <button type="button" className="cop-pay-btn" disabled={!canBook || status === 'paying'} onClick={status === 'awaiting-confirmation' ? onStripeConfirmed : handlePay}>
+            <button type="button" className="cop-pay-btn" disabled={status === 'paying'} onClick={status === 'awaiting-confirmation' ? onStripeConfirmed : handlePay}>
               {status === 'paying'
                 ? 'Confirming…'
                 : status === 'awaiting-confirmation'

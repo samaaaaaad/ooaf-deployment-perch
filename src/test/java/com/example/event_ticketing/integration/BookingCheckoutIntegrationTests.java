@@ -255,10 +255,10 @@ class BookingCheckoutIntegrationTests {
                 .andReturn().getResponse().getContentAsString();
         var json = new tools.jackson.databind.ObjectMapper().readTree(response);
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                .get("/api/bookings/" + json.get("bookingId").asText()))
+                .get("/api/bookings/" + json.get("bookingId").asString()))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.tickets[0].ticketCode")
-                        .value(json.get("tickets").get(0).get("ticketCode").asText()));
+                        .value(json.get("tickets").get(0).get("ticketCode").asString()));
     }
 
     private String decodeQr(String dataUrl) {

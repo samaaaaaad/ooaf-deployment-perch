@@ -38,7 +38,7 @@ describe('booking confirmation', () => {
 
 it('retries confirmation without creating another payment after webhook delay', async () => {
   sessionStorage.setItem('pendingOrder', JSON.stringify({
-    eventId: 'event', title: 'Concert', total: 20, isLive: true,
+    eventId: 'event', title: 'Concert', total: 20,
     seats: [{ id: 'seat', label: 'A1', tier: 'standard', price: 20 }],
   }));
   createBooking.mockResolvedValue({ status: 'PENDING_PAYMENT', bookingId: 'booking', clientSecret: 'secret' });

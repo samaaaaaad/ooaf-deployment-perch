@@ -1,6 +1,7 @@
 package com.example.event_ticketing.service;
 
 import com.example.event_ticketing.dto.OrganiserRequestDTO;
+import com.example.event_ticketing.exception.ResourceNotFoundException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.OrganiserRequestStatus;
 import com.example.event_ticketing.model.User;
@@ -105,5 +106,71 @@ class OrganiserRequestServiceTests {
 
         assertThatThrownBy(() -> organiserRequestService.submit(customer.getUserId()))
                 .isInstanceOf(ValidationException.class);
+    }
+
+    private User newUser(UserRole role) {
+        return userRepository.saveAndFlush(new User(
+                "Someone", "someone+" + UUID.randomUUID() + "@example.com", "test-password-hash", role));
+    }
+
+    @Test
+    void organisersAdminsAndUnknownUsersCannotSubmit() {
+        assertThatThrownBy(() -> organiserRequestService.submit(newUser(UserRole.ORGANISER).getUserId()))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("This account is already an organiser");
+        assertThatThrownBy(() -> organiserRequestService.submit(newUser(UserRole.ADMIN).getUserId()))
+                .isInstanceOf(ValidationException.class)
+                .hasMessage("Admin accounts cannot request organiser access");
+        assertThatThrownBy(() -> organiserRequestService.submit(UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void aResolvedRequestCannotBeApprovedRejectedOrCancelledAgain() {
+        User customer = newCustomer();
+        organiserRequestService.submit(customer.getUserId());
+        UUID requestId = pendingRequestIdFor(customer.getUserId());
+        organiserRequestService.approve(requestId);
+
+        assertThatThrownBy(() -> organiserRequestService.reject(requestId))
+                .hasMessage("This request has already been resolved");
+        assertThatThrownBy(() -> organiserRequestService.approve(requestId))
+                .hasMessage("This request has already been resolved");
+        assertThatThrownBy(() -> organiserRequestService.cancel(customer.getUserId(), requestId))
+                .hasMessage("This request has already been resolved");
+        assertThatThrownBy(() -> organiserRequestService.approve(UUID.randomUUID()))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void onlyTheApplicantCanCancelOrAcknowledgeTheirRequest() {
+        User customer = newCustomer();
+        organiserRequestService.submit(customer.getUserId());
+        UUID requestId = pendingRequestIdFor(customer.getUserId());
+        UUID stranger = newCustomer().getUserId();
+
+        assertThatThrownBy(() -> organiserRequestService.cancel(stranger, requestId))
+                .hasMessage("This request does not belong to this user");
+        assertThatThrownBy(() -> organiserRequestService.acknowledge(requestId, stranger))
+                .hasMessage("This request does not belong to this user");
+        assertThatThrownBy(() -> organiserRequestService.acknowledge(UUID.randomUUID(), stranger))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void theApplicantSeesTheirLatestDecisionUntilTheyAcknowledgeIt() {
+        User customer = newCustomer();
+        organiserRequestService.submit(customer.getUserId());
+        UUID requestId = pendingRequestIdFor(customer.getUserId());
+        organiserRequestService.reject(requestId);
+
+        OrganiserRequestDTO latest = organiserRequestService.getLatestForUser(customer.getUserId());
+        assertThat(latest.status).isEqualTo(OrganiserRequestStatus.REJECTED);
+        assertThat(latest.notified).isFalse();
+
+        organiserRequestService.acknowledge(requestId, customer.getUserId());
+
+        assertThat(organiserRequestService.getLatestForUser(customer.getUserId()).notified).isTrue();
+        assertThat(organiserRequestService.getLatestForUser(UUID.randomUUID())).isNull();
     }
 }
