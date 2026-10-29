@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { useRouter } from '../utils/router';
+import BrandLogo from '../components/BrandLogo';
 import './LandingPage.css';
 
 /* ---- Small inline icon set (no external dependency) --------------------- */
@@ -56,7 +57,7 @@ const features = [
 const steps = [
   { title: 'Build your layout', body: 'Drag seats and sections onto the grid until the canvas matches your real room.' },
   { title: 'Price & publish', body: 'Set per-seat or per-section pricing, attach it to an event and go live in minutes.' },
-  { title: 'Sell & check in', body: 'Customers reserve seats in real time. You scan their QR tickets at the door.' },
+  { title: 'Sell & deliver tickets', body: 'Customers reserve seats in real time and retrieve their QR tickets after booking confirmation.' },
 ];
 
 const stats = [
@@ -193,8 +194,7 @@ export default function LandingPage() {
       <nav className="lp-nav" ref={navRef} aria-label="Primary">
         <div className="lp-shell lp-nav-inner">
           <a className="lp-brand" href="/" onClick={go('/')} aria-label="Perch home">
-            <span className="lp-brand-mark" aria-hidden="true">P</span>
-            <strong>Perch</strong>
+            <BrandLogo onDark />
           </a>
           <div className="lp-nav-links">
             <a href="#audiences" onClick={scrollTo('audiences')}>Overview</a>
@@ -264,7 +264,7 @@ export default function LandingPage() {
               <ul>
                 <li>Design a floor plan for any temporary or mobile space</li>
                 <li>Price seats and sections independently, then publish</li>
-                <li>Check guests in at the door with a quick QR scan</li>
+                <li>Issue a unique QR ticket for each confirmed seat</li>
               </ul>
             </article>
           </div>
@@ -276,7 +276,7 @@ export default function LandingPage() {
         <div className="lp-shell">
           <div className="lp-section-head lp-reveal">
             <p className="lp-eyebrow">Everything the platform handles</p>
-            <h2>From empty room to scanned ticket</h2>
+            <h2>From empty room to confirmed ticket</h2>
           </div>
           <div className="lp-features">
             {features.map((f) => (
@@ -345,8 +345,7 @@ export default function LandingPage() {
           <div className="lp-footer-top">
             <div className="lp-footer-brand">
               <a className="lp-brand" href="/" onClick={go('/')}>
-                <span className="lp-brand-mark" aria-hidden="true">P</span>
-                <strong style={{ color: '#fff' }}>Perch</strong>
+                <BrandLogo onDark />
               </a>
               <p>Reserved-seating ticketing for pop-ups, promoters and independent venues whose room never sits still.</p>
             </div>

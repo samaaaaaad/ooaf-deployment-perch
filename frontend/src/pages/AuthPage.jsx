@@ -3,6 +3,7 @@ import { useState } from 'react';
 import * as authApi from '../api/authApi';
 import { useAuth } from '../auth/AuthContext';
 import { useRouter } from '../utils/router';
+import BrandLogo from '../components/BrandLogo';
 import './AuthPage.css';
 
 function validatePassword(password) {
@@ -83,8 +84,7 @@ export default function AuthPage() {
         </a>
 
         <div className="au-brand">
-          <span className="au-brand-mark" aria-hidden="true">P</span>
-          <span className="au-brand-name">Perch</span>
+          <BrandLogo />
         </div>
 
         <p className="au-eyebrow">{isRegistering ? 'Create your account' : 'Welcome back'}</p>

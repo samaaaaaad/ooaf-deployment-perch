@@ -1,0 +1,573 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="26.0.0" type="device">
+  <diagram id="page0" name="Domain classes">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1810" pageHeight="1240" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Class diagram  |  A  Domain structure" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=28;">
+          <mxGeometry as="geometry" x="35" y="15" width="1740" height="40" />
+        </mxCell>
+        <mxCell id="subtitle" value="Perch event ticketing • Selected attributes and operations • UML associations show stored object references" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=17;">
+          <mxGeometry as="geometry" x="35" y="55" width="1740" height="35" />
+        </mxCell>
+        <mxCell id="Venue" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="115" width="330" height="214" />
+        </mxCell>
+        <mxCell id="Venue_name" value="Venue" vertex="1" parent="Venue" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="Venue_attributes" value="- venueId: UUID&lt;br/&gt;- name: String&lt;br/&gt;- address: String&lt;br/&gt;- city: String&lt;br/&gt;- state: String" vertex="1" parent="Venue" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="136" />
+        </mxCell>
+        <mxCell id="Venue_operations" value="+ getName(): String" vertex="1" parent="Venue" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="174" width="330" height="40" />
+        </mxCell>
+        <mxCell id="User" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="470" y="115" width="330" height="238" />
+        </mxCell>
+        <mxCell id="User_name" value="User" vertex="1" parent="User" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="User_attributes" value="- userId: UUID&lt;br/&gt;- fullName: String&lt;br/&gt;- email: String&lt;br/&gt;- passwordHash: String&lt;br/&gt;- role: UserRole&lt;br/&gt;- studentVerified: Boolean" vertex="1" parent="User" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="160" />
+        </mxCell>
+        <mxCell id="User_operations" value="+ isStudentVerified(): boolean" vertex="1" parent="User" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="198" width="330" height="40" />
+        </mxCell>
+        <mxCell id="OrganiserRequest" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="940" y="115" width="330" height="190" />
+        </mxCell>
+        <mxCell id="OrganiserRequest_name" value="OrganiserRequest" vertex="1" parent="OrganiserRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="OrganiserRequest_attributes" value="- requestId: UUID&lt;br/&gt;- status: OrganiserRequestStatus&lt;br/&gt;- resolvedAt: Instant&lt;br/&gt;- notified: boolean" vertex="1" parent="OrganiserRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="112" />
+        </mxCell>
+        <mxCell id="OrganiserRequest_operations" value="+ setStatus(status): void" vertex="1" parent="OrganiserRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="150" width="330" height="40" />
+        </mxCell>
+        <mxCell id="StudentVerificationRequest" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1410" y="115" width="360" height="214" />
+        </mxCell>
+        <mxCell id="StudentVerificationRequest_name" value="StudentVerificationRequest" vertex="1" parent="StudentVerificationRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="360" height="38" />
+        </mxCell>
+        <mxCell id="StudentVerificationRequest_attributes" value="- requestId: UUID&lt;br/&gt;- university: String&lt;br/&gt;- studentNumber: String&lt;br/&gt;- cardImage: String&lt;br/&gt;- status: StudentVerificationStatus" vertex="1" parent="StudentVerificationRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="360" height="136" />
+        </mxCell>
+        <mxCell id="StudentVerificationRequest_operations" value="+ resolve(outcome, notified): void" vertex="1" parent="StudentVerificationRequest" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="174" width="360" height="40" />
+        </mxCell>
+        <mxCell id="FloorPlan" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="470" width="330" height="238" />
+        </mxCell>
+        <mxCell id="FloorPlan_name" value="FloorPlan" vertex="1" parent="FloorPlan" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="FloorPlan_attributes" value="- floorPlanId: UUID&lt;br/&gt;- name: String&lt;br/&gt;- layoutJson: String&lt;br/&gt;- capacity: Integer&lt;br/&gt;- shared: boolean" vertex="1" parent="FloorPlan" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="136" />
+        </mxCell>
+        <mxCell id="FloorPlan_operations" value="+ publish(): void&lt;br/&gt;+ unpublish(): void" vertex="1" parent="FloorPlan" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="174" width="330" height="64" />
+        </mxCell>
+        <mxCell id="Event" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="470" y="470" width="330" height="334" />
+        </mxCell>
+        <mxCell id="Event_name" value="Event" vertex="1" parent="Event" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="Event_attributes" value="- eventId: UUID&lt;br/&gt;- title: String&lt;br/&gt;- status: EventStatus&lt;br/&gt;- startsAt: Instant&lt;br/&gt;- standardPrice: BigDecimal&lt;br/&gt;- premiumPrice: BigDecimal&lt;br/&gt;- category: String&lt;br/&gt;- venueName: String&lt;br/&gt;- city: String&lt;br/&gt;- studentDiscountPercent: Integer" vertex="1" parent="Event" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="256" />
+        </mxCell>
+        <mxCell id="Event_operations" value="+ hasStudentDiscount(): boolean" vertex="1" parent="Event" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="294" width="330" height="40" />
+        </mxCell>
+        <mxCell id="Booking" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="940" y="470" width="330" height="214" />
+        </mxCell>
+        <mxCell id="Booking_name" value="Booking" vertex="1" parent="Booking" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="Booking_attributes" value="- bookingId: UUID&lt;br/&gt;- status: BookingStatus&lt;br/&gt;- totalAmount: BigDecimal&lt;br/&gt;- paymentReference: String&lt;br/&gt;- seatIds: List&amp;lt;UUID&amp;gt;" vertex="1" parent="Booking" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="136" />
+        </mxCell>
+        <mxCell id="Booking_operations" value="+ pricePaidFor(seat): BigDecimal" vertex="1" parent="Booking" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="174" width="330" height="40" />
+        </mxCell>
+        <mxCell id="Ticket" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1410" y="470" width="360" height="166" />
+        </mxCell>
+        <mxCell id="Ticket_name" value="Ticket" vertex="1" parent="Ticket" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="360" height="38" />
+        </mxCell>
+        <mxCell id="Ticket_attributes" value="- ticketId: UUID&lt;br/&gt;- ticketCode: String {unique}&lt;br/&gt;- issuedAt: Instant" vertex="1" parent="Ticket" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="360" height="88" />
+        </mxCell>
+        <mxCell id="Ticket_operations" value="+ getTicketCode(): String" vertex="1" parent="Ticket" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="126" width="360" height="40" />
+        </mxCell>
+        <mxCell id="Seat" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="880" width="330" height="214" />
+        </mxCell>
+        <mxCell id="Seat_name" value="Seat" vertex="1" parent="Seat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="Seat_attributes" value="- seatId: UUID&lt;br/&gt;- label: String&lt;br/&gt;- tier: SeatTier&lt;br/&gt;- x: Integer&lt;br/&gt;- y: Integer" vertex="1" parent="Seat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="136" />
+        </mxCell>
+        <mxCell id="Seat_operations" value="+ getTier(): SeatTier" vertex="1" parent="Seat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="174" width="330" height="40" />
+        </mxCell>
+        <mxCell id="EventSeat" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="470" y="880" width="330" height="286" />
+        </mxCell>
+        <mxCell id="EventSeat_name" value="EventSeat" vertex="1" parent="EventSeat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="330" height="38" />
+        </mxCell>
+        <mxCell id="EventSeat_attributes" value="- eventSeatId: UUID&lt;br/&gt;- label: String&lt;br/&gt;- price: BigDecimal&lt;br/&gt;- status: SeatStatus&lt;br/&gt;- version: Long&lt;br/&gt;- holdExpiresAt: Instant" vertex="1" parent="EventSeat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="38" width="330" height="160" />
+        </mxCell>
+        <mxCell id="EventSeat_operations" value="+ isHoldActiveAt(now): boolean&lt;br/&gt;+ hold(customer, expiresAt): void&lt;br/&gt;+ book(booking): void" vertex="1" parent="EventSeat" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;">
+          <mxGeometry as="geometry" x="0" y="198" width="330" height="88" />
+        </mxCell>
+        <mxCell id="u_v" value="organiser" edge="1" parent="1" source="User" target="Venue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.3;entryX=1;entryY=0.3;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="u_v_s" value="1" vertex="1" connectable="0" parent="u_v" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_v_t" value="0..*" vertex="1" connectable="0" parent="u_v" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_org" value="user" edge="1" parent="1" source="User" target="OrganiserRequest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.2;entryX=0;entryY=0.25;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="u_org_s" value="1" vertex="1" connectable="0" parent="u_org" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_org_t" value="0..*" vertex="1" connectable="0" parent="u_org" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_stu" value="user" edge="1" parent="1" source="User" target="StudentVerificationRequest" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.05;entryX=0;entryY=0.4;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="850" y="95" />
+              <mxPoint x="1360" y="95" />
+              <mxPoint x="1360" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_stu_s" value="1" vertex="1" connectable="0" parent="u_stu" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_stu_t" value="0..*" vertex="1" connectable="0" parent="u_stu" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_event" value="organiser" edge="1" parent="1" source="User" target="Event" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="u_event_s" value="1" vertex="1" connectable="0" parent="u_event" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_event_t" value="0..*" vertex="1" connectable="0" parent="u_event" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_plan" value="organiser" edge="1" parent="1" source="User" target="FloorPlan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.85;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="425" y="380" />
+              <mxPoint x="425" y="430" />
+              <mxPoint x="205" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_plan_s" value="0..1" vertex="1" connectable="0" parent="u_plan" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_plan_t" value="0..*" vertex="1" connectable="0" parent="u_plan" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_booking" value="customer" edge="1" parent="1" source="User" target="Booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.8;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="855" y="410" />
+              <mxPoint x="1105" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_booking_s" value="1" vertex="1" connectable="0" parent="u_booking" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_booking_t" value="0..*" vertex="1" connectable="0" parent="u_booking" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_hold" value="heldBy" edge="1" parent="1" source="User" target="EventSeat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.65;entryX=1;entryY=0.4;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="875" y="345" />
+              <mxPoint x="875" y="1000" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_hold_s" value="0..1" vertex="1" connectable="0" parent="u_hold" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="u_hold_t" value="0..*" vertex="1" connectable="0" parent="u_hold" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="plan_event" value="floorPlan" edge="1" parent="1" source="FloorPlan" target="Event" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;entryX=0;entryY=0.4;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="plan_event_s" value="0..1" vertex="1" connectable="0" parent="plan_event" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="plan_event_t" value="0..*" vertex="1" connectable="0" parent="plan_event" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="plan_seat" value="floorPlan" edge="1" parent="1" source="FloorPlan" target="Seat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="plan_seat_s" value="1" vertex="1" connectable="0" parent="plan_seat" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="plan_seat_t" value="0..*" vertex="1" connectable="0" parent="plan_seat" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="event_booking" value="event" edge="1" parent="1" source="Event" target="Booking" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.3;entryX=0;entryY=0.4;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="event_booking_s" value="1" vertex="1" connectable="0" parent="event_booking" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="event_booking_t" value="0..*" vertex="1" connectable="0" parent="event_booking" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="event_seats" value="event" edge="1" parent="1" source="Event" target="EventSeat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="event_seats_s" value="1" vertex="1" connectable="0" parent="event_seats" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="event_seats_t" value="0..*" vertex="1" connectable="0" parent="event_seats" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="booking_seat" value="booking" edge="1" parent="1" source="Booking" target="EventSeat" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=1;entryY=0.7;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="1105" y="815" />
+              <mxPoint x="825" y="815" />
+              <mxPoint x="825" y="1080" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="booking_seat_s" value="0..1" vertex="1" connectable="0" parent="booking_seat" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="booking_seat_t" value="0..*" vertex="1" connectable="0" parent="booking_seat" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="booking_ticket" value="booking" edge="1" parent="1" source="Booking" target="Ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.4;entryX=0;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1" y="18" />
+        </mxCell>
+        <mxCell id="booking_ticket_s" value="1" vertex="1" connectable="0" parent="booking_ticket" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="booking_ticket_t" value="0..*" vertex="1" connectable="0" parent="booking_ticket" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seat_ticket" value="seat {unique}" edge="1" parent="1" source="EventSeat" target="Ticket" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;entryX=1;entryY=0.7;">
+          <mxGeometry as="geometry" relative="1" y="18">
+            <Array as="points">
+              <mxPoint x="635" y="1190" />
+              <mxPoint x="1790" y="1190" />
+              <mxPoint x="1790" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seat_ticket_s" value="1" vertex="1" connectable="0" parent="seat_ticket" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="-0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="seat_ticket_t" value="0..1" vertex="1" connectable="0" parent="seat_ticket" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontFamily=Arial;fontSize=18;labelBackgroundColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="0.87" y="-13" relative="1">
+            <mxPoint as="offset" x="0" y="0" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="domain_notes" value="&lt;b&gt;Reading this view&lt;/b&gt;&lt;br/&gt;− private attribute; + public operation. Parameter types are abbreviated.&lt;br/&gt;Association-end numbers state how many instances may be related.&lt;br/&gt;Only selected members are shown; getters, setters and constructors are mostly omitted.&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Implementation boundaries&lt;/b&gt;&lt;br/&gt;Roles are UserRole values, not User subclasses. A built-in FloorPlan may have no organiser. Event stores category, venueName and city as text; it has no Venue association. EventSeat has no stored Seat reference.&lt;br/&gt;&lt;br/&gt;Pending/cancelled bookings may have no linked EventSeat or Ticket. Confirmation links the sold seats and issues one Ticket per seat. Booking.seatIds separately records the selected IDs before confirmation." vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;shape=note;fillColor=#FFFDF2;align=left;verticalAlign=top;spacing=12;fontSize=17;">
+          <mxGeometry as="geometry" x="940" y="875" width="830" height="280" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page1" name="Application classes">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1810" pageHeight="1270" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Class diagram  |  B  Application structure" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=28;">
+          <mxGeometry as="geometry" x="35" y="15" width="1740" height="40" />
+        </mxCell>
+        <mxCell id="subtitle" value="Perch event ticketing • Business operations and selected collaborators • Dashed arrows denote dependencies" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=17;">
+          <mxGeometry as="geometry" x="35" y="55" width="1740" height="35" />
+        </mxCell>
+        <mxCell id="UserService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="115" width="365" height="142" />
+        </mxCell>
+        <mxCell id="UserService_name" value="UserService" vertex="1" parent="UserService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="365" height="38" />
+        </mxCell>
+        <mxCell id="UserService_attributes" value="- userRepository: UserRepository" vertex="1" parent="UserService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="365" height="40" />
+        </mxCell>
+        <mxCell id="UserService_operations" value="+ register(…): UserDTO&lt;br/&gt;+ login(…): UserDTO" vertex="1" parent="UserService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="78" width="365" height="64" />
+        </mxCell>
+        <mxCell id="OrganiserRequestService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="490" y="115" width="365" height="162" />
+        </mxCell>
+        <mxCell id="OrganiserRequestService_name" value="OrganiserRequestService" vertex="1" parent="OrganiserRequestService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="365" height="38" />
+        </mxCell>
+        <mxCell id="OrganiserRequestService_attributes" value="" vertex="1" parent="OrganiserRequestService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="365" height="36" />
+        </mxCell>
+        <mxCell id="OrganiserRequestService_operations" value="+ submit(…): UserDTO&lt;br/&gt;+ approve(…): OrganiserRequestDTO&lt;br/&gt;+ reject(…): OrganiserRequestDTO" vertex="1" parent="OrganiserRequestService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="365" height="88" />
+        </mxCell>
+        <mxCell id="StudentVerificationService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="940" y="115" width="400" height="162" />
+        </mxCell>
+        <mxCell id="StudentVerificationService_name" value="StudentVerificationService" vertex="1" parent="StudentVerificationService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="400" height="38" />
+        </mxCell>
+        <mxCell id="StudentVerificationService_attributes" value="" vertex="1" parent="StudentVerificationService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="400" height="36" />
+        </mxCell>
+        <mxCell id="StudentVerificationService_operations" value="+ submit(…): StudentVerificationDTO&lt;br/&gt;+ approve(…): StudentVerificationDTO&lt;br/&gt;+ reject(…): StudentVerificationDTO" vertex="1" parent="StudentVerificationService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="400" height="88" />
+        </mxCell>
+        <mxCell id="AdminService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1410" y="115" width="365" height="118" />
+        </mxCell>
+        <mxCell id="AdminService_name" value="AdminService" vertex="1" parent="AdminService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="365" height="38" />
+        </mxCell>
+        <mxCell id="AdminService_attributes" value="- eventSeatRepository: EventSeatRepository" vertex="1" parent="AdminService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="365" height="40" />
+        </mxCell>
+        <mxCell id="AdminService_operations" value="+ getStats(): AdminStatsDTO" vertex="1" parent="AdminService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="78" width="365" height="40" />
+        </mxCell>
+        <mxCell id="VenueService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="390" width="415" height="138" />
+        </mxCell>
+        <mxCell id="VenueService_name" value="VenueService" vertex="1" parent="VenueService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="415" height="38" />
+        </mxCell>
+        <mxCell id="VenueService_attributes" value="" vertex="1" parent="VenueService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="415" height="36" />
+        </mxCell>
+        <mxCell id="VenueService_operations" value="+ getVenuesForOrganiser(…): List&amp;lt;VenueDTO&amp;gt;&lt;br/&gt;+ getVenueForOrganiser(…): VenueDTO" vertex="1" parent="VenueService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="415" height="64" />
+        </mxCell>
+        <mxCell id="EventService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="490" y="390" width="480" height="210" />
+        </mxCell>
+        <mxCell id="EventService_name" value="EventService" vertex="1" parent="EventService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="480" height="38" />
+        </mxCell>
+        <mxCell id="EventService_attributes" value="" vertex="1" parent="EventService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="480" height="36" />
+        </mxCell>
+        <mxCell id="EventService_operations" value="+ createEvent(…): EventDTO&lt;br/&gt;+ publishEvent(…): EventDTO&lt;br/&gt;+ updateEventPricing(…): EventDTO&lt;br/&gt;+ createFloorPlan(…): FloorPlanDTO&lt;br/&gt;+ cloneSharedFloorPlan(…): FloorPlanDTO" vertex="1" parent="EventService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="480" height="136" />
+        </mxCell>
+        <mxCell id="SeatHoldService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1050" y="390" width="430" height="162" />
+        </mxCell>
+        <mxCell id="SeatHoldService_name" value="SeatHoldService" vertex="1" parent="SeatHoldService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="430" height="38" />
+        </mxCell>
+        <mxCell id="SeatHoldService_attributes" value="" vertex="1" parent="SeatHoldService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="430" height="36" />
+        </mxCell>
+        <mxCell id="SeatHoldService_operations" value="+ holdSeat(…): SeatHoldDTO&lt;br/&gt;+ releaseHold(…): void&lt;br/&gt;+ releaseExpiredHolds(): int" vertex="1" parent="SeatHoldService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="430" height="88" />
+        </mxCell>
+        <mxCell id="ExpiredSeatHoldReleaseJob" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1540" y="390" width="235" height="114" />
+        </mxCell>
+        <mxCell id="ExpiredSeatHoldReleaseJob_name" value="ExpiredSeatHoldReleaseJob" vertex="1" parent="ExpiredSeatHoldReleaseJob" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;fontSize=14;">
+          <mxGeometry as="geometry" x="0" y="0" width="235" height="38" />
+        </mxCell>
+        <mxCell id="ExpiredSeatHoldReleaseJob_attributes" value="" vertex="1" parent="ExpiredSeatHoldReleaseJob" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;fontSize=14;">
+          <mxGeometry as="geometry" x="0" y="38" width="235" height="36" />
+        </mxCell>
+        <mxCell id="ExpiredSeatHoldReleaseJob_operations" value="+ releaseExpiredHolds(): void" vertex="1" parent="ExpiredSeatHoldReleaseJob" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;fontSize=14;">
+          <mxGeometry as="geometry" x="0" y="74" width="235" height="40" />
+        </mxCell>
+        <mxCell id="BookingService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="770" width="425" height="166" />
+        </mxCell>
+        <mxCell id="BookingService_name" value="BookingService" vertex="1" parent="BookingService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="425" height="38" />
+        </mxCell>
+        <mxCell id="BookingService_attributes" value="- paymentProvider: PaymentProvider" vertex="1" parent="BookingService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="425" height="40" />
+        </mxCell>
+        <mxCell id="BookingService_operations" value="+ startCheckout(…): BookingDTO&lt;br/&gt;+ confirmPaidBooking(…): BookingDTO&lt;br/&gt;+ markPaymentFailed(…): void" vertex="1" parent="BookingService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="78" width="425" height="88" />
+        </mxCell>
+        <mxCell id="TicketService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="560" y="770" width="365" height="162" />
+        </mxCell>
+        <mxCell id="TicketService_name" value="TicketService" vertex="1" parent="TicketService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="365" height="38" />
+        </mxCell>
+        <mxCell id="TicketService_attributes" value="" vertex="1" parent="TicketService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="365" height="36" />
+        </mxCell>
+        <mxCell id="TicketService_operations" value="+ issue(…): void&lt;br/&gt;+ getTickets(…): List&amp;lt;BookingDTO.Ticket&amp;gt;&lt;br/&gt;+ qrPng(…): byte[]" vertex="1" parent="TicketService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="365" height="88" />
+        </mxCell>
+        <mxCell id="BookingEmailService" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1050" y="770" width="430" height="118" />
+        </mxCell>
+        <mxCell id="BookingEmailService_name" value="BookingEmailService" vertex="1" parent="BookingEmailService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="430" height="38" />
+        </mxCell>
+        <mxCell id="BookingEmailService_attributes" value="- mailSender: JavaMailSender [0..1]" vertex="1" parent="BookingEmailService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="430" height="40" />
+        </mxCell>
+        <mxCell id="BookingEmailService_operations" value="+ sendBookingConfirmation(…): void" vertex="1" parent="BookingEmailService" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="78" width="430" height="40" />
+        </mxCell>
+        <mxCell id="PaymentProvider" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="40" y="1050" width="425" height="158" />
+        </mxCell>
+        <mxCell id="PaymentProvider_name" value="&amp;lt;&amp;lt;interface&amp;gt;&amp;gt;&lt;br/&gt;PaymentProvider" vertex="1" parent="PaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="425" height="58" />
+        </mxCell>
+        <mxCell id="PaymentProvider_attributes" value="" vertex="1" parent="PaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="58" width="425" height="36" />
+        </mxCell>
+        <mxCell id="PaymentProvider_operations" value="+ createPaymentIntent(…): PaymentIntentResult&lt;br/&gt;+ autoConfirms(): boolean" vertex="1" parent="PaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="94" width="425" height="64" />
+        </mxCell>
+        <mxCell id="MockPaymentProvider" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="560" y="1080" width="365" height="114" />
+        </mxCell>
+        <mxCell id="MockPaymentProvider_name" value="MockPaymentProvider" vertex="1" parent="MockPaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="365" height="38" />
+        </mxCell>
+        <mxCell id="MockPaymentProvider_attributes" value="" vertex="1" parent="MockPaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="365" height="36" />
+        </mxCell>
+        <mxCell id="MockPaymentProvider_operations" value="+ autoConfirms(): boolean" vertex="1" parent="MockPaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="74" width="365" height="40" />
+        </mxCell>
+        <mxCell id="StripePaymentProvider" value="" vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;">
+          <mxGeometry as="geometry" x="1050" y="1080" width="430" height="118" />
+        </mxCell>
+        <mxCell id="StripePaymentProvider_name" value="StripePaymentProvider" vertex="1" parent="StripePaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#EDF3F7;fontStyle=1;align=center;">
+          <mxGeometry as="geometry" x="0" y="0" width="430" height="38" />
+        </mxCell>
+        <mxCell id="StripePaymentProvider_attributes" value="- client: StripeClient" vertex="1" parent="StripePaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="38" width="430" height="40" />
+        </mxCell>
+        <mxCell id="StripePaymentProvider_operations" value="+ createPaymentIntent(…): PaymentIntentResult" vertex="1" parent="StripePaymentProvider" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=10;spacingTop=8;fontSize=16;">
+          <mxGeometry as="geometry" x="0" y="78" width="430" height="40" />
+        </mxCell>
+        <mxCell id="job_hold" value="" edge="1" parent="1" source="ExpiredSeatHoldReleaseJob" target="SeatHoldService" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=open;endFill=0;exitX=0;exitY=0.5;entryX=1;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="booking_ticketservice" value="" edge="1" parent="1" source="BookingService" target="TicketService" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=open;endFill=0;exitX=1;exitY=0.4;entryX=0;entryY=0.4;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="booking_email" value="" edge="1" parent="1" source="BookingService" target="BookingEmailService" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=open;endFill=0;exitX=1;exitY=0.9;entryX=0;entryY=0.9;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="500" y="1005" />
+              <mxPoint x="1010" y="1005" />
+              <mxPoint x="1010" y="900" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="email_ticket" value="" edge="1" parent="1" source="BookingEmailService" target="TicketService" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=open;endFill=0;exitX=0;exitY=0.3;entryX=1;entryY=0.3;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="booking_provider" value="" edge="1" parent="1" source="BookingService" target="PaymentProvider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=open;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="mock_interface" value="" edge="1" parent="1" source="MockPaymentProvider" target="PaymentProvider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=block;endFill=0;exitX=0;exitY=0.5;entryX=1;entryY=0.5;">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="stripe_interface" value="" edge="1" parent="1" source="StripePaymentProvider" target="PaymentProvider" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#334155;strokeWidth=1.5;fontFamily=Arial;fontSize=17;labelBackgroundColor=#FFFFFF;dashed=1;endArrow=block;endFill=0;exitX=0.5;exitY=1;entryX=0.5;entryY=1;">
+          <mxGeometry as="geometry" relative="1">
+            <Array as="points">
+              <mxPoint x="1265" y="1245" />
+              <mxPoint x="252" y="1245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="app_notes" value="&lt;b&gt;Scope&lt;/b&gt;&lt;br/&gt;All services and the scheduled job are shown. Members are selective; … abbreviates parameters.&lt;br/&gt;&lt;br/&gt;Controllers delegate to services; repositories persist the domain objects in panel A. DTOs cross HTTP boundaries.&lt;br/&gt;&lt;br/&gt;Hollow triangles denote interface realisation. Mock is the default payment mode. Stripe confirms by webhook.&lt;br/&gt;&lt;br/&gt;JavaMailSender is optional. Email is skipped without mail configuration." vertex="1" parent="1" style="whiteSpace=wrap;html=1;fontFamily=Arial;fontSize=18;strokeColor=#334155;shape=note;fillColor=#FFFDF2;align=left;verticalAlign=top;spacing=12;fontSize=16;">
+          <mxGeometry as="geometry" x="1510" y="650" width="265" height="585" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

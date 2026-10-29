@@ -1,0 +1,16 @@
+{
+  "name": "Perch",
+  "short_name": "Perch",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f6f7",
+  "theme_color": "#0a3b37",
+  "icons": [
+    {
+      "src": "/branding/perch-app-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

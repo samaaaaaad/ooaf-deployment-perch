@@ -1,0 +1,580 @@
+{
+  "commit": "48d55b49ecd9a7f21ba48b9c13d531469bb8cef4",
+  "classes": [
+    {
+      "name": "Venue",
+      "kind": "model",
+      "attributes": [
+        "- venueId: UUID",
+        "- name: String",
+        "- address: String",
+        "- city: String",
+        "- state: String"
+      ],
+      "operations": [
+        "+ getName(): String"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "User",
+      "kind": "model",
+      "attributes": [
+        "- userId: UUID",
+        "- fullName: String",
+        "- email: String",
+        "- passwordHash: String",
+        "- role: UserRole",
+        "- studentVerified: Boolean"
+      ],
+      "operations": [
+        "+ isStudentVerified(): boolean"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "OrganiserRequest",
+      "kind": "model",
+      "attributes": [
+        "- requestId: UUID",
+        "- status: OrganiserRequestStatus",
+        "- resolvedAt: Instant",
+        "- notified: boolean"
+      ],
+      "operations": [
+        "+ setStatus(status): void"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "StudentVerificationRequest",
+      "kind": "model",
+      "attributes": [
+        "- requestId: UUID",
+        "- university: String",
+        "- studentNumber: String",
+        "- cardImage: String",
+        "- status: StudentVerificationStatus"
+      ],
+      "operations": [
+        "+ resolve(outcome, notified): void"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "FloorPlan",
+      "kind": "model",
+      "attributes": [
+        "- floorPlanId: UUID",
+        "- name: String",
+        "- layoutJson: String",
+        "- capacity: Integer",
+        "- shared: boolean"
+      ],
+      "operations": [
+        "+ publish(): void",
+        "+ unpublish(): void"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "Event",
+      "kind": "model",
+      "attributes": [
+        "- eventId: UUID",
+        "- title: String",
+        "- status: EventStatus",
+        "- startsAt: Instant",
+        "- standardPrice: BigDecimal",
+        "- premiumPrice: BigDecimal",
+        "- category: String",
+        "- venueName: String",
+        "- city: String",
+        "- studentDiscountPercent: Integer"
+      ],
+      "operations": [
+        "+ hasStudentDiscount(): boolean"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "Booking",
+      "kind": "model",
+      "attributes": [
+        "- bookingId: UUID",
+        "- status: BookingStatus",
+        "- totalAmount: BigDecimal",
+        "- paymentReference: String",
+        "- seatIds: List<UUID>"
+      ],
+      "operations": [
+        "+ pricePaidFor(seat): BigDecimal"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "Ticket",
+      "kind": "model",
+      "attributes": [
+        "- ticketId: UUID",
+        "- ticketCode: String {unique}",
+        "- issuedAt: Instant"
+      ],
+      "operations": [
+        "+ getTicketCode(): String"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "Seat",
+      "kind": "model",
+      "attributes": [
+        "- seatId: UUID",
+        "- label: String",
+        "- tier: SeatTier",
+        "- x: Integer",
+        "- y: Integer"
+      ],
+      "operations": [
+        "+ getTier(): SeatTier"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "EventSeat",
+      "kind": "model",
+      "attributes": [
+        "- eventSeatId: UUID",
+        "- label: String",
+        "- price: BigDecimal",
+        "- status: SeatStatus",
+        "- version: Long",
+        "- holdExpiresAt: Instant"
+      ],
+      "operations": [
+        "+ isHoldActiveAt(now): boolean",
+        "+ hold(customer, expiresAt): void",
+        "+ book(booking): void"
+      ],
+      "page": "Domain classes"
+    },
+    {
+      "name": "UserService",
+      "kind": "service",
+      "attributes": [
+        "- userRepository: UserRepository"
+      ],
+      "operations": [
+        "+ register(req): UserDTO",
+        "+ login(req): UserDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "OrganiserRequestService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ submit(userId): UserDTO",
+        "+ approve(requestId): OrganiserRequestDTO",
+        "+ reject(requestId): OrganiserRequestDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "StudentVerificationService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ submit(userId, body): StudentVerificationDTO",
+        "+ approve(requestId): StudentVerificationDTO",
+        "+ reject(requestId): StudentVerificationDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "AdminService",
+      "kind": "service",
+      "attributes": [
+        "- eventSeatRepository: EventSeatRepository"
+      ],
+      "operations": [
+        "+ getStats(): AdminStatsDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "VenueService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ getVenuesForOrganiser(organiserId): List<VenueDTO>",
+        "+ getVenueForOrganiser(organiserId, venueId): VenueDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "EventService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ createEvent(organiserId, request): EventDTO",
+        "+ publishEvent(organiserId, eventId): EventDTO",
+        "+ updateEventPricing(organiserId, eventId, request): EventDTO",
+        "+ createFloorPlan(organiserId, request): FloorPlanDTO",
+        "+ cloneSharedFloorPlan(organiserId, floorPlanId): FloorPlanDTO"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "SeatHoldService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ holdSeat(eventId, seatId, customerId): SeatHoldDTO",
+        "+ releaseHold(eventId, seatId, customerId): void",
+        "+ releaseExpiredHolds(): int"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "ExpiredSeatHoldReleaseJob",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ releaseExpiredHolds(): void"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "BookingService",
+      "kind": "service",
+      "attributes": [
+        "- paymentProvider: PaymentProvider"
+      ],
+      "operations": [
+        "+ startCheckout(eventId, request): BookingDTO",
+        "+ confirmPaidBooking(paymentIntentId): BookingDTO",
+        "+ markPaymentFailed(paymentIntentId): void"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "TicketService",
+      "kind": "service",
+      "attributes": [],
+      "operations": [
+        "+ issue(booking, seats): void",
+        "+ getTickets(bookingId): List<BookingDTO.Ticket>",
+        "+ qrPng(ticketCode): byte[]"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "BookingEmailService",
+      "kind": "service",
+      "attributes": [
+        "- mailSender: JavaMailSender [0..1]"
+      ],
+      "operations": [
+        "+ sendBookingConfirmation(booking, seats): void"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "PaymentProvider",
+      "kind": "interface",
+      "attributes": [],
+      "operations": [
+        "+ createPaymentIntent(...): PaymentIntentResult",
+        "+ autoConfirms(): boolean"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "MockPaymentProvider",
+      "kind": "payment",
+      "attributes": [],
+      "operations": [
+        "+ autoConfirms(): boolean"
+      ],
+      "page": "Application classes"
+    },
+    {
+      "name": "StripePaymentProvider",
+      "kind": "payment",
+      "attributes": [
+        "- client: StripeClient"
+      ],
+      "operations": [
+        "+ createPaymentIntent(...): PaymentIntentResult"
+      ],
+      "page": "Application classes"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "u_v",
+      "source": "User",
+      "target": "Venue",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_org",
+      "source": "User",
+      "target": "OrganiserRequest",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_stu",
+      "source": "User",
+      "target": "StudentVerificationRequest",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_event",
+      "source": "User",
+      "target": "Event",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_plan",
+      "source": "User",
+      "target": "FloorPlan",
+      "sourceMultiplicity": "0..1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_booking",
+      "source": "User",
+      "target": "Booking",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "u_hold",
+      "source": "User",
+      "target": "EventSeat",
+      "sourceMultiplicity": "0..1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "plan_event",
+      "source": "FloorPlan",
+      "target": "Event",
+      "sourceMultiplicity": "0..1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "plan_seat",
+      "source": "FloorPlan",
+      "target": "Seat",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "event_booking",
+      "source": "Event",
+      "target": "Booking",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "event_seats",
+      "source": "Event",
+      "target": "EventSeat",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "booking_seat",
+      "source": "Booking",
+      "target": "EventSeat",
+      "sourceMultiplicity": "0..1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "booking_ticket",
+      "source": "Booking",
+      "target": "Ticket",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..*",
+      "page": "Domain classes"
+    },
+    {
+      "id": "seat_ticket",
+      "source": "EventSeat",
+      "target": "Ticket",
+      "sourceMultiplicity": "1",
+      "targetMultiplicity": "0..1",
+      "page": "Domain classes"
+    },
+    {
+      "id": "job_hold",
+      "source": "ExpiredSeatHoldReleaseJob",
+      "target": "SeatHoldService",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "booking_ticketservice",
+      "source": "BookingService",
+      "target": "TicketService",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "booking_email",
+      "source": "BookingService",
+      "target": "BookingEmailService",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "email_ticket",
+      "source": "BookingEmailService",
+      "target": "TicketService",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "booking_provider",
+      "source": "BookingService",
+      "target": "PaymentProvider",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "mock_interface",
+      "source": "MockPaymentProvider",
+      "target": "PaymentProvider",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    },
+    {
+      "id": "stripe_interface",
+      "source": "StripePaymentProvider",
+      "target": "PaymentProvider",
+      "sourceMultiplicity": null,
+      "targetMultiplicity": null,
+      "page": "Application classes"
+    }
+  ],
+  "source_files": {
+    "src/main/java/com/example/event_ticketing/EventTicketingApplication.java": "eb08d23da225b433f357fef08887733e1772466c2d7139e54fa030927ed35146",
+    "src/main/java/com/example/event_ticketing/config/BookingStatusSchemaFixer.java": "530bb63e56967782f3e94d32f656c3ddf3e665528241806712af2f409d7b5d93",
+    "src/main/java/com/example/event_ticketing/config/ClockConfig.java": "de2e59126e684f5265588425299219fed512da553aee6d09c621b6aec0d20e72",
+    "src/main/java/com/example/event_ticketing/config/DemoAccountSeeder.java": "2d4ea0cc8e097d4ac936c4ef9ea011ca8f3b3b8d9c99e9b607aa8d21ee7f08c3",
+    "src/main/java/com/example/event_ticketing/config/DemoEventSeeder.java": "43967baa2685a8d5f06035d4eb2092007abc94bae0d66cd4c26064c5a0558f90",
+    "src/main/java/com/example/event_ticketing/config/SchedulingConfig.java": "c0ea65cf61be4472def3e762e676ee3b182348257b923c24c86c65bac812a28b",
+    "src/main/java/com/example/event_ticketing/controller/AdminController.java": "735e2b500506c8bf1496f4f13d5de60136c0a3198c9e85a6f57866e58ffb0322",
+    "src/main/java/com/example/event_ticketing/controller/BookingController.java": "ffec9c2034ef905862331be36519802a63f68d829fefe6ec31a0876131067a41",
+    "src/main/java/com/example/event_ticketing/controller/EventController.java": "74b1c7ddbb6244ed458a6f9509dae0b87b717b715d228272fc9d579ae54d96f4",
+    "src/main/java/com/example/event_ticketing/controller/FloorPlanController.java": "ae800d09a6fef80dd2d9d3b9ad9263d1bd578ee32407f0edbd971398601fe442",
+    "src/main/java/com/example/event_ticketing/controller/OrganiserRequestController.java": "617ff5204f2a4571ad6e05a837b0dbe11e92a4f6e271e066aa0a95b5a12753be",
+    "src/main/java/com/example/event_ticketing/controller/PaymentConfigController.java": "d189b2699bf79c7598c85aee35ba19a91f289e54c5e27a636e5be3d06a16b009",
+    "src/main/java/com/example/event_ticketing/controller/PublicEventController.java": "ecd6708570ba309fcd49927c45631a6bb3d6a509137b08e19554dabeafafb096",
+    "src/main/java/com/example/event_ticketing/controller/PublicFloorPlanController.java": "8c0c53b7f57c8cc05845a8e419fc7db72c065c81d8cdec77456efbeaa602c07a",
+    "src/main/java/com/example/event_ticketing/controller/SeatHoldController.java": "646ff6ce0269de522f1bca086fb8e54720b2f0ef1ae2146f63b1dd374c878a1f",
+    "src/main/java/com/example/event_ticketing/controller/SpaForwardingController.java": "8dd21bbd2e2f8bcef6446e84e6bf3c30950f8f94a7428ba7414d63f08b6301e8",
+    "src/main/java/com/example/event_ticketing/controller/StripeWebhookController.java": "bdf76b63077a025a4609b11324ca5702adc48f80d029e505719d9f026908264a",
+    "src/main/java/com/example/event_ticketing/controller/StudentVerificationController.java": "c424c9ff19dda33a1db44727ae940fa164679e019667de350a4567e726fa5fba",
+    "src/main/java/com/example/event_ticketing/controller/UserController.java": "3e08e82992847e2155b6011ef25a46b2c80b2ff3a0f418b21d55f321b25e5f44",
+    "src/main/java/com/example/event_ticketing/controller/VenueController.java": "ad51659f2ebdbdc0cf3b7f39f01094bf52832220ee26e8f331e10ccf5ad560df",
+    "src/main/java/com/example/event_ticketing/dto/AdminStatsDTO.java": "2729ae07d73ae2c45557570318e246e0c2c25de75eb8e881a02dd051eb91da44",
+    "src/main/java/com/example/event_ticketing/dto/ApiErrorDTO.java": "fc4c2c613f5aedcd209a1b969f2565577da9eadb361b2678e4e5bed740e8fb27",
+    "src/main/java/com/example/event_ticketing/dto/BookingDTO.java": "0e96ac237a42a19e4eee40107ce9cbea85fc7fb17365220951e48c00ea17adf8",
+    "src/main/java/com/example/event_ticketing/dto/CheckoutRequest.java": "23e24022f8694b65b887f61d172458916f9bad784d198e7591ce49afee60750a",
+    "src/main/java/com/example/event_ticketing/dto/CreateEventRequest.java": "04d6ba5bf85959785a761e64dad4c0cbd659e6cc241bc2ebe88e6e8d852c5ad7",
+    "src/main/java/com/example/event_ticketing/dto/EventDTO.java": "878f5ec71313552cf009d1de74d43c898ac19caec9a8df0d70a039dc55cbcb37",
+    "src/main/java/com/example/event_ticketing/dto/EventSeatDTO.java": "57a56c9abca04351032a215fb81f06495f8a8bb95dff7eb110e870e77dadecc3",
+    "src/main/java/com/example/event_ticketing/dto/FloorPlanDTO.java": "c328f674f67f570378887046e162aceb10e2a42a94e88c7755725feb61828740",
+    "src/main/java/com/example/event_ticketing/dto/FloorPlanRequest.java": "7cdefd64f61804e6840b65927cff5eb62be2ea46c842f6df10a4449ad2f42592",
+    "src/main/java/com/example/event_ticketing/dto/HoldSeatRequest.java": "7fafe7ff130d8f225bd8d0ae068e9f4e1b3cb2e3ba9e7aa64f4528f0fde27df2",
+    "src/main/java/com/example/event_ticketing/dto/LoginRequest.java": "b79a2a3b614d3f4c3dda8a71f4f94ae77dbc3c97a2f45ab1fe81987083d52353",
+    "src/main/java/com/example/event_ticketing/dto/OrganiserRequestDTO.java": "32a6bab78297889c7eafe88c95c99bf54612599140b4587ea08cc807cb38029f",
+    "src/main/java/com/example/event_ticketing/dto/PopularEventDTO.java": "abb8265d52adcf6de103e6f8199ef5c80fc033fc2a0ee46e807c7405ca0ccf0c",
+    "src/main/java/com/example/event_ticketing/dto/PublishEventRequest.java": "8653c53c7ccc4d1bea45aef4f0a54331775050e116459144afea5cc4bb6e3970",
+    "src/main/java/com/example/event_ticketing/dto/RegisterRequest.java": "2fe2b53b271c0c56ee2d8e9a45a8729a7c24a63b7e77f34add492b2c8db92c60",
+    "src/main/java/com/example/event_ticketing/dto/SeatDTO.java": "fb693db4008e5d15f7cdca2a027ca80daa144b0f39e0f2d0c2eabc259052dd80",
+    "src/main/java/com/example/event_ticketing/dto/SeatHoldDTO.java": "91003c9dc765cec7898e130411f47a21a7fe4fe68344cab851062c23039ae57f",
+    "src/main/java/com/example/event_ticketing/dto/StudentVerificationDTO.java": "8a921ac0289023e6c809a87f4652c76e547d3ea481d84bfe42858757c58e96c6",
+    "src/main/java/com/example/event_ticketing/dto/StudentVerificationRequestBody.java": "c4010909ce140c7cecdc59f8e1f93659b1f1743657df463d4329e50a54d2f143",
+    "src/main/java/com/example/event_ticketing/dto/UpdatePricingRequest.java": "66aa8d73898811cb0b522d024ba6ade79a1f5ad9ccdbcdf1d132a88598b13905",
+    "src/main/java/com/example/event_ticketing/dto/UserDTO.java": "cdd20c146767adaea1b3f2a0ca963e351d7fac5df837f0d01424a6e8ad469ff9",
+    "src/main/java/com/example/event_ticketing/dto/VenueDTO.java": "127a0c81d2cceea5d00462db0c3588f3464a7e261266195fff44b6a66db8fe1a",
+    "src/main/java/com/example/event_ticketing/exception/ApiExceptionHandler.java": "43dfd56ade4467d972b78cc02b02f5e10de3c725eac6602bbe4f67ebf1aafdeb",
+    "src/main/java/com/example/event_ticketing/exception/InvalidCredentialsException.java": "816de679287ff67fb732232db341a3413646f79dbce13ea40029257aadbf140d",
+    "src/main/java/com/example/event_ticketing/exception/ResourceNotFoundException.java": "0b1f339c2016cc5d0449575539728aa0890d341ca84e881c7f73fc176b427fca",
+    "src/main/java/com/example/event_ticketing/exception/SeatUnavailableException.java": "c6010db1dae40b17f886680875875ad47903eaaeedbdfe2d4dea8940d1e5acad",
+    "src/main/java/com/example/event_ticketing/exception/ValidationException.java": "5b584289522b3bbbebd67506869f78d7475015eaf370728b65c7867d91557690",
+    "src/main/java/com/example/event_ticketing/model/Booking.java": "e41229ef36993e1b1592eeccdfc18e4a151897d82b56475c4d4879e7b068e4e5",
+    "src/main/java/com/example/event_ticketing/model/BookingStatus.java": "fb3b595bade0e120bb51e2c97351705430ba473cffe4bffc5edf84846eb379c6",
+    "src/main/java/com/example/event_ticketing/model/Event.java": "9b11118f8a5cbc8864d2342855394ec9f8fa1d46d9f8a479cbbfd6bd06fb61d4",
+    "src/main/java/com/example/event_ticketing/model/EventCategory.java": "c0b7799fe9f93963b9c65ed295aec106afb8502a1ff0b8c5daa872f2855c54df",
+    "src/main/java/com/example/event_ticketing/model/EventSeat.java": "a3e968c2e59f6ab76703078c7a4821185ebc189fbe6153f0deaeafd5ac12d49b",
+    "src/main/java/com/example/event_ticketing/model/EventStatus.java": "848389a95d803cc1ba03cc0834f1b51fa260a9c23cda30dd3aada973ad2fcd67",
+    "src/main/java/com/example/event_ticketing/model/FloorPlan.java": "10fb71762d543381df7628cd1cd7aff54bad651aabc6b495c934e75cf7d5d995",
+    "src/main/java/com/example/event_ticketing/model/OrganiserRequest.java": "9d45e12cb2723954f5da1ed068becc786d95be5610ad1ef0db4606403f914c56",
+    "src/main/java/com/example/event_ticketing/model/OrganiserRequestStatus.java": "5016cf67cfc7d2b0ac8971f86968ac84bc322bba5ed1c384006be1876e9695cc",
+    "src/main/java/com/example/event_ticketing/model/Seat.java": "b1ac33abe4c4feab593017981a884ef2e54337fac946978e773b9f74d86faa79",
+    "src/main/java/com/example/event_ticketing/model/SeatStatus.java": "4fb45d2f573413284c2e08e657060bb8fd0b6f130e5e7b370ca1f7daf8c815ab",
+    "src/main/java/com/example/event_ticketing/model/SeatTier.java": "5c149d918427fe2e4b08ceed79304b212a4b3151155c28bd8d60e281fb42a101",
+    "src/main/java/com/example/event_ticketing/model/StudentVerificationRequest.java": "c055786b79f010a0d30cdcc920167538353a3b8a65a9ccc9e19602ffbfda1906",
+    "src/main/java/com/example/event_ticketing/model/StudentVerificationStatus.java": "b53641fae68daa93c740e326bf58ac9c29cf2a4fda7ce2303492f3f1e4081fbe",
+    "src/main/java/com/example/event_ticketing/model/Ticket.java": "b2d6f9b3fb2a48f6867f5073ec81cff96150399a47241ac09d6794a5a9a12af5",
+    "src/main/java/com/example/event_ticketing/model/User.java": "180b03b8ffc0d64f51b282ab07cacc80bda4d91fed60ad4f186d2906ba932669",
+    "src/main/java/com/example/event_ticketing/model/UserRole.java": "c539ecbbe7822b3ef7594c280cdc96b30202a3245f19df2d7742a6542c68bb33",
+    "src/main/java/com/example/event_ticketing/model/Venue.java": "24afdbd3b8fca0eaaa7c1ac34cf117e3bd18afd1a888c21941d47a663184b150",
+    "src/main/java/com/example/event_ticketing/payment/MockPaymentProvider.java": "b258609bc724fcec3517fa6bcfe59385a0380a95ff01cd2fdda351e45b204075",
+    "src/main/java/com/example/event_ticketing/payment/PaymentIntentResult.java": "fab6c0d258504e5d51096bc081ab7dc2d7e0a4fb175679b1d90e0652e9822464",
+    "src/main/java/com/example/event_ticketing/payment/PaymentProvider.java": "d8d54dd4318d949c78e209dbcd6f5045306ff1499eed202f98e3ef8843bf4d7f",
+    "src/main/java/com/example/event_ticketing/payment/StripePaymentProvider.java": "d0620ade1264710e971596724a7a08061a46b13347c6c2305d58c7ad5c7781da",
+    "src/main/java/com/example/event_ticketing/repository/BookingRepository.java": "21a1062b328c3bd0e52cc1abc54e97dac2e704dfbda3f61a405930110903e8ec",
+    "src/main/java/com/example/event_ticketing/repository/EventRepository.java": "606f563150992631184e23b8a8ce035ff2819355aefe586f706007a6fd186ab4",
+    "src/main/java/com/example/event_ticketing/repository/EventSeatRepository.java": "3e4726c26c7b3a6015cb3161c6caf12892c9f382772675f0ed81b5bacb649b56",
+    "src/main/java/com/example/event_ticketing/repository/FloorPlanRepository.java": "107f94ce21d34f00ebe3888e7d09924cd3441830c48925cd0b1fbacf629cf7fc",
+    "src/main/java/com/example/event_ticketing/repository/OrganiserRequestRepository.java": "6977f1443f5caaa666724127acfd10cbdcb8f64633429755c97712d7ce14eb6a",
+    "src/main/java/com/example/event_ticketing/repository/SeatRepository.java": "0c7e9aa46600f843d20eee0b68635563f28c704775f3f0bdbc8965bf119da551",
+    "src/main/java/com/example/event_ticketing/repository/StudentVerificationRequestRepository.java": "503813d658c788723ca1edd79b31bae2900ca79efe768f7645b1dcfd33d788cb",
+    "src/main/java/com/example/event_ticketing/repository/TicketRepository.java": "d704dda2f36c23ca946aeecc6e805680e91120b9d8e3e9d5a9950cb35a16fbcc",
+    "src/main/java/com/example/event_ticketing/repository/UserRepository.java": "7831707ca6c2c8d6c47dfca49b6f58d06ef599fdc857a7257c8dfc55dc4e49c6",
+    "src/main/java/com/example/event_ticketing/repository/VenueRepository.java": "1b34059848120c68742847cf93dc0789948ace70e9048bd3acac8627d22c983a",
+    "src/main/java/com/example/event_ticketing/service/AdminService.java": "56ca5539193aba7cbcf519bfd7f4bbd79d56919bab846b0e438447651c97c4a3",
+    "src/main/java/com/example/event_ticketing/service/BookingEmailService.java": "8eedc271cc52a4e751e6332cca3b5001330f25f37f8ab4f32d0c1aed15343350",
+    "src/main/java/com/example/event_ticketing/service/BookingService.java": "e4338acf3278607982c27573bf277ee4f29b79280979019704e64fc9e32fbc73",
+    "src/main/java/com/example/event_ticketing/service/EventService.java": "92a676f5fd9ca9b5e0f690b19fd89ff4360c75e72b48426c1a687746472f8b7d",
+    "src/main/java/com/example/event_ticketing/service/ExpiredSeatHoldReleaseJob.java": "7fdfa018238b82f1f1430c3eb5492811b8bb16ea13aa64d60ab9d26de287c95b",
+    "src/main/java/com/example/event_ticketing/service/OrganiserRequestService.java": "34b774a7b1dbfda401a936c3dd1618789d059e23587a770a5f4a5d32925a0fb7",
+    "src/main/java/com/example/event_ticketing/service/SeatHoldService.java": "e85c3fa6b22f1d1c9b14a03256a94c54bd82f32dac912c3ac465f96effebd792",
+    "src/main/java/com/example/event_ticketing/service/StudentVerificationService.java": "83556d903b015bb8bc3abd76499c41fd5399636cd75eeb3a0fe3b11102ab4916",
+    "src/main/java/com/example/event_ticketing/service/TicketService.java": "32545c2f0e62ebdbcfe4ee58bdde9aa732fd6e35ab60ff66ca0140a257a32c93",
+    "src/main/java/com/example/event_ticketing/service/UserService.java": "d4de6ce668478760ce9663389d812cc8bbdf303f8b5617d39186379a04e27553",
+    "src/main/java/com/example/event_ticketing/service/VenueService.java": "221f69d2b95ae1e9d392e5859861f11b9ca33750eda91373da7f3cc523f70719",
+    "src/main/java/com/example/event_ticketing/util/PasswordUtil.java": "a6a212de4750a3b4cae73c3030f57020a5a528b64b04253a7ecbd70b89f578a8",
+    "src/main/java/com/example/event_ticketing/util/PasswordValidator.java": "7cc33aae57d262cb9646764d18f9103a8b10b1ec7b98b38b7c141410588850ba",
+    "src/main/java/com/example/event_ticketing/util/StudentEligibility.java": "6a8cc62de69b5e9ef9e3478afc564d63e53d42727bf21d4159eed9652520f337"
+  }
+}

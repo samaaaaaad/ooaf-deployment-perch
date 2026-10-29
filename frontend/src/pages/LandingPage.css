@@ -83,12 +83,7 @@
 .lp-nav.is-stuck { background: rgba(8, 40, 37, 0.94); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18); }
 .lp-nav-inner { align-items: center; display: flex; gap: 1.5rem; height: 72px; justify-content: space-between; }
 .lp-brand { align-items: center; color: #fff; display: inline-flex; gap: 0.7rem; text-decoration: none; }
-.lp-brand-mark {
-  align-items: center; background: linear-gradient(140deg, var(--lp-gold), #c48f38);
-  border-radius: 10px; color: #23180a; display: inline-flex; font-size: 0.8rem; font-weight: 900;
-  height: 38px; justify-content: center; letter-spacing: -0.02em; width: 38px;
-}
-.lp-brand strong { font-size: 1.02rem; letter-spacing: -0.01em; }
+.lp-brand .perch-logo { width: clamp(110px, 12vw, 148px); }
 .lp-nav-links { align-items: center; display: flex; gap: 2rem; }
 .lp-nav-links a { color: rgba(255, 255, 255, 0.82); font-size: 0.9rem; font-weight: 600; text-decoration: none; transition: color 140ms ease; }
 .lp-nav-links a:hover { color: #fff; }
