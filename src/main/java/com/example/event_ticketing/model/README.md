@@ -14,4 +14,6 @@ The persistent domain. Every table uses a UUID primary key, plural `snake_case` 
 | `Ticket` (`tickets`) | `booking` → Booking, `seat` → EventSeat (unique); `ticketCode` (unique) |
 | `OrganiserRequest`, `StudentVerificationRequest` | `user` → User; status and resolution timestamps |
 
-Relationships are `@ManyToOne(fetch = LAZY)`. Services read them inside a transaction, and repositories fetch-join them where lists need them. Hibernate generates the schema (`ddl-auto=update` in dev and prod, `create-drop` in tests).
+Object relationships use lazy `@ManyToOne`, except `Ticket.seat`, which uses a lazy `@OneToOne` with a unique event-seat reference. Services read them inside a transaction, and repositories fetch-join them where lists need them. Hibernate generates the schema (`ddl-auto=update` in dev and prod, `create-drop` in tests).
+
+The report's [domain and application UML class views](../../../../../../../docs/architecture/README.md) document the implemented classes; they are distinct from the database ERD.

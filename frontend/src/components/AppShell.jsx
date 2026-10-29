@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../auth/AuthContext';
 import { Link, NavLink, useRouter } from '../utils/router';
 import ConfirmDialog from './ConfirmDialog';
+import BrandLogo from './BrandLogo';
 import StudentVerificationModal from './StudentVerificationModal';
 
 function initials(name) {
@@ -137,11 +138,8 @@ export default function AppShell({ children }) {
     <div className="app-shell">
       <header className="app-header">
         <Link className="brand" to="/browse" aria-label="Perch home">
-          <span className="brand-mark" aria-hidden="true">P</span>
-          <span>
-            <strong>Perch</strong>
-            <small>Reserved seating</small>
-          </span>
+          <BrandLogo />
+          <small>Reserved seating</small>
         </Link>
 
         <nav className="primary-nav" aria-label="Primary navigation">

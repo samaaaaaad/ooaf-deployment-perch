@@ -16,6 +16,8 @@ This project proposes a clean, intuitive drag-and-drop platform that allows busi
 
 The corrected logical database model is available in the editable [Draw.io ERD](docs/event-ticketing-mvp-erd.drawio). Architecture decisions are recorded under [`docs/adr`](docs/adr), and active development conventions are documented in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+The report's [domain and application UML class views](docs/architecture/README.md) include editable draw.io diagrams, exports, a class-only Word excerpt and source consistency checks. [Branding asset usage](docs/branding.md) records which supplied logo belongs on light or dark surfaces.
+
 ### 1.1 Key Requirements
 
 Directly addressing the problems above, the platform must support:
@@ -60,11 +62,11 @@ Versions are the exact ones resolved by `build.gradle` (Spring Boot 4.1.0 depend
 | Library | Version | Used for |
 |---|---|---|
 | React / React DOM | 19.2.8 | UI |
-| Vite | 6.4.3 | Dev server (with an `/api` proxy) and production build |
+| Vite | 6.4.5 | Dev server (with an `/api` proxy) and production build |
 | @vitejs/plugin-react | 4.7.0 | JSX / Fast Refresh |
 | @stripe/stripe-js | 10.0.0 | Loads Stripe.js for card payments |
 | @stripe/react-stripe-js | 7.0.0 | Stripe Payment Element |
-| Vitest | 3.2.7 | Test runner |
+| Vitest | 4.1.12 | Test runner |
 | React Testing Library | 16.3.2 (DOM 10.4.1, jest-dom 6.9.1) | Component tests |
 | jsdom | 25.0.1 | Browser environment for tests |
 
@@ -77,7 +79,7 @@ The UI is hand-written React and CSS in our own teal and gold design system (sec
 ### 3.1 Prerequisites
 
 - **JDK 17+.** The Gradle toolchain targets Java 17. Gradle itself is downloaded by the wrapper.
-- **Node.js 18+** and npm.
+- **Node.js 20 or 22, or 24+** and npm (the test runner requires one of these supported release lines).
 - Optional: Docker, to run the production-like stack with PostgreSQL.
 
 ### 3.2 Database

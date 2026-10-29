@@ -19,4 +19,4 @@ The build fails if line coverage of the `service` or `controller` package drops 
 
 Lower-covered areas: `payment.StripePaymentProvider` calls the live Stripe API, which unit tests do not reach (the Stripe webhook controller is fully tested). Model getters and `equals` are exercised indirectly.
 
-Frontend: 64 Vitest tests pass (`npm --prefix frontend test`).
+Frontend: 69 Vitest tests pass (`npm --prefix frontend test`, Node 20), including logo placement, icon metadata and the ticket-delivery copy regression checks.

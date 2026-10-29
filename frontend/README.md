@@ -2,6 +2,12 @@
 
 The single-page app for customers, organisers and admins. It talks to the Spring Boot API only through `src/api`. In development, Vite proxies `/api` to `localhost:8080`. In production, the built files are bundled into the Spring Boot jar and served from the same origin.
 
+Use Node.js 20 or 22, or 24+ for the frontend tooling (including Vitest 4).
+
+## Branding
+
+`BrandLogo` uses the supplied primary wordmark on light surfaces (login and the app header) and the yellow wordmark on dark surfaces (landing navigation and footer). The supplied app icon is used by the favicon, Apple touch icon and web manifest. The three original PNGs are under `public/branding/`, without recolouring or distortion. See [branding asset usage](../docs/branding.md).
+
 ```bash
 npm ci
 ```
