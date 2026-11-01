@@ -2,6 +2,7 @@ package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.dto.HoldSeatRequest;
 import com.example.event_ticketing.dto.SeatHoldDTO;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import com.example.event_ticketing.service.SeatHoldService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,9 +22,11 @@ import java.util.UUID;
 public class SeatHoldController {
 
     private final SeatHoldService seatHoldService;
+    private final SeatBroadcaster seatBroadcaster;
 
-    public SeatHoldController(SeatHoldService seatHoldService) {
+    public SeatHoldController(SeatHoldService seatHoldService, SeatBroadcaster seatBroadcaster) {
         this.seatHoldService = seatHoldService;
+        this.seatBroadcaster = seatBroadcaster;
     }
 
     @PostMapping("/{seatId}/hold")
@@ -33,7 +36,10 @@ public class SeatHoldController {
             @RequestBody(required = false) HoldSeatRequest request
     ) {
         UUID customerId = request == null ? null : request.customerId;
-        return ResponseEntity.ok(seatHoldService.holdSeat(eventId, seatId, customerId));
+        SeatHoldDTO held = seatHoldService.holdSeat(eventId, seatId, customerId);
+        // The hold transaction has committed by now, so other seat maps re-fetch fresh state.
+        seatBroadcaster.seatsChanged(eventId);
+        return ResponseEntity.ok(held);
     }
 
     /** 204 whether or not there was a hold of the customer's to release. 404 only for an unknown seat. */
@@ -44,6 +50,7 @@ public class SeatHoldController {
             @RequestParam UUID customerId
     ) {
         seatHoldService.releaseHold(eventId, seatId, customerId);
+        seatBroadcaster.seatsChanged(eventId);
         return ResponseEntity.noContent().build();
     }
 

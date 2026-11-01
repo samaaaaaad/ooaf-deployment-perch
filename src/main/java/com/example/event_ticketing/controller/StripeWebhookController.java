@@ -1,6 +1,7 @@
 package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.service.BookingService;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
@@ -29,13 +30,16 @@ public class StripeWebhookController {
     private static final Logger log = LoggerFactory.getLogger(StripeWebhookController.class);
 
     private final BookingService bookingService;
+    private final SeatBroadcaster seatBroadcaster;
     private final String webhookSecret;
 
     public StripeWebhookController(
             BookingService bookingService,
+            SeatBroadcaster seatBroadcaster,
             @Value("${stripe.webhook-secret}") String webhookSecret
     ) {
         this.bookingService = bookingService;
+        this.seatBroadcaster = seatBroadcaster;
         this.webhookSecret = webhookSecret;
     }
 
@@ -60,7 +64,11 @@ public class StripeWebhookController {
         if ("payment_intent.succeeded".equals(type)) {
             PaymentIntent intent = deserializePaymentIntent(event);
             if (intent != null) {
-                bookingService.confirmPaidBooking(intent.getId());
+                var booking = bookingService.confirmPaidBooking(intent.getId());
+                if (booking != null) {
+                    // Seats just flipped to BOOKED; push the change to open seat maps.
+                    seatBroadcaster.seatsChanged(booking.eventId);
+                }
             }
         } else if ("payment_intent.payment_failed".equals(type)) {
             PaymentIntent intent = deserializePaymentIntent(event);

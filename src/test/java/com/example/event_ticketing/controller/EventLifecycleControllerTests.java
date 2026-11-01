@@ -12,6 +12,7 @@ import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.EventStatus;
 import com.example.event_ticketing.service.BookingService;
 import com.example.event_ticketing.service.EventService;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -53,7 +54,7 @@ class EventLifecycleControllerTests {
         bookingService = mock(BookingService.class);
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new EventController(eventService), new PublicEventController(eventService),
-                        new BookingController(bookingService))
+                        new BookingController(bookingService, mock(SeatBroadcaster.class)))
                 .setControllerAdvice(new ApiExceptionHandler())
                 .build();
     }

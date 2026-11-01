@@ -243,7 +243,9 @@ class BookingCheckoutIntegrationTests {
     void checkoutHttpResponseAndBookingLookupExposeTheSameTicket() throws Exception {
         EventSeat seat = saveHeld("HTTP1", "12.00");
         var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders
-                .standaloneSetup(new com.example.event_ticketing.controller.BookingController(bookingService)).build();
+                .standaloneSetup(new com.example.event_ticketing.controller.BookingController(
+                        bookingService,
+                        org.mockito.Mockito.mock(com.example.event_ticketing.service.SeatBroadcaster.class))).build();
         String response = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                 .post("/api/events/" + event.getEventId() + "/bookings")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)

@@ -1,6 +1,7 @@
 package com.example.event_ticketing.controller;
 
 import com.example.event_ticketing.service.BookingService;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import com.stripe.Stripe;
 import com.stripe.net.Webhook;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ class StripeWebhookSignedEventTests {
     @BeforeEach
     void setUp() {
         bookingService = mock(BookingService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new StripeWebhookController(bookingService, SECRET)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new StripeWebhookController(bookingService, mock(SeatBroadcaster.class), SECRET)).build();
     }
 
     private static String event(String type) {

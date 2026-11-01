@@ -7,6 +7,7 @@ import com.example.event_ticketing.exception.SeatUnavailableException;
 import com.example.event_ticketing.exception.ValidationException;
 import com.example.event_ticketing.model.SeatStatus;
 import com.example.event_ticketing.model.SeatTier;
+import com.example.event_ticketing.service.SeatBroadcaster;
 import com.example.event_ticketing.service.SeatHoldService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ class SeatHoldControllerTests {
     void setUp() {
         seatHoldService = mock(SeatHoldService.class);
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new SeatHoldController(seatHoldService))
+                .standaloneSetup(new SeatHoldController(seatHoldService, mock(SeatBroadcaster.class)))
                 .setControllerAdvice(new ApiExceptionHandler())
                 .build();
     }
