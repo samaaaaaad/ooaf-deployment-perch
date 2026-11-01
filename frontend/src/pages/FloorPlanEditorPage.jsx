@@ -15,11 +15,28 @@ const BOARD_H = 560;
 // Per-shape geometry. Circles (seat, table) are positioned by their centre;
 // rectangles (stage, barrier) by their top-left corner.
 const SHAPES = {
-  seat: { kind: 'circle', r: 13, fill: '#3b82f6', label: 'Seat', counts: true },
+  seat: { kind: 'circle', r: 13, label: 'Seat', counts: true },
   table: { kind: 'circle', r: 26, fill: '#14544d', label: 'Table', counts: false },
   stage: { kind: 'rect', w: 320, h: 64, fill: '#176b63', label: 'Stage', single: true },
   barrier: { kind: 'rect', w: 150, h: 16, fill: '#4b5563', label: 'Barrier', single: false },
 };
+
+// Seats carry a price tier (matches the backend's SeatTier enum); every other
+// shape is untiered. Colors match FloorPlanPreview.jsx (the pricing modal and
+// shared-gallery preview), so a seat looks the same tier here as it does there.
+const SEAT_TIER_COLORS = { STANDARD: '#3b82f6', PREMIUM: '#8b5cf6' };
+const seatTierOf = (item) => (item.tier === 'PREMIUM' ? 'PREMIUM' : 'STANDARD');
+
+// Draggable palette tools. Standard Seat and Premium Seat are two distinct
+// tools (not one "Seat" tool plus a toggle) so the tier is picked up front,
+// the same way Table/Stage/Barrier are already picked by dragging the right tile.
+const PALETTE_TOOLS = [
+  { key: 'seat-standard', itemType: 'seat', tier: 'STANDARD', label: 'Standard Seat', fill: SEAT_TIER_COLORS.STANDARD },
+  { key: 'seat-premium', itemType: 'seat', tier: 'PREMIUM', label: 'Premium Seat', fill: SEAT_TIER_COLORS.PREMIUM },
+  { key: 'table', itemType: 'table', label: 'Table', fill: SHAPES.table.fill },
+  { key: 'stage', itemType: 'stage', label: 'Stage', fill: SHAPES.stage.fill },
+  { key: 'barrier', itemType: 'barrier', label: 'Barrier', fill: SHAPES.barrier.fill },
+];
 
 let idCounter = 0;
 const nextId = () => {
@@ -45,6 +62,12 @@ export default function FloorPlanEditorPage() {
   const editId = new URLSearchParams(window.location.search).get('id');
   const svgRef = useRef(null);
   const dragState = useRef(null);
+  // Mirrors paletteDrag's toolKey for the mouseup handler below to read synchronously.
+  // Kept separate from the paletteDrag *state* (which exists only to re-render the floating
+  // preview's position) so handleUp can call addItem as a plain side effect rather than from
+  // inside a setState updater — React 18 Strict Mode double-invokes updater functions in dev
+  // specifically to catch impure ones, which doubled every drop when addItem lived in one.
+  const paletteDragToolKey = useRef(null);
 
   const [name, setName] = useState('Untitled floor plan');
   const [items, setItems] = useState([]);
@@ -60,6 +83,22 @@ export default function FloorPlanEditorPage() {
   const [sharedAt, setSharedAt] = useState(null);
   const [isDefaultPlan, setIsDefaultPlan] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [boardScale, setBoardScale] = useState(1);
+  // { toolKey, x, y } while a palette tool is being dragged toward the board (x/y are
+  // viewport coordinates, for positioning the floating preview below); null otherwise.
+  const [paletteDrag, setPaletteDrag] = useState(null);
+
+  // Tracks the board's current on-screen scale so the floating drag preview (below) is
+  // sized to match the item's real on-board size, not an arbitrary icon size.
+  useEffect(() => {
+    const board = svgRef.current;
+    if (!board) return undefined;
+    const update = () => setBoardScale(board.getBoundingClientRect().width / BOARD_W);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(board);
+    return () => observer.disconnect();
+  }, []);
 
   // Load an existing plan when editing.
   useEffect(() => {
@@ -103,21 +142,24 @@ export default function FloorPlanEditorPage() {
     };
   }, []);
 
-  const addItem = useCallback((type, cx, cy) => {
-    const s = SHAPES[type];
-    if (s.single && items.some((it) => it.type === type)) {
+  const addItem = useCallback((toolKey, cx, cy) => {
+    const tool = PALETTE_TOOLS.find((t) => t.key === toolKey);
+    if (!tool) return;
+    const s = SHAPES[tool.itemType];
+    if (s.single && items.some((it) => it.type === tool.itemType)) {
       setNote(`Only one ${s.label.toLowerCase()} is supported.`);
       return;
     }
     const id = nextId();
     const raw = s.kind === 'rect' ? { x: cx - s.w / 2, y: cy - s.h / 2 } : { x: cx, y: cy };
-    const pos = clampItem(type, raw.x, raw.y);
-    setItems((prev) => [...prev, { id, type, ...pos }]);
+    const pos = clampItem(tool.itemType, raw.x, raw.y);
+    const extra = tool.tier ? { tier: tool.tier } : {};
+    setItems((prev) => [...prev, { id, type: tool.itemType, ...pos, ...extra }]);
     setSelectedId(id);
     setNote('');
   }, [items]);
 
-  function addGrid() {
+  function addGrid(tier) {
     const s = SHAPES.seat;
     const rows = clamp(Number(gridRows) || 1, 1, 8);
     const cols = clamp(Number(gridCols) || 1, 1, 14);
@@ -128,19 +170,11 @@ export default function FloorPlanEditorPage() {
     for (let r = 0; r < rows; r += 1) {
       for (let c = 0; c < cols; c += 1) {
         const pos = clampItem('seat', startX + c * gap, startY + r * gap);
-        block.push({ id: nextId(), type: 'seat', ...pos });
+        block.push({ id: nextId(), type: 'seat', ...pos, tier });
       }
     }
     setItems((prev) => [...prev, ...block]);
-    setNote(`Added a ${rows} x ${cols} block.`);
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    const type = e.dataTransfer.getData('perch/item');
-    if (!SHAPES[type]) return;
-    const { x, y } = toBoard(e.clientX, e.clientY);
-    addItem(type, x, y);
+    setNote(`Added a ${rows} x ${cols} ${tier === 'PREMIUM' ? 'premium' : 'standard'} block.`);
   }
 
   const onItemPointerDown = useCallback((e, item) => {
@@ -150,25 +184,47 @@ export default function FloorPlanEditorPage() {
     dragState.current = { id: item.id, offsetX: x - item.x, offsetY: y - item.y };
   }, [toBoard]);
 
+  // Tracks both kinds of drag with the board's own pointer events (not native HTML5
+  // drag-and-drop): repositioning a placed item, and dragging a palette tool onto the
+  // board. Native setDragImage hands the preview bitmap to the OS compositor, which on
+  // Windows applies its own opacity/edge-feather "lifted" treatment — this stays fully
+  // under our control instead, the same way in-board repositioning already did.
   useEffect(() => {
     function handleMove(e) {
       const drag = dragState.current;
-      if (!drag) return;
-      const { x, y } = toBoard(e.clientX, e.clientY);
-      setItems((prev) => prev.map((it) => {
-        if (it.id !== drag.id) return it;
-        const pos = clampItem(it.type, x - drag.offsetX, y - drag.offsetY);
-        return { ...it, ...pos };
-      }));
+      if (drag) {
+        const { x, y } = toBoard(e.clientX, e.clientY);
+        setItems((prev) => prev.map((it) => {
+          if (it.id !== drag.id) return it;
+          const pos = clampItem(it.type, x - drag.offsetX, y - drag.offsetY);
+          return { ...it, ...pos };
+        }));
+        return;
+      }
+      if (paletteDragToolKey.current) {
+        setPaletteDrag({ toolKey: paletteDragToolKey.current, x: e.clientX, y: e.clientY });
+      }
     }
-    function handleUp() { dragState.current = null; }
+    function handleUp(e) {
+      dragState.current = null;
+      const toolKey = paletteDragToolKey.current;
+      if (toolKey) {
+        paletteDragToolKey.current = null;
+        setPaletteDrag(null);
+        const rect = svgRef.current?.getBoundingClientRect();
+        if (rect && e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+          const { x, y } = toBoard(e.clientX, e.clientY);
+          addItem(toolKey, x, y);
+        }
+      }
+    }
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleUp);
     return () => {
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-  }, [toBoard]);
+  }, [toBoard, addItem]);
 
   const deleteSelected = useCallback(() => {
     if (!selectedId) return;
@@ -247,8 +303,6 @@ export default function FloorPlanEditorPage() {
               ? 'Save the floor plan first, then you can publish it'
               : undefined;
 
-  const paletteTypes = ['seat', 'table', 'stage', 'barrier'];
-
   return (
     <section className="fp">
       <div className="fp-head">
@@ -313,8 +367,6 @@ export default function FloorPlanEditorPage() {
             ref={svgRef}
             className="fp-board"
             viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
             onMouseDown={() => setSelectedId(null)}
             role="application"
             aria-label="Floor Plan drawing board"
@@ -349,10 +401,11 @@ export default function FloorPlanEditorPage() {
                   </g>
                 );
               }
+              const fill = it.type === 'seat' ? SEAT_TIER_COLORS[seatTierOf(it)] : s.fill;
               return (
                 <circle
                   key={it.id} className="fp-item"
-                  cx={it.x} cy={it.y} r={s.r} fill={s.fill}
+                  cx={it.x} cy={it.y} r={s.r} fill={fill}
                   stroke={selected ? '#d8a84e' : '#0a2328'} strokeWidth={selected ? 3 : 2}
                   onMouseDown={(e) => onItemPointerDown(e, it)}
                 />
@@ -366,27 +419,28 @@ export default function FloorPlanEditorPage() {
           <p className="fp-hint">Drag a shape onto the board. Drag placed items to move them, and press Delete to remove the selected one.</p>
 
           <div className="fp-tiles">
-            {paletteTypes.map((type) => {
-              const s = SHAPES[type];
-              const disabled = s.single && hasSingle(type);
+            {PALETTE_TOOLS.map((tool) => {
+              const s = SHAPES[tool.itemType];
+              const disabled = s.single && hasSingle(tool.itemType);
               return (
                 <div
-                  key={type}
+                  key={tool.key}
                   className={`fp-tile${disabled ? ' is-disabled' : ''}`}
-                  draggable={!disabled}
-                  onDragStart={(e) => {
-                    if (disabled) { e.preventDefault(); return; }
-                    e.dataTransfer.setData('perch/item', type);
+                  onMouseDown={(e) => {
+                    if (disabled) return;
+                    e.preventDefault();
+                    paletteDragToolKey.current = tool.key;
+                    setPaletteDrag({ toolKey: tool.key, x: e.clientX, y: e.clientY });
                   }}
                 >
                   <span className="fp-tile-icon" aria-hidden="true">
                     <svg viewBox="0 0 40 40">
                       {s.kind === 'rect'
-                        ? <rect x="4" y="14" width="32" height="12" rx="3" fill={s.fill} />
-                        : <circle cx="20" cy="20" r={type === 'table' ? 15 : 11} fill={s.fill} />}
+                        ? <rect x="4" y="14" width="32" height="12" rx="3" fill={tool.fill} />
+                        : <circle cx="20" cy="20" r={tool.itemType === 'table' ? 15 : 11} fill={tool.fill} />}
                     </svg>
                   </span>
-                  <span>{s.label}{disabled ? ' (added)' : ''}</span>
+                  <span>{tool.label}{disabled ? ' (added)' : ''}</span>
                 </div>
               );
             })}
@@ -394,6 +448,7 @@ export default function FloorPlanEditorPage() {
 
           <div className="fp-grid-tool">
             <h4>Seat grid</h4>
+            <p className="fp-hint">Place a block of seats at once — pick standard or premium.</p>
             <div className="fp-grid-inputs">
               <label>Rows
                 <input type="number" min="1" max="8" value={gridRows} onChange={(e) => setGridRows(e.target.value)} />
@@ -403,13 +458,21 @@ export default function FloorPlanEditorPage() {
                 <input type="number" min="1" max="14" value={gridCols} onChange={(e) => setGridCols(e.target.value)} />
               </label>
             </div>
-            <button type="button" className="button button-secondary button-small" onClick={addGrid}>
-              Add {clamp(Number(gridRows) || 1, 1, 8)} × {clamp(Number(gridCols) || 1, 1, 14)} block
-            </button>
+            <div className="fp-grid-add-row">
+              <button type="button" className="button button-secondary button-small" onClick={() => addGrid('STANDARD')}>
+                <span className="fp-tier-dot" style={{ background: SEAT_TIER_COLORS.STANDARD }} aria-hidden="true" />
+                Add standard block
+              </button>
+              <button type="button" className="button button-secondary button-small" onClick={() => addGrid('PREMIUM')}>
+                <span className="fp-tier-dot" style={{ background: SEAT_TIER_COLORS.PREMIUM }} aria-hidden="true" />
+                Add premium block
+              </button>
+            </div>
           </div>
 
           <div className="fp-stats">
             <div><strong>{seatCount}</strong><span>seats</span></div>
+            <div><strong>{items.filter((it) => it.type === 'seat' && seatTierOf(it) === 'PREMIUM').length}</strong><span>premium</span></div>
             <div><strong>{items.length}</strong><span>items</span></div>
           </div>
 
@@ -429,6 +492,31 @@ export default function FloorPlanEditorPage() {
           )}
         </aside>
       </div>
+
+      {paletteDrag && (() => {
+        const tool = PALETTE_TOOLS.find((t) => t.key === paletteDrag.toolKey);
+        const s = SHAPES[tool.itemType];
+        const w = (s.kind === 'rect' ? s.w : s.r * 2) * boardScale;
+        const h = (s.kind === 'rect' ? s.h : s.r * 2) * boardScale;
+        return (
+          <div
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              left: paletteDrag.x - w / 2,
+              top: paletteDrag.y - h / 2,
+              width: w,
+              height: h,
+              background: tool.fill,
+              borderRadius: s.kind === 'rect' ? '8px' : '50%',
+              pointerEvents: 'none',
+              opacity: 0.85,
+              boxShadow: '0 6px 16px rgba(0,0,0,0.35)',
+              zIndex: 1000,
+            }}
+          />
+        );
+      })()}
     </section>
   );
 }

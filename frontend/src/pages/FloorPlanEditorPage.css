@@ -144,6 +144,21 @@
   color: var(--muted, #667681);
 }
 
+.fp-grid-add-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fp-tier-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 0.45rem;
+  flex: none;
+}
+
 .fp-palette h3 {
   margin: 0;
   font-size: 1.05rem;
